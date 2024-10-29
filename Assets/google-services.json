@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "207581025918",
+    "project_id": "fm-sas-ragdoll-capture",
+    "storage_bucket": "fm-sas-ragdoll-capture.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:207581025918:android:b2483c384ad3655582ea2f",
+        "android_client_info": {
+          "package_name": "jp.fourm.ragdollcapture"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAe4U-R8UiHVFiBOh2RYvZ-C22m2Fa7xkc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
