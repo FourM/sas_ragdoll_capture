@@ -30,6 +30,13 @@ public class InGameManager : MonoBehaviour
     [SerializeField, Tooltip("「高速スワイプした！」判定の速度")] private float _fastSwipeSpeed = 20f;
     [SerializeField, Tooltip("「高速スワイプした！」判定の距離")] private float _fastSwipeAway = 500f;
     [SerializeField, Tooltip("「掴んでるやつが高速移動してる！」判定の速度")] private float _fastCatchObjSpd = 10f;
+    [SerializeField, Tooltip("糸を出す音")] private AudioSource _audioSouceWebShot = null;
+    [SerializeField, Tooltip("音リスト")] private List<AudioClip> _listAudioClipWebShot = null;
+    [SerializeField, Tooltip("音リスト")] private List<AudioClip> _listAudioClipWebRelease = null;
+    [SerializeField, Tooltip("糸で捕まえる音")] private AudioSource _audioSouceWebCatch = null;
+    [SerializeField, Tooltip("音リスト")] private List<AudioClip> _listAudioClipWebCatch = null;
+    [SerializeField, Tooltip("風切音")] private AudioSource _audioSouceFastSwipe = null;
+    [SerializeField, Tooltip("音リスト")] private List<AudioClip> _listAudioClipFastSwipe = null;
     private bool _isCatch = false;
     private float _springPosZ = 0.0f;
     private Material _webRopeMaterial = default;
@@ -283,6 +290,8 @@ public class InGameManager : MonoBehaviour
 
              // バイブレーションさせる
             VibrationManager.VibrateShort();
+            PlayRandomSound(_audioSouceWebShot, _listAudioClipWebShot);
+            PlayRandomSound(_audioSouceWebCatch, _listAudioClipWebCatch);
         }
     }
 
@@ -331,8 +340,10 @@ public class InGameManager : MonoBehaviour
         {
             float swipeSpeed = (Input.mousePosition - _beforeMousePos).magnitude;
             if( _fastSwipeSpeed <= swipeSpeed)
-            {
+            {       
                 // Debug.Log("素早いスワイプ！:" + swipeSpeed);
+
+                float _beforeTotalFastSwipeAway = _currentTotalFastSwipeAway;
                 _currentTotalFastSwipeAway += swipeSpeed;
 
                 float catchObjSpeed = _currentCatchObj.GetRigidbody().velocity.magnitude;
@@ -341,11 +352,14 @@ public class InGameManager : MonoBehaviour
                 if( _fastSwipeAway <= _currentTotalFastSwipeAway && _fastCatchObjSpd <= catchObjSpeed)
                 {
                     // Debug.Log("一定距離を素早いスワイプ！:" + _currentTotalFastSwipeAway);
-                        _currentCatchObj.FastSwipe();
+                    _currentCatchObj.FastSwipe();
 
-                        Human human = _currentCatchObj.TryGetParentHuman();
-                        if(human != null)
-                            human.FastSwipe();
+                    Human human = _currentCatchObj.TryGetParentHuman();
+                    if(human != null)
+                        human.FastSwipe();
+                        
+                    if(_beforeTotalFastSwipeAway < _fastSwipeAway)
+                        PlayRandomSound(_audioSouceFastSwipe, _listAudioClipFastSwipe, 0.8f);
                 }
             }
             else
@@ -441,6 +455,8 @@ public class InGameManager : MonoBehaviour
                 GameDataManager.SetIsCatchSomething(false);
             }
         });
+
+        PlayRandomSound(_audioSouceWebShot, _listAudioClipWebRelease, 0.2f);
     }
 
     // 糸の表示非表示切り替え
@@ -481,5 +497,18 @@ public class InGameManager : MonoBehaviour
             _showAdAction?.Invoke();
             // FirebaseManager.instance.EventStageStart();
         });
+    }
+
+    private void PlayRandomSound(AudioSource audioSource, List<AudioClip> listAudioClips, float volumeScale = 1.0f)
+    {
+        if(audioSource == null)
+            return;
+        if(listAudioClips == null)
+            return;
+        if(listAudioClips.Count <= 0)
+            return;
+        // 音を出す
+        int index = UnityEngine.Random.Range(0, listAudioClips.Count);
+        audioSource.PlayOneShot(listAudioClips[index], volumeScale);
     }
 }

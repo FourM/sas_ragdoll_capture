@@ -22,6 +22,8 @@ public class Stage15SubManager : MonoBehaviour
     [SerializeField, Tooltip("打ち出す力")] private List<GameObject> _collisions = default;
     [SerializeField, Tooltip("大砲の玉（見えない攻撃判定）")] private Rigidbody _dymmyCanonBall = default;
     [SerializeField, Tooltip("大砲の玉　開始位置")] private Transform _dymmyCanonBallStartPos = default;
+    [SerializeField, Tooltip("大砲の発射音")] private AudioSource _soundCannonShot = null;
+    [SerializeField, Tooltip("大砲の駆動音")] private AudioSource _soundCannonMove = null;
     
     private bool _isInitialize = false;
     private bool _isShot = false;
@@ -67,10 +69,21 @@ public class Stage15SubManager : MonoBehaviour
             return;
         
         human.OnRelease();
+        humanChild.OnRelease();
+        Rigidbody rigidbody = human.GetParts(HumanParts.waist).GetRigidbody();
+        rigidbody.velocity = Vector3.zero;
+        rigidbody.isKinematic = true;
+        rigidbody.useGravity = false;
+        human.gameObject.SetActive(false);
 
         Sequence sequence = DOTween.Sequence();
 
-        sequence.Append(_cannnonBody.DOLocalRotate(new Vector3(0, 90, 0), _rollDuration).SetEase(Ease.InOutBack));
+        sequence.AppendCallback(()=>{ _soundCannonMove.PlayOneShot(_soundCannonMove.clip); });
+        sequence.Append(_cannnonBody.DOLocalRotate(new Vector3(0, 90, 0), _rollDuration).SetEase(Ease.InOutBack).OnComplete(()=>
+        {
+            if(_soundCannonMove != null)
+                _soundCannonMove.Stop();
+        }));
         sequence.AppendInterval(_shotDuration);
         // 発射あ！！
         sequence.AppendCallback(()=>{
@@ -78,9 +91,11 @@ public class Stage15SubManager : MonoBehaviour
             // human.GetParts(HumanParts.waist).GetRigidbody().velocity = _shotVelocity;
             _dymmyCanonBall.velocity = _shotVelocity;
 
+            human.gameObject.SetActive(true);
             _dymmyCanonBall.gameObject.SetActive(true);
             // _dymmyCanonBall.transform.parent = human.GetParts(HumanParts.waist).transform;
-            human.GetParts(HumanParts.waist).transform.parent = _dymmyCanonBall.transform.parent;
+            human.transform.parent = _dymmyCanonBall.transform;
+            human.transform.localPosition = Vector3.zero;
             _dymmyCanonBall.transform.parent = _dymmyCanonBallStartPos;
             _dymmyCanonBall.gameObject.layer = human.GetParts(HumanParts.waist).gameObject.layer;
             _dymmyCanonBall.transform.localPosition = Vector3.zero;
@@ -90,9 +105,12 @@ public class Stage15SubManager : MonoBehaviour
                 int index = i;
                 _collisions[index].SetActive(false);
             }
+
+            _soundCannonShot.PlayOneShot(_soundCannonShot.clip);
         });
         sequence.AppendInterval(0.3f);
         sequence.AppendCallback(()=>{
+            human.transform.parent = GameDataManager.GetStage().transform;
             _dymmyCanonBall.gameObject.SetActive(false);
             human.OnBreak();
         });
@@ -105,8 +123,13 @@ public class Stage15SubManager : MonoBehaviour
             }
         });
         sequence.AppendInterval(1f);
-        sequence.Append(_cannnonBody.DOLocalRotate(new Vector3(0, 90, -90), _rollDuration).SetEase(Ease.InOutBack));
-                sequence.AppendCallback(()=>{
+        sequence.AppendCallback(()=>{ _soundCannonMove.PlayOneShot(_soundCannonMove.clip); });
+        sequence.Append(_cannnonBody.DOLocalRotate(new Vector3(0, 90, -90), _rollDuration).SetEase(Ease.InOutBack).OnComplete(()=>
+        {
+            if(_soundCannonMove != null)
+                _soundCannonMove.Stop();
+        }));
+        sequence.AppendCallback(()=>{
             _isShot = false;
         });
 

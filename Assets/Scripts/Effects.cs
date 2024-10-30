@@ -9,6 +9,7 @@ public class Effects : MonoBehaviour
     // ---------- プレハブ ----------
     // ---------- プロパティ ----------
     [SerializeField, Tooltip("エフェクトリスト")] private List<ParticleSystem> _listEffect = default;
+    [SerializeField, Tooltip("エフェクトリスト")] private List<AudioSource> _listSound = default;
     private int _index = 0;
     // ---------- クラス変数宣言 ----------
     // ---------- インスタンス変数宣言 ----------
@@ -20,6 +21,12 @@ public class Effects : MonoBehaviour
         effect.transform.position = pos;
         effect.Play();
 
+        if( _index < _listSound.Count )
+        {
+            AudioSource audio = _listSound[_index];
+            audio.PlayOneShot(audio.clip);
+        }
+
         _index++;
         _index %= _listEffect.Count;
     }
@@ -28,6 +35,8 @@ public class Effects : MonoBehaviour
         for(int i = 0; i < _listEffect.Count; i++)
         {
             _listEffect[i].Stop();
+            if( i < _listSound.Count )
+                _listSound[i].Stop();
         }
     }
     // ---------- Private関数 ----------

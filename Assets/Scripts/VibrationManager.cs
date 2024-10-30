@@ -16,7 +16,7 @@ public static class VibrationManager
 		public static void VibrateShort()
 		{
 #if UNITY_EDITOR
-            Debug.Log("VibrateShort");
+            // Debug.Log("VibrateShort");
 #endif
 #if UNITY_ANDROID && !UNITY_EDITOR
 				UniAndroidVibration.Vibrate(5);
@@ -28,8 +28,8 @@ public static class VibrationManager
         public static void VibrateLong()
         {
 #if UNITY_EDITOR
-            Debug.Log("VibrateLong");
-            Handheld.Vibrate();
+            // Debug.Log("VibrateLong");
+            // Handheld.Vibrate();
 #endif
 #if UNITY_ANDROID && !UNITY_EDITOR
 			UniAndroidVibration.Vibrate(100);

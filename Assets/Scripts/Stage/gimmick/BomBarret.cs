@@ -15,6 +15,7 @@ public class BomBarret : CatchableObj
     // ---------- プロパティ ----------
     [SerializeField, Tooltip("爆発エフェクト")] private ParticleSystem _effectExplosion = default;
     [SerializeField, Tooltip("爆発攻撃判定")] private ChildTrigger _triggerExplotion = default;
+    [SerializeField, Tooltip("爆発音")] private AudioSource _soundExplotion = null;
     private Tween _bomTween = null;
     // ---------- クラス変数宣言 ----------
     // ---------- インスタンス変数宣言 ----------
@@ -102,5 +103,7 @@ public class BomBarret : CatchableObj
         
         _onDoReleaseCallback?.Invoke();
         this.gameObject.layer = LayerMask.NameToLayer("Ignore Raycast");
+
+        _soundExplotion.PlayOneShot(_soundExplotion.clip);
     }
 }

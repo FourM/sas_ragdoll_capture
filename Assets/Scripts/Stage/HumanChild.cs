@@ -32,6 +32,8 @@ public class HumanChild : CatchableObj
             return;
         if(collision.gameObject.layer == LayerMask.NameToLayer("Wall"))
             return; 
+        if(collision.gameObject.layer == LayerMask.NameToLayer("NotKillFloor"))
+            return; 
         if(collision.gameObject.layer == LayerMask.NameToLayer("ThroughWall"))
             return;
         
@@ -192,7 +194,7 @@ public class HumanChild : CatchableObj
             Debug.DrawRay(this.transform.position, -Vector3.up * _rayDistance, Color.red, 0.1f, false);
             RaycastHit hit;
             LayerMask mask = LayerMask.GetMask("Deafult", "catchable", "Floor", "ThroughWall",
-            "catchableThroughFloor", "catchableNoMutualConflicts", "catchableThroughWall");
+            "catchableThroughFloor", "catchableNoMutualConflicts", "catchableThroughWall", "NotKillFloor");
 
             // 起き上がり処理中でない & アニメーション中でない
             // if(!_parentHuman.IsFollow() && !_parentHuman.IsEnableAnimation())
@@ -261,7 +263,7 @@ public class HumanChild : CatchableObj
     protected override void OnCatchUnique()
     { 
         _parentHuman.OnCatch();
-        // _parentHuman.SetOnDoReleaseCallback(_onDoReleaseCallback);
+        _parentHuman.SetOnDoReleaseCallback(_onDoReleaseCallback);
     }
     protected override void OnReleaseUnique()
     { 

@@ -22,6 +22,8 @@ public class Stage10SubManager : MonoBehaviour
     [SerializeField, Tooltip("檻が開いた判定")] private float _openPosX = 2.5f;
     [SerializeField, Tooltip("虎アニメーター")] private Animator _animator = null;
     [SerializeField, Tooltip("虎アニメーター")] private ChildTrigger _tigerChlidTrigger = null;
+    [SerializeField, Tooltip("虎の攻撃音")] private AudioSource _soundTigerAttack = null;
+    [SerializeField, Tooltip("虎の攻撃音")] private float _soundPlayDelay = 0.3f;
     private bool _isInitialize = false;
     private bool _isBeastDash = false;
     private bool _isBeastAttack = false;
@@ -53,6 +55,11 @@ public class Stage10SubManager : MonoBehaviour
                     _beastMoveTween.Kill();
                     _beastMoveTween = null;
                 }
+                DOVirtual.DelayedCall(_soundPlayDelay, ()=>
+                {
+                    if(_soundTigerAttack != null)
+                        _soundTigerAttack.PlayOneShot(_soundTigerAttack.clip);
+                }); 
             }
         });
     }

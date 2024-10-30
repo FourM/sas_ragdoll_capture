@@ -34,6 +34,8 @@ public class Human : CatchableObj
     [SerializeField, Tooltip("Ragdoll根本の位置")] private Transform _basePos;
     [SerializeField, Tooltip("パーツ追従")] private HumanPartsFollow _humanPartsFollow = null;
     [SerializeField, Tooltip("振り向く頭")] private Transform _lookAtHead = null;
+    [SerializeField, Tooltip("声")] private AudioSource _audioSouce = default;
+    [SerializeField, Tooltip("声リスト")] private List<AudioClip> _listAudioClip = default;
     // private bool _isBroken = false;
     private UnityEvent _onCatchCallback = default;
     private UnityEvent _onReleaseCallback = default;
@@ -113,13 +115,19 @@ public class Human : CatchableObj
         ChangePartsMass();
 
         if(!_isBroken)
+        {
             _cinemachineImpulseSource.GenerateImpulse(new Vector3(0.4f, 0.4f, 0));
+            // 声を出す
+            int index = UnityEngine.Random.Range(0, _listAudioClip.Count);
+            _audioSouce.PlayOneShot(_listAudioClip[index]);
+            // バイブレーションさせる
+            VibrationManager.VibrateLong();
+        }
+            
         _isBroken = true;
 
         // ぐてっとさせる
         SetIsPartsFollow(false);
-        // バイブレーションさせる
-        VibrationManager.VibrateLong();
     }
     public bool IsDead(){ return _isBroken; }
 
