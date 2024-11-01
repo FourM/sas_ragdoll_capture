@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Firebase.Analytics;
+using System;
 
 // Firebaseマネージャー。イベント発火の関数を定義する。
 public class FirebaseManager : MonoBehaviour
@@ -61,10 +62,15 @@ public class FirebaseManager : MonoBehaviour
     /// <param name="taptime"></param>
     public void EventTapRelese(float taptime)
     {
+        double taptimeDouble = (double)taptime;
+        double taptimeDouble2 = Math.Round(taptimeDouble, 1);
+        // string taptimeString = taptime.ToString("F1");          // タップ時間をStringにする
+        int stage = PlayerPrefs.GetInt("currentStage", 0) + 1;  // 現在のステージ
+
         Firebase.Analytics.FirebaseAnalytics.LogEvent("Tap_Release",
-                            new Parameter("Stage", PlayerPrefs.GetInt("currentStage", 0) + 1),
-                            new Parameter("taptime", taptime.ToString("F1")));
-        // Debug.Log("tap_release:" + taptime.ToString("F1"));
+                            new Parameter("Stage", stage),
+                            new Parameter("taptime", taptimeDouble2));
+        // Debug.Log("tap_release:" + stage + ", " + taptime + ", " + taptimeDouble + ", " + taptimeDouble2);
     }
     public void EventWatchInste(bool isWatch)
     {

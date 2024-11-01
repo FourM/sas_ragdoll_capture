@@ -33,11 +33,8 @@ public class StageManager : MonoBehaviour
     }
     public void ResetStageBundle()
     {
-        // レベルバンドル。どちらのステージ順を用いるかABで分ける
-        if(PlayerPrefs.GetInt("level_Bundle") == 0)
-            _useGameStageList = _gameStageList;
-        else
-            _useGameStageList = _gameStageList2;
+        // レベルバンドルリセット。どちらのステージ順を用いるかABで分ける
+        _useGameStageList = GetEnableGameStageList();
     }
     // ステージ生成
     public void StageLoad()
@@ -62,6 +59,14 @@ public class StageManager : MonoBehaviour
     public void SetOnClearCallBack( Action onCliearCallback)
     {
         _onCliearCallback = onCliearCallback;
+    }
+    public List<GameStage> GetEnableGameStageList()
+    { 
+        // レベルバンドル。どちらのステージ順を用いるかABで分ける
+        if(PlayerPrefs.GetInt("level_Bundle") == 0)
+            return _gameStageList;
+        else
+            return _gameStageList2;
     }
     // ---------- Private関数 ----------
     private void OnClearCallback()

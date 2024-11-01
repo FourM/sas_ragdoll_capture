@@ -18,6 +18,12 @@ public class Needle : MonoBehaviour
         if(catchableObj != null )
             catchableObj.OnBreak();
     }
+    private void OnTriggerEnter(Collider collision)
+    {
+        CatchableObj catchableObj = GameDataManager.GetCatchableObj(collision.transform.gameObject);
+        if(catchableObj != null )
+            catchableObj.OnBreak();
+    }
     // ---------- Public関数 ----------
     // ---------- Private関数 ----------
 }

@@ -11,14 +11,12 @@ public class InGameUIManager : MonoBehaviour
     // ---------- ゲームオブジェクト参照変数宣言 ----------
     // ---------- プレハブ ----------
     // ---------- プロパティ ----------
+    [SerializeField, Tooltip("キャンバス")] private Canvas _canvas = default;
     [SerializeField, Tooltip("ステージマネージャー")] private Button _buttonUndo = default;
     private bool _isInitialize = false;
     // ---------- クラス変数宣言 ----------
     // ---------- インスタンス変数宣言 ----------
     // ---------- Unity組込関数 ----------
-    private void Update(){
-
-    }
     // ---------- Public関数 ----------
     public void Initialize(){
         if(_isInitialize) return;

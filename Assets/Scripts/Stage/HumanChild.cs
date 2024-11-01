@@ -30,11 +30,29 @@ public class HumanChild : CatchableObj
     {
         if(0 < GameDataManager.GetMutekiTime())
             return;
+        if(collision.gameObject.layer == this.gameObject.layer)
+            return;
         if(collision.gameObject.layer == LayerMask.NameToLayer("Wall"))
             return; 
         if(collision.gameObject.layer == LayerMask.NameToLayer("NotKillFloor"))
             return; 
         if(collision.gameObject.layer == LayerMask.NameToLayer("ThroughWall"))
+            return;
+        // ギミックで倒す必要があるなら、床への激突では死なない
+        if(collision.gameObject.layer == LayerMask.NameToLayer("Floor") && GameDataManager.IsGimmickKill())
+            return;
+        // ギミックで倒す必要があるなら、他Humanの激突では死なない
+        if(collision.gameObject.layer == LayerMask.NameToLayer("BreakableParts") && GameDataManager.IsGimmickKill())
+            return;
+        // ギミックで倒す必要があるなら、他Humanの激突では死なない
+        if(collision.gameObject.layer == LayerMask.NameToLayer("catchableParent") && GameDataManager.IsGimmickKill())
+            return;
+        // ギミックで倒す必要があるなら、他Humanの激突では死なない
+        if(collision.gameObject.layer == LayerMask.NameToLayer("Ignore Raycast") && GameDataManager.IsGimmickKill())
+            return;
+
+        // ギミックで倒す必要があるなら、能動的には死なない？
+        if(GameDataManager.IsGimmickKill())
             return;
         
         bool isOtherHuman = false;
@@ -47,7 +65,7 @@ public class HumanChild : CatchableObj
 
         // Debug.Log("collisionSpeed:" + collisionSpeed);
 
-        // 親が同じなら何もしない
+        // 高速スワイプや、他のHumanかの情報を取得
         CatchableObj collitionChatchableObj = GameDataManager.GetCatchableObj(collision.gameObject);
         bool collisionFastSwiped = IsFastSwipedCollision(collision);
         if(collitionChatchableObj != null)
@@ -63,6 +81,13 @@ public class HumanChild : CatchableObj
 
             // 対象が、直前まで高速で振り回されていたか
             collisionFastSwiped = collitionChatchableObj.IsFastSwiped();
+        }
+
+        if(GameDataManager.IsGimmickKill())
+        {
+            // ギミックで倒す必要があるなら、他のHumanの激突では死なない
+            if(isOtherHuman)
+                return;
         }
         
         // 衝突位置を保存
@@ -82,6 +107,7 @@ public class HumanChild : CatchableObj
             OnBreak();
             if(isOtherHuman)
                 collitionChatchableObj.OnBreak();
+            // Debug.Log(";" + GameDataManager.IsGimmickKill() + ", " + isOtherHuman + ", " + collision.gameObject.name + ", " + collision.gameObject.layer);
         }
         else if( (killShockStrength / 2 ) <= collisionSpeed && this.gameObject.tag != collision.gameObject.tag)
         {
@@ -179,7 +205,7 @@ public class HumanChild : CatchableObj
         });
         _alternate.AddOnBreakCallback(()=>
         {
-            _onDoReleaseCallback?.Invoke();
+            // _onDoReleaseCallback?.Invoke();
         });
     }
 
@@ -237,6 +263,12 @@ public class HumanChild : CatchableObj
     // ---------- Public関数 ----------
     protected override void OnBreakUnique()
     { 
+        bool _isCatched = IsCatch();
+        CatchableObj alternate = TryGetAlternate();
+        if(alternate != null)
+            _isCatched |= alternate.IsCatch();
+            
+        
         // 体や頭など大事な部位が強い衝撃を受けたら死ぬ
         if(_isDeadable)
         {
@@ -250,11 +282,12 @@ public class HumanChild : CatchableObj
             EffectManager.instance.PlayEffect(_impactPos, effectType.impactSmall);
 
         // これに対応する、壊れるパーツがあるならそれを破壊する
-        if(_breakableParts != null && ( _isDeadable || _parentHuman.IsDead() ))
+        if(_breakableParts != null && ( _isDeadable || _parentHuman.IsDead() ) && !_isCatched)
         {
             _breakableParts.Break(GetRigidbody().velocity);
+            // _onDoReleaseCallback?.Invoke();
+
             gameObject.SetActive(false);
-            _onDoReleaseCallback?.Invoke();
         }
     }
 
@@ -263,7 +296,7 @@ public class HumanChild : CatchableObj
     protected override void OnCatchUnique()
     { 
         _parentHuman.OnCatch();
-        _parentHuman.SetOnDoReleaseCallback(_onDoReleaseCallback);
+        // _parentHuman.SetOnDoReleaseCallback(_onDoReleaseCallback);
     }
     protected override void OnReleaseUnique()
     { 

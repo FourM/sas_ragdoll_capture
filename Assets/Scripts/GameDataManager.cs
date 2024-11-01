@@ -17,6 +17,7 @@ public static class GameDataManager
 
     private static Transform _lookAtTransform = null;
     private static Vector3 _lookAtShift = default;
+    private static bool _isGimmickKill = false;
 
     // セーブデータのロード
     public static void ResetGamePlayData()
@@ -48,6 +49,8 @@ public static class GameDataManager
     public static GameStage GetStage(){ return _stage; }
     public static void UpdateMutekiTime(){ _mutekiTime--; }
     public static int GetMutekiTime(){ return _mutekiTime; }
+    public static void SetGimmickKill( bool isGimmickKill ){ _isGimmickKill = isGimmickKill; }
+    public static bool IsGimmickKill(){ return _isGimmickKill; }
     public static void SetKillShockStrength(float killShockStrength){ _killShockStrength = killShockStrength; }
     public static float GetKillShockStrength(){ return _killShockStrength; }
 

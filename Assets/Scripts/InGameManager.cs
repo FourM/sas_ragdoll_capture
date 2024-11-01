@@ -53,10 +53,21 @@ public class InGameManager : MonoBehaviour
     private float _tapTime = 0f;
     private bool _isTapHand = false;   // イベント用：おててタップ
     private bool _isTapTarget = false;   // イベント用：ターゲットタップ
+    private bool _isStageFirstTap = false;   // イベント用：ステージ開始初めてのタップ
     private Tween _tweenFalseLootAt = null;
+    private bool _debugStageLoop = false;
+    private bool _debugEnebleInste = true;
     // ---------- クラス変数宣言 ----------
     // ---------- インスタンス変数宣言 ----------
+    public static InGameManager instance = null;
     // ---------- Unity組込関数 ----------
+    private void Awake()
+    {
+        if(instance == null)
+            instance = this;
+        else
+            Destroy(this.gameObject);
+    }
     private void Update(){
         // 操作の状態
         // 画面タップしたら、掴みを試行。
@@ -65,13 +76,7 @@ public class InGameManager : MonoBehaviour
             if(!_isCatch)
                 TryCatch();
             // イベント用：画面タップ！
-            if(!_isTap)
-            {
-                _isTap = true;
-                _tapTime = 0.0f;
-                TryTouchHand();
-            }
-            else
+            if(_isTap)
             {
                 // イベント用：タップ時間取得
                 _tapTime += Time.deltaTime;
@@ -88,6 +93,15 @@ public class InGameManager : MonoBehaviour
         if(!Input.GetMouseButton(0) || ( _isCatch && _springjoint.connectedBody == null ) )
         {
             ReleaseCatchObj();
+        }
+
+        if(Input.GetMouseButtonDown(0) || (!_isStageFirstTap && Input.GetMouseButton(0)))
+        {
+            _isTap = true;
+            _tapTime = 0.0f;
+            TryTouchHand();
+            _isStageFirstTap = true;
+            // Debug.Log("タップしたお！");
         }
     }
     public void FixedUpdate()
@@ -151,6 +165,23 @@ public class InGameManager : MonoBehaviour
         _stageManager.DeleteStage();
         _stageManager.StageLoad();
     }
+
+    public void SetDebugStageLoop(bool isStageLoop)
+    {
+        _debugStageLoop = isStageLoop;
+    }
+    public void SetDebugEnebleInste(bool enebleInste)
+    {
+        _debugEnebleInste = enebleInste;
+    }
+    // 掴んでるものの差し替えを試行
+    public bool TryChangeCatch(CatchableObj catchableObj)
+    {
+        Debug.Log("差し替え２");
+        return CatchSetUp(catchableObj);;
+    }
+
+    
     // ---------- Private関数 ----------
     // イベント用：おててタッチ判定
     private void TryTouchHand()
@@ -199,6 +230,14 @@ public class InGameManager : MonoBehaviour
             
             _isCatch = true;
 
+            // 手のアニメーション
+            _hand.ChangeAction(HandAction.attack);
+
+            // 捕まえた時の糸表示
+            Vector3 catchWebTargetScale = Vector3.one;
+            _catchWeb.gameObject.SetActive(true);
+            _catchWeb.localScale = Vector3.zero;
+
             // 取った対象のCatchableObj取得を試行
             CatchableObj catchableObj = GameDataManager.GetCatchableObj(Hit.transform.gameObject);
             GameDataManager.SetIsCatchSomething(true);
@@ -242,9 +281,6 @@ public class InGameManager : MonoBehaviour
             
             // 見えないSpringJointの位置変更
             _springPosZ = Hit.point.z - Camera.main.transform.position.z;  
-
-            // 手のアニメーション
-            _hand.ChangeAction(HandAction.attack);
             
             // CatchableObjが取得できていたなら、捕まえた時のコールバック呼び出し
             if(catchableObj != null)
@@ -256,31 +292,21 @@ public class InGameManager : MonoBehaviour
                 catchableObj.OnCatch();
                 _currentCatchObj = catchableObj;
             }
-
-            // 捕まえた時の糸表示
-            Vector3 _targetScale = Vector3.one;
-            _catchWeb.gameObject.SetActive(true);
-            _catchWeb.localScale = Vector3.zero;
             
             if(catchableObj != null )
             {
-                _targetScale = catchableObj.GetWebScale();
+                catchWebTargetScale = catchableObj.GetWebScale();
                 _catchWeb.localPosition = catchableObj.GetWebPosition();
                 _catchWeb.localEulerAngles = catchableObj.GetWebRotate();
-
-                // Debug.Log("catchableObj.GetWebScale:" + catchableObj.GetWebScale());
             }
             else
             {
                 _catchWeb.localPosition = Vector3.zero;
             }
-            _targetScale *= 0.055f;
-            _catchWeb.DOScale(_targetScale, 0.3f).SetEase(Ease.OutBack);
+            catchWebTargetScale *= 0.055f;
+            _catchWeb.DOScale(catchWebTargetScale, 0.3f).SetEase(Ease.OutBack);
 
-            // タップして捕まえた回数カウント
-            // FirebaseManager.instance.EventTapCount(1);
-
-            // MMVibrationManager.Haptic (HapticTypes.Selection);
+            //-------------
 
             _handMoneTween.Kill();
             _handMoneTween = null;
@@ -293,6 +319,58 @@ public class InGameManager : MonoBehaviour
             PlayRandomSound(_audioSouceWebShot, _listAudioClipWebShot);
             PlayRandomSound(_audioSouceWebCatch, _listAudioClipWebCatch);
         }
+    }
+
+    // private bool CatchSetUp(GameObject gameObject,Rigidbody rigidbody)
+    // {
+
+    // }
+
+    // // 掴んでるものの差し替えを試行
+    private bool CatchSetUp(CatchableObj catchableObj)
+    {
+        Debug.Log("差し替え！");
+        return false;
+        Vector3 catchWebTargetScale = Vector3.one;
+        // 掴むもののを代行するか否か
+        _springjoint.connectedBody = catchableObj.GetRigidbody();
+        // 取った対象からの相対位置を設定。
+        _springjoint.connectedAnchor = Vector3.zero;
+        _webLineEndPos.parent = catchableObj.transform;
+        _webLineEndPos.localPosition = Vector3.zero;
+        _catchWeb.parent = catchableObj.GetCatchWebParent();
+
+        GameDataManager.SetLookAtShift(_springjoint.connectedAnchor);
+        if(_tweenFalseLootAt != null)
+        {
+            _tweenFalseLootAt.Kill();
+            _tweenFalseLootAt = null;
+        }
+            
+        // 掴んだオブジェクトが重かったら、スプリングの力を上げる
+        if(10 <= _springjoint.connectedBody.mass)
+            _springjoint.spring = _springjoint.connectedBody.mass * 45;
+        else
+            _springjoint.spring = 90;
+
+        // 取った相手のRagDoll挙動安定化のため、重さを変える
+        _catchObjMass = _springjoint.connectedBody.mass;
+        
+        // CatchableObjが取得できていたなら、捕まえた時のコールバック呼び出し
+        catchableObj.SetOnDoReleaseCallback(()=>
+        {
+            ReleaseCatchObj();
+        });
+        catchableObj.OnCatch();
+        _currentCatchObj = catchableObj;
+        
+        catchWebTargetScale = catchableObj.GetWebScale();
+        _catchWeb.localPosition = catchableObj.GetWebPosition();
+        _catchWeb.localEulerAngles = catchableObj.GetWebRotate();
+        catchWebTargetScale *= 0.055f;
+        _catchWeb.DOScale(catchWebTargetScale, 0.3f).SetEase(Ease.OutBack);
+
+        return true;
     }
 
     // 掴み中の動作
@@ -479,7 +557,8 @@ public class InGameManager : MonoBehaviour
         FirebaseManager.instance.EventStageClear();
         GameDataManager.ResetGamePlayData();
         int currentStageNum = SaveDataManager.GetCurrentStage();
-        currentStageNum++;
+        if(!_debugStageLoop)
+            currentStageNum++;
         SaveDataManager.SetCurrentStage(currentStageNum);
         _inGameUiManager.HideInGameUI();
         // ステージ進める
@@ -494,8 +573,11 @@ public class InGameManager : MonoBehaviour
             // ステージスタートイベント発火を待機状態にさせる。
             GameDataManager.SetWaitEventStageStart(true);
             // インステ広告表示試行
-            _showAdAction?.Invoke();
+            if(_debugEnebleInste)
+                _showAdAction?.Invoke();
             // FirebaseManager.instance.EventStageStart();
+            ReleaseCatchObj();
+            _isStageFirstTap = false;
         });
     }
 

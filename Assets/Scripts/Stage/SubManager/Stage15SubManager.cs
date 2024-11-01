@@ -21,7 +21,7 @@ public class Stage15SubManager : MonoBehaviour
     [SerializeField, Tooltip("打ち出す力")] private Vector3 _shotVelocity;
     [SerializeField, Tooltip("打ち出す力")] private List<GameObject> _collisions = default;
     [SerializeField, Tooltip("大砲の玉（見えない攻撃判定）")] private Rigidbody _dymmyCanonBall = default;
-    [SerializeField, Tooltip("大砲の玉　開始位置")] private Transform _dymmyCanonBallStartPos = default;
+    [SerializeField, Tooltip("大砲の玉 開始位置")] private Transform _dymmyCanonBallStartPos = default;
     [SerializeField, Tooltip("大砲の発射音")] private AudioSource _soundCannonShot = null;
     [SerializeField, Tooltip("大砲の駆動音")] private AudioSource _soundCannonMove = null;
     

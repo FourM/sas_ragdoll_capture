@@ -13,6 +13,7 @@ public enum HumanParts
     handR,
     footL,
     footR,
+    body,
     waist
 }
 
@@ -111,7 +112,7 @@ public class Human : CatchableObj
         }
 
         this.gameObject.layer = LayerMask.NameToLayer("Ignore Raycast");
-        _onDoReleaseCallback?.Invoke();
+        // _onDoReleaseCallback?.Invoke();
         ChangePartsMass();
 
         if(!_isBroken)

@@ -10,6 +10,8 @@ public class GameStage : MonoBehaviour
     // ---------- ゲームオブジェクト参照変数宣言 ----------
     // ---------- プレハブ ----------
     // ---------- プロパティ ----------
+    [SerializeField, Tooltip("ステージのId")] private String _stageId = "noName";
+    [SerializeField, Tooltip("ABフラグによってはギミックで倒すステージか")] private bool _isGimmickKill = false;
     [SerializeField, Tooltip("ターゲットリスト")] private List<HumanHub> _targethumanhubList = default;
     [SerializeField, Tooltip("ターゲットリスト")] private List<CatchableObj> _HumanHandyList = default;
     [SerializeField, Tooltip("Humanの捕まる前の参考constraints")] private Rigidbody _rafConstraints = null;
@@ -70,14 +72,19 @@ public class GameStage : MonoBehaviour
             hand = _targethumanList[index].GetParts(HumanParts.handR).transform;
             if(hand != null)
                 obj.transform.parent = hand;
-            else
-                Debug.Log("handがNullだぞい");
+            // else
+            //     Debug.Log("handがNullだぞい");
 
             obj.transform.localPosition = pos;
             obj.transform.localEulerAngles = ang;
         }
 
         _onInitialize?.Invoke();
+
+        if(_isGimmickKill && PlayerPrefs.GetInt("gimmick_Kill", 1) == 1)
+            GameDataManager.SetGimmickKill(true);
+        else
+            GameDataManager.SetGimmickKill(false);
     }
     public Human GetHuman(int index = 0)
     { 
@@ -95,5 +102,7 @@ public class GameStage : MonoBehaviour
             _onInitialize = new UnityEvent();
         _onInitialize.AddListener(onInitialize);
     }
+    public string GetStageId(){ return _stageId; }
+    public bool IsGimmickKill(){ return _isGimmickKill; }
     // ---------- Private関数 ----------
 }

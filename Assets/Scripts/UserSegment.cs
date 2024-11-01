@@ -27,6 +27,8 @@ public class UserSegment : MonoBehaviour
         int is_Recovery = Random.Range(0, 2);
         // レベルバンドル（ステージの順番）
         int level_Bundle = Random.Range(0, 2);
+        // 一部ステージはギミックでないと倒せないか
+        int gimmick_Kill = Random.Range(0, 2);
 
         
 
@@ -35,16 +37,16 @@ public class UserSegment : MonoBehaviour
         PlayerPrefs.SetInt("killShockStrength", killShockStrength);
         PlayerPrefs.SetInt("is_SpiderSkin", is_SpiderSkin);
         PlayerPrefs.SetInt("is_Recovery", is_Recovery);
-        PlayerPrefs.SetInt("level_Bundle", level_Bundle);
+        PlayerPrefs.SetInt("gimmick_Kill", gimmick_Kill);
 
-
-
+        
         // ユーザープロパティ
         // Firebase.Analytics.FirebaseAnalytics.SetUserProperty("is_BananaMan",PlayerPrefs.GetInt("is_BananaMan").ToString());
         Firebase.Analytics.FirebaseAnalytics.SetUserProperty("killShockStrength",PlayerPrefs.GetInt("killShockStrength").ToString());
         Firebase.Analytics.FirebaseAnalytics.SetUserProperty("is_Recovery",PlayerPrefs.GetInt("is_Recovery").ToString());
         Firebase.Analytics.FirebaseAnalytics.SetUserProperty("Level_Bundle",PlayerPrefs.GetInt("level_Bundle").ToString());
         // Firebase.Analytics.FirebaseAnalytics.SetUserProperty("is_SpiderSkin",PlayerPrefs.GetInt("is_SpiderSkin").ToString());
+        Firebase.Analytics.FirebaseAnalytics.SetUserProperty("Gimmick_Kill",PlayerPrefs.GetInt("gimmick_Kill").ToString());
     }
     // ---------- Private関数 ----------
 }
