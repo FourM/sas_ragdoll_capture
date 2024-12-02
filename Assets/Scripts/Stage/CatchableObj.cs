@@ -16,6 +16,8 @@ public abstract class CatchableObj : MonoBehaviour
     [SerializeField, Tooltip("ぐるぐる巻き糸のスケール。nullならデフォルトサイズ")] protected Vector3 _webScale = default;
     [SerializeField, Tooltip("ぐるぐる巻き糸のローカル位置。nullなら0")] protected Vector3 _webPosition = default;
     [SerializeField, Tooltip("ぐるぐる巻き糸のローカル回転。nullなら0")] protected Vector3 _webRotate = default;
+    [SerializeField, Tooltip("ConnectedAnchorを矯正するか")] private bool _fixConnectedAnchor = false;
+    [SerializeField, Tooltip("矯正ConnectedAnchor")] private Vector3 _connectedAnchor = default;
     private bool _isCatch;
     protected bool _isBroken = false;
     private GameObject _parent;
@@ -25,7 +27,7 @@ public abstract class CatchableObj : MonoBehaviour
     private bool _isInitialize = false;
     private UnityEvent _onInitialize = null;
     private Vector3 _beforevelocity = default;
-    private Vector3 _beforevelocity2 = default;
+    // private Vector3 _beforevelocity2 = default;
     private float _fastSwipedTime = 0f;
     // ---------- クラス変数宣言 ----------
     // ---------- インスタンス変数宣言 ----------
@@ -35,7 +37,6 @@ public abstract class CatchableObj : MonoBehaviour
     }
     private void Update(){
         _beforevelocity = _rigidbody.velocity;
-        _beforevelocity2 = _beforevelocity;
 
         _fastSwipedTime -= Time.deltaTime;
         if(_fastSwipedTime <= 0)
@@ -66,6 +67,9 @@ public abstract class CatchableObj : MonoBehaviour
         if(_onInitialize != null)
             _onInitialize?.Invoke();
     }
+    private void OnDisable(){
+        OnDisableUnique();
+    }
     // ---------- Public関数 ----------
     // 捕まった時の共通処理
     public void OnCatch()
@@ -85,20 +89,16 @@ public abstract class CatchableObj : MonoBehaviour
         OnReleaseUnique();
     }
 
-    public CatchableObj TryGetAlternate(){ return _alternate; }
+    public CatchableObj GetAlternate(){ return _alternate; }
     public Transform GetCatchWebParent(){ return _catchWebParent; }
     public Vector3 GetWebScale(){ return _webScale; }
     public Vector3 GetWebPosition(){ return _webPosition; }
     public Vector3 GetWebRotate(){ return _webRotate; }
     public Rigidbody GetRigidbody(){ return _rigidbody; }
-    public Rigidbody TryGetAlternateRigidbody()
-    { 
-        if(_alternate != null)
-            return _alternate.GetRigidbody();
-        return null; 
-    }
     public bool IsCatch(){ return _isCatch; }
     public GameObject GetParent(){ return _parent; }
+    public bool FixConnectedAnchor(){ return _fixConnectedAnchor; }
+    public Vector3 GetConnectedAnchor(){ return _connectedAnchor; }
     // 壊された時の継承先の独自処理
     public void OnBreak()
     {
@@ -162,6 +162,7 @@ public abstract class CatchableObj : MonoBehaviour
     // 離された時の継承先の独自処理
     protected virtual void OnReleaseUnique(){  }
     protected virtual void OnBreakUnique(){  }
+    protected virtual void OnDisableUnique(){  }
     protected void SetParent( GameObject parent ){ _parent = parent; }
     //　衝突相手が(他の)Humanかチェック
     protected bool IsCollisionHuman( Collision collision )
@@ -193,5 +194,69 @@ public abstract class CatchableObj : MonoBehaviour
             return true;
 
         return false;
+    }
+
+    // 何かにぶつかったらそれを壊すギミックの共通処理
+    protected void GimmickOnCollisionHuman(Collision collision, Vector3 velocity)
+    {
+        if(GetRigidbody() == null)
+            return;
+        if(collision.gameObject.layer == LayerMask.NameToLayer("Wall"))
+            return; 
+
+        CatchableObj catchableObj = GameDataManager.GetCatchableObj(collision.transform.gameObject);
+        GameObject parentObj = null;
+        CatchableObj parentCatchableObj = null;
+        HumanChild humanChild = null; 
+        Human human = null;
+
+        if(catchableObj != null)
+        {
+            parentObj = catchableObj.GetParent();
+            humanChild = catchableObj.TryGetHumanChild();
+            human = catchableObj.TryGetParentHuman();
+        }
+        if(parentObj != null)
+            parentCatchableObj = GameDataManager.GetCatchableObj(parentObj);
+
+        if(human != null && human.IsStayObject(this.gameObject))
+            return;
+
+        
+
+        float killShockStrength = GameDataManager.GetKillShockStrength();
+        killShockStrength /= 2f;
+        if(catchableObj != null )
+        {
+            bool isBroken = catchableObj.IsBroken();
+
+            if(catchableObj.GetRigidbody() != null)
+                catchableObj.GetRigidbody().velocity = velocity;
+
+            if( killShockStrength <= GetRigidbody().velocity.magnitude )
+            {
+                if(humanChild != null)
+                    humanChild.SetImpactPos(collision.GetContact(0).point);
+
+                catchableObj.OnBreak();
+                if(parentCatchableObj != null)
+                    parentCatchableObj.OnBreak();
+            }
+            bool isKill = catchableObj.IsBroken();
+
+            if(!isBroken &&
+            ( collision.gameObject.layer == LayerMask.NameToLayer("Human1") || 
+            collision.gameObject.layer == LayerMask.NameToLayer("Human2") ||
+            collision.gameObject.layer == LayerMask.NameToLayer("Human3") ||
+            collision.gameObject.layer == LayerMask.NameToLayer("Human4") ||
+            collision.gameObject.layer == LayerMask.NameToLayer("Human5") ||
+            collision.gameObject.layer == LayerMask.NameToLayer("Human6") ||
+            collision.gameObject.layer == LayerMask.NameToLayer("Human7") ||
+            collision.gameObject.layer == LayerMask.NameToLayer("Human8") ||
+            collision.gameObject.layer == LayerMask.NameToLayer("Human9") ||
+            collision.gameObject.layer == LayerMask.NameToLayer("Human10")
+            ))
+                FirebaseManager.instance.EventCrashed(GetRigidbody().velocity.magnitude, isKill);
+        }
     }
 }

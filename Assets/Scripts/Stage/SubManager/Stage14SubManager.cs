@@ -14,9 +14,7 @@ public class Stage14SubManager : MonoBehaviour
     // ---------- プロパティ ----------
     [SerializeField, Tooltip("ステージ")] private GameStage _stage;
     [SerializeField, Tooltip("おててL")] private Transform _handLChild;
-    [SerializeField, Tooltip("おててR")] private Transform _handRChild;
     [SerializeField, Tooltip("左手SpringJoint")] private SpringJoint _springjointL;
-    [SerializeField, Tooltip("右手SpringJoint")] private SpringJoint _springjointR;
     [SerializeField, Tooltip("SpringJointのトリガー")] private ChildTrigger _jointLBreakTrigger;
     private bool _isInitialize = false;
     private bool _isCatch = true;
@@ -48,7 +46,10 @@ public class Stage14SubManager : MonoBehaviour
             human.GetParts(HumanParts.handL).SetIsFixMass(false);
             human.ChangePartsMass();
             _isCatch = false;
+            human.SetIsOtherCatch(false);
         });
+
+        human.SetIsOtherCatch(true);
 
         human.AddCallbackOnRelease(()=>{
             if(_isCatch)
@@ -57,15 +58,11 @@ public class Stage14SubManager : MonoBehaviour
             }
         });
 
-        // _handRChild.parent = human.GetParts(HumanParts.handR).transform;
 
         _handLChild.localPosition = Vector3.zero;
-        // _handRChild.localPosition = Vector3.zero;
 
         _handLChild.localEulerAngles = Vector3.zero;
-        // _handRChild.localEulerAngles = Vector3.zero;
 
         _handLChild.localScale = Vector3.zero;
-        // _handRChild.localScale = Vector3.zero;
     }
 }

@@ -21,6 +21,7 @@ public class BreakableHumanoidParts : MonoBehaviour
     [SerializeField, Tooltip("リジッドボディ")] private Rigidbody _rigidbody = null;
     private UnityEvent _onBreakCallback = default;
     private bool _isBreak = false;
+    private GameStage _currentStage = null;
     // ---------- クラス変数宣言 ----------
     // ---------- インスタンス変数宣言 ----------
     // ---------- Unity組込関数 ----------
@@ -87,12 +88,22 @@ public class BreakableHumanoidParts : MonoBehaviour
                 ParentBreak();
             });
         }
+
+        _currentStage = GameDataManager.GetStage();
     }
 
     private void Update(){
         if(_skinnedMeshRenderer == null)
             return;
     }
+
+    // private void OnDisable()
+    // {
+    //     if(_isBreak)
+    //     {
+    //         Debug.Log("逃げ遅れたお:" + this.transform.name);
+    //     }
+    // }
     // ---------- Public関数 ----------
     public void AddOnBreakCallback( UnityAction callback )
     {
@@ -109,29 +120,33 @@ public class BreakableHumanoidParts : MonoBehaviour
         this.transform.parent = _parentParts.transform;
         
         CommonBreak();
+        // Debug.Log("ParentBreak:" + this.transform.name + ", " + this.transform.parent.name);
     }
     // これが壊れた
     public void Break( Vector3 velocity )
     {
         if(_isBreak)
             return;
-        if(GameDataManager.GetStage() != null)
+            
+        if(GameDataManager.GetStage() != null && _currentStage == GameDataManager.GetStage())
+        {
             this.transform.parent = GameDataManager.GetStage().transform;
+            // Debug.Log("Break、親変更:" + this.transform.name + ", " + this.transform.parent.name);
+        }
+        // else
+        // {
+        //     if(GameDataManager.GetStage() == null)
+        //         Debug.Log("Break、親変更失敗:" + this.transform.name + ", Null");
+        //     else
+        //         Debug.Log("Break、親変更失敗:" + this.transform.name + ", " + GameDataManager.GetStage().transform.name);
+        // }
         CommonBreak();
         // 物理演算を有効化
         _collider.enabled = true;
         _rigidbody.isKinematic = false;
         _rigidbody.useGravity = true;
         _rigidbody.velocity = velocity;
-    }
-    // 壊れた時の共通処理
-    public void CommonBreak()
-    {
-        _isBreak = true;
-        _onBreakCallback?.Invoke();
-        _skinnedMeshRenderer.enabled = false;
-        _meshRenderer.enabled = true;
-        this.gameObject.layer = LayerMask.NameToLayer("Ignore Raycast");
+        // Debug.Log("Break:" + this.transform.name + ", " + this.transform.parent.name);
     }
 
     public void SetMaterial( Material material )
@@ -139,4 +154,13 @@ public class BreakableHumanoidParts : MonoBehaviour
         _meshRenderer.material = material;
     }
     // ---------- Private関数 ----------
+    // 壊れた時の共通処理
+    private void CommonBreak()
+    {
+        _isBreak = true;
+        _onBreakCallback?.Invoke();
+        _skinnedMeshRenderer.enabled = false;
+        _meshRenderer.enabled = true;
+        this.gameObject.layer = LayerMask.NameToLayer("Ignore Raycast");
+    }
 }

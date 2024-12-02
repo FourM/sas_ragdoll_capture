@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 // using MoreMountains.NiceVibrations;
 
 public class HumanChild : CatchableObj
@@ -38,6 +39,8 @@ public class HumanChild : CatchableObj
             return; 
         if(collision.gameObject.layer == LayerMask.NameToLayer("ThroughWall"))
             return;
+        if(collision.gameObject.layer == LayerMask.NameToLayer("catchableNotKill"))
+            return;
         // ギミックで倒す必要があるなら、床への激突では死なない
         if(collision.gameObject.layer == LayerMask.NameToLayer("Floor") && GameDataManager.IsGimmickKill())
             return;
@@ -49,6 +52,9 @@ public class HumanChild : CatchableObj
             return;
         // ギミックで倒す必要があるなら、他Humanの激突では死なない
         if(collision.gameObject.layer == LayerMask.NameToLayer("Ignore Raycast") && GameDataManager.IsGimmickKill())
+            return;
+        // 直前まで接触していた
+        if(_parentHuman.IsStayObject(collision.gameObject))
             return;
 
         // ギミックで倒す必要があるなら、能動的には死なない？
@@ -94,14 +100,15 @@ public class HumanChild : CatchableObj
         _impactPos = collision.GetContact(0).point;
 
         // 死ねる衝撃の強さ
-        float killShockStrength = GameDataManager.GetKillShockStrength();
+        float killShockStrength = GameDataManager.GetKillShockStrength() * _parentHuman.GetToughness();
         // 捕まってるか、他の捕まえられる物に当たった時はしぬるラインをゆるくする
         if(isOtherHuman)
-            killShockStrength = killShockStrength * 6f / 8f;
+            killShockStrength = killShockStrength * 7f / 8f;
         
         // 致死衝撃を受けたか否か
         if( killShockStrength <= collisionSpeed || collisionFastSwiped)
         {
+            // Debug.Log("collision.gameObject.layer:" + collision.gameObject.layer + ", " + collision.gameObject.name);
             // Debug.Log("killShockStrength:" + killShockStrength + ", " + collisionSpeed);
             // 致死衝撃を受けた処理
             OnBreak();
@@ -109,7 +116,7 @@ public class HumanChild : CatchableObj
                 collitionChatchableObj.OnBreak();
             // Debug.Log(";" + GameDataManager.IsGimmickKill() + ", " + isOtherHuman + ", " + collision.gameObject.name + ", " + collision.gameObject.layer);
         }
-        else if( (killShockStrength / 2 ) <= collisionSpeed && this.gameObject.tag != collision.gameObject.tag)
+        else if( (killShockStrength / 2f ) <= collisionSpeed && this.gameObject.tag != collision.gameObject.tag)
         {
             // 衝撃を受けたエフェクト
             EffectManager.instance.PlayEffect(_impactPos, effectType.impactSmall);
@@ -117,6 +124,12 @@ public class HumanChild : CatchableObj
 
         if( !isDead)
             FirebaseManager.instance.EventCrashed(collisionSpeed, _parentHuman.IsDead());
+    }
+
+    // 直前まで触れていたオブジェクトとして登録
+    private void OnCollisionStay(Collision collision)
+    {
+        _parentHuman.SetStayObjectDic(collision.gameObject);
     }
 
     //　自分(か衝突相手)が「高速スワイプされた」状態かチェック
@@ -165,21 +178,30 @@ public class HumanChild : CatchableObj
                     if(_alternate != null && _alternate.IsCatch() )
                     {
                         if( _alternate == this )
+                        {
                             rigidbody.mass = 2f;
+                        }
                         else
                             rigidbody.mass = 0.7f;
+                        // Debug.Log("応よ:" + this.gameObject.name);
                     }
                     // 捕まった部位から遠いなら軽くする
                     else
                     {
                         rigidbody.mass = 0.1f;
+                        // Debug.Log("軽量化よ:" + this.gameObject.name);
                     }
                 }
                 else
                 {
                     // 重さを元に戻す
                     rigidbody.mass = _mass;
+                    // Debug.Log("戻すよ:" + this.gameObject.name);
                 }
+            }
+            else
+            {
+                // Debug.Log("否よ:" + this.gameObject.name);
             }
         });
 
@@ -198,64 +220,111 @@ public class HumanChild : CatchableObj
                 rigidbody.velocity += _parentHuman.GetRigidbody().velocity * wait;
             }
         });
+
+        _parentHuman.AddCallbackOnCatch(()=>
+        {
+            GetRigidbody().velocity += new Vector3(0, 1, 0);
+        });
+
         if(_alternate == null)
             _alternate = this;
         _parentHuman.AddOnBreakCallback(()=>{
             this.gameObject.layer = LayerMask.NameToLayer("Ignore Raycast");
         });
-        _alternate.AddOnBreakCallback(()=>
+
+        // ギミック側から処理をしたい時のコールバック
+        _parentHuman.AddCallbackOnPartsActiion(( UnityAction<HumanChild> action)=>
         {
-            // _onDoReleaseCallback?.Invoke();
+            action(this);
         });
     }
 
     protected override void UpdateUnique() {
         if(this.gameObject.layer != _parentHuman.GetChildLayer() && !_parentHuman.IsDead())
             this.gameObject.layer = _parentHuman.GetChildLayer();
-
+        
+        float scale = _parentHuman.transform.localScale.y;
+        // float scale = 1f;
 
         // 起き上がり処理のオンオフ切り替え
         if(_partsType == HumanParts.waist )
         {
-            Debug.DrawRay(this.transform.position, -Vector3.up * _rayDistance, Color.red, 0.1f, false);
+            Debug.DrawRay(this.transform.position, -Vector3.up * _rayDistance * scale, Color.red, 0.1f, false);
             RaycastHit hit;
-            LayerMask mask = LayerMask.GetMask("Deafult", "catchable", "Floor", "ThroughWall",
+            LayerMask mask = LayerMask.GetMask("Deafult", "catchable", "Floor", "ThroughWall", "catchableNotKill",
             "catchableThroughFloor", "catchableNoMutualConflicts", "catchableThroughWall", "NotKillFloor");
 
             // 起き上がり処理中でない & アニメーション中でない
             // if(!_parentHuman.IsFollow() && !_parentHuman.IsEnableAnimation())
             {
                 // 足元の地面を検知
-                if (Physics.Raycast(this.transform.position, -Vector3.up, out hit, _rayDistance, mask))
+                if (Physics.Raycast(this.transform.position, -Vector3.up, out hit, _rayDistance * scale, mask))
                 {
                     // 捕まっていない
                     if(!_parentHuman.IsCatch() )
                     {
+                        // X軸も位置補正するかは、足場による
+                        bool isMove = false;
+                        // if(hit.transform.gameObject.layer == LayerMask.NameToLayer("catchable"))
+                        //     isMove = true;
+                        // if(hit.transform.gameObject.layer == LayerMask.NameToLayer("catchableNotKill"))
+                        //     isMove = true;
+                        // if(hit.transform.gameObject.layer == LayerMask.NameToLayer("catchableThroughFloor"))
+                        //     isMove = true;
+                        // if(hit.transform.gameObject.layer == LayerMask.NameToLayer("catchableNoMutualConflicts"))
+                        //     isMove = true;
+                        // if(hit.transform.gameObject.layer == LayerMask.NameToLayer("catchableThroughWall"))
+                        //     isMove = true;
+
                         // 位置更新
-                        _parentHuman.SetFollowBasePos(hit.point);
+                        _parentHuman.SetFollowBasePos(hit.point, isMove);
                         // 起きあがり
                         if(!_parentHuman.IsFollow() && !_parentHuman.IsEnableAnimation())
                             _parentHuman.SetIsPartsFollow(true);
                         // Debug.Log("床を検知！:" + hit.point + ", " + hit.transform.name);
                     }
+                    // _parentHuman.SetIsGround(true);
+                }
+                else
+                {
+                    // _parentHuman.SetIsGround(false);
                 }
             }
 
-            if(!_parentHuman.IsFollow() && !_parentHuman.IsEnableAnimation())
-            {
-                //　ダミー
-            }
             // 起き上がり処理中orアニメーション中
-            else 
+            if(_parentHuman.IsFollow() || _parentHuman.IsEnableAnimation()) 
             {
                 // 足元に床を検知できない
-                if (!Physics.Raycast(this.transform.position, -Vector3.up, out hit, _rayDistance2, mask))
+                if (!Physics.Raycast(this.transform.position, -Vector3.up, out hit, _rayDistance2 * scale, mask))
                 {
                     _parentHuman.SetIsPartsFollow(false);
                     _parentHuman.DesableAnimation();
+                    // _parentHuman.SetIsGround(false);
+                    Vector3 velocity = GetRigidbody().velocity;
+                    if( 0f < velocity.y )
+                        velocity.y += 1.5f;
+                    if( velocity.y <= 0f )
+                        velocity.y -= 2f;
+                    GetRigidbody().velocity = velocity;
                     // Debug.Log("起き上がらない！" );
                 }
             }
+        }
+
+        if(IsCatch())
+        {
+            // Debug.Log("捕まってる！：" + this.transform.name);
+        }
+        // 壊れるパーツで、死んでる時に高速移動してたら壊れる
+        if(_parentHuman.IsDead() && 10f <= GetRigidbody().velocity.magnitude && _breakableParts != null && !IsCatch() && (_alternate == null || !_alternate.IsCatch()))
+        {
+            // Debug.Log("壊れるぅ：" + this.transform.name);
+            _breakableParts.Break(GetRigidbody().velocity);
+            gameObject.SetActive(false);
+            // if(_breakableParts != null && _breakableParts.transform.parent == this.transform)
+            // {
+            //     Debug.Log("逃げ遅れたで。2:" + _breakableParts.transform.name);
+            // }
         }
     }
     public void SetImpactPos(Vector3 pos ){ _impactPos = pos; }
@@ -264,11 +333,10 @@ public class HumanChild : CatchableObj
     protected override void OnBreakUnique()
     { 
         bool _isCatched = IsCatch();
-        CatchableObj alternate = TryGetAlternate();
+        CatchableObj alternate = GetAlternate();
         if(alternate != null)
             _isCatched |= alternate.IsCatch();
-            
-        
+
         // 体や頭など大事な部位が強い衝撃を受けたら死ぬ
         if(_isDeadable)
         {
@@ -282,12 +350,16 @@ public class HumanChild : CatchableObj
             EffectManager.instance.PlayEffect(_impactPos, effectType.impactSmall);
 
         // これに対応する、壊れるパーツがあるならそれを破壊する
-        if(_breakableParts != null && ( _isDeadable || _parentHuman.IsDead() ) && !_isCatched)
+        if(_breakableParts != null && ( _isDeadable || _parentHuman.IsDead() ) && !_isCatched && (_alternate == null || !_alternate.IsCatch()))
         {
+            // Debug.Log("壊れるぅ２:" + this.transform.name);
             _breakableParts.Break(GetRigidbody().velocity);
-            // _onDoReleaseCallback?.Invoke();
 
             gameObject.SetActive(false);
+            if(_breakableParts != null && _breakableParts.transform.parent == this.transform)
+            {
+                Debug.Log("逃げ遅れたで。1:" + _breakableParts.transform.name);
+            }
         }
     }
 
@@ -296,7 +368,7 @@ public class HumanChild : CatchableObj
     protected override void OnCatchUnique()
     { 
         _parentHuman.OnCatch();
-        // _parentHuman.SetOnDoReleaseCallback(_onDoReleaseCallback);
+        _parentHuman.SetOnDoReleaseCallback(_onDoReleaseCallback);
     }
     protected override void OnReleaseUnique()
     { 

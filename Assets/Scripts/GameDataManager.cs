@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 
 /// <summary>
@@ -18,6 +19,9 @@ public static class GameDataManager
     private static Transform _lookAtTransform = null;
     private static Vector3 _lookAtShift = default;
     private static bool _isGimmickKill = false;
+    private static bool _debugIsShowUi = true;
+    private static bool _eventIsDefeat = false; // イベント用：画面から指を離した時、敵が死んていたか
+    private static UnityEvent _onStageStart = null;
 
     // セーブデータのロード
     public static void ResetGamePlayData()
@@ -56,7 +60,7 @@ public static class GameDataManager
 
     public static void UpdatekillShockStrength()
     {
-        GetkillShockStrength(PlayerPrefs.GetInt("killShockStrength", 0));
+        SetkillShockStrength(PlayerPrefs.GetInt("killShockStrength", 0));
     }
 
     // 何か捕まえている
@@ -67,13 +71,14 @@ public static class GameDataManager
     { 
         if(_lookAtTransform == null)
         {
+            SetIsCatchSomething(false);
             Debug.Log("何を見ればいいか登録されてないよ");
             return Vector3.zero;
         }
         return _lookAtTransform.position + _lookAtShift;
     }
     public static bool IsCatchSomething(){ return _isCatchSomething; }
-    public static void GetkillShockStrength(int no)
+    public static void SetkillShockStrength(int no)
     { 
         switch(no)
         {
@@ -81,10 +86,10 @@ public static class GameDataManager
                 SetKillShockStrength(8f);
                 break;
             case 1:
-                SetKillShockStrength(20f);
+                SetKillShockStrength(10f);
                 break;
             case 2:
-                SetKillShockStrength(29f);
+                SetKillShockStrength(12f);
                 break;
         }
     }
@@ -97,7 +102,22 @@ public static class GameDataManager
     public static void TryEventStageStart()
     { 
         if(_waitEventStageStart)
+        {
             FirebaseManager.instance.EventStageStart();
+            _onStageStart?.Invoke();
+        }
         _waitEventStageStart = false;
     }
+    public static void SetDebugIsShowUi(bool isShowUI){ _debugIsShowUi = isShowUI; }
+    public static bool DebugIsShowUi(){ return _debugIsShowUi; }
+
+    // イベント用：離した時、掴んでた敵は死んているか
+    public static void SetIsDefeat(bool eventIsDefeat){ _eventIsDefeat = eventIsDefeat; }
+    public static bool IsDefeat(){ return _eventIsDefeat; }   
+    public static void AddOnStageStart(UnityAction onStageStart)
+    { 
+        if(_onStageStart == null)
+            _onStageStart = new UnityEvent();
+        _onStageStart.AddListener(onStageStart); 
+    }   
 }

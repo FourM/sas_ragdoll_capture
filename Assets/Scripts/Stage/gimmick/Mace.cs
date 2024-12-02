@@ -9,7 +9,9 @@ public class Mace : CatchableObj
     // ---------- ゲームオブジェクト参照変数宣言 ----------
     // ---------- プレハブ ----------
     // ---------- プロパティ ----------
-    // [SerializeField, Tooltip("hoge")] private int hoge = default;
+    [SerializeField, Tooltip("補正動作の時間")] private float _moveDuration = 0.3f;
+    [SerializeField, Tooltip("破壊する衝撃の強さ係数")] private float _killShockStrengthFactor = 0.14f;
+    [SerializeField, Tooltip("掴んだ時や離した時に質量を変えるか")] private bool _isChangeMass = true;
     // ---------- クラス変数宣言 ----------
     // ---------- インスタンス変数宣言 ----------
     // ---------- Unity組込関数 ----------
@@ -39,8 +41,10 @@ public class Mace : CatchableObj
             parentCatchableObj = GameDataManager.GetCatchableObj(parentObj);
         isHuman = IsCollisionHuman(collision);
 
+        // Debug.Log("わぁ");
+
         // 破壊する衝撃の強さ
-        float killShockStrength = GameDataManager.GetKillShockStrength() * 1f / 7f;
+        float killShockStrength = GameDataManager.GetKillShockStrength() * _killShockStrengthFactor;
 
         if(catchableObj != null)
         {
@@ -75,10 +79,11 @@ public class Mace : CatchableObj
 
         // 持ち主から切り離す
         this.transform.parent = GameDataManager.GetStage().transform;
-        Rigidbody rIgidbody = GetRigidbody(); 
-        rIgidbody.isKinematic = false;
-        rIgidbody.useGravity = true;
-        rIgidbody.mass = 3;
+        Rigidbody rigidbody = GetRigidbody(); 
+        rigidbody.isKinematic = false;
+        rigidbody.useGravity = true;
+        if(_isChangeMass)
+            rigidbody.mass = 3;
 
         HumanChild humanChild = null;
 
@@ -94,22 +99,23 @@ public class Mace : CatchableObj
         {
             Vector3 pos = this.transform.position;
             pos.z = human.transform.position.z;
-            this.transform.DOMove(pos, 0.3f).SetEase(Ease.OutBack);
+            this.transform.DOMove(pos, _moveDuration).SetEase(Ease.OutBack);
         }
 
         // 角度の補正
         Vector3 angle = this.transform.localEulerAngles;
         angle.x = 0f;
         angle.y = 0f;
-        this.transform.DORotate(angle, 0.3f).SetEase(Ease.OutBack);
-        DOVirtual.DelayedCall(0.305f, ()=>
+        this.transform.DORotate(angle, _moveDuration).SetEase(Ease.OutBack);
+        DOVirtual.DelayedCall(_moveDuration + 0.05f, ()=>
         {
-            rIgidbody.constraints = RigidbodyConstraints.FreezePositionZ | RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationY;
+            rigidbody.constraints = RigidbodyConstraints.FreezePositionZ | RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationY;
         });
     }
 
     protected override void OnReleaseUnique()
     {
-        GetRigidbody().mass = 20f;
+        if(_isChangeMass)
+            GetRigidbody().mass = 20f;
     }
 }

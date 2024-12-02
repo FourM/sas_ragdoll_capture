@@ -35,10 +35,6 @@ public class CarGimmickManager : MonoBehaviour
         }
     }
 
-    private void Update(){
-
-    }
-    
     private void OnDisable() {
         if(_sequence != null)
             _sequence.Kill();

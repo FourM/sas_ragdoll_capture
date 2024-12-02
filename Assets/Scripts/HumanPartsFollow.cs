@@ -29,6 +29,7 @@ public class HumanPartsFollow : MonoBehaviour
     private float _beforeRealTime = 0f;
     private float _realTime = 0f;
     private float _followStartTime = 0f;
+    private bool _isFollowBaseLock = false;
     // ---------- クラス変数宣言 ----------
     // ---------- インスタンス変数宣言 ----------
     // ---------- Unity組込関数 ----------
@@ -123,7 +124,17 @@ public class HumanPartsFollow : MonoBehaviour
         Vector3 localPos = _parts[index].transform.position - _basePos;
         Vector3 followLocalPos = _followTarget.GetParts(index).transform.position - _followTarget.GetFollowBase().position;
 
-        return followLocalPos - localPos;
+        Vector3 subPos = (followLocalPos - localPos);
+
+        subPos.x *= _human.transform.localScale.x;
+        subPos.y *= _human.transform.localScale.y;
+        subPos.z *= _human.transform.localScale.z;
+        // if(  Vector3.one != _human.transform.localScale )
+        // {
+        //     Debug.Log("大きいお：" + _human.transform.localScale);
+        // }
+
+        return subPos;
     }
     private Vector3 GetSubAngle(int index)
     {
@@ -151,12 +162,13 @@ public class HumanPartsFollow : MonoBehaviour
         return subAngle;
     }
     // ---------- Public関数 ----------
-    public void SetFollowBasePos( Vector3 pos )
+    public void SetFollowBasePos( Vector3 pos, bool isMove )
     { 
         // すでに起きあがりが始まっているなら、Y軸以外の中心地点を変えない。
-        if(0.3f <= _realTime || _human.IsEnableAnimation())
+        if( !isMove && ( 0.3f <= _realTime || _human.IsEnableAnimation()))
         {
            _basePos.y = pos.y;
+           _isFollowBaseLock = true;
             return;
         }
         _basePos = pos; 
@@ -190,9 +202,11 @@ public class HumanPartsFollow : MonoBehaviour
             _followStartTime = 0.1f;
             _followTime = 0f;
             _realTime = 0;
+            _isFollowBaseLock = false;
         }
         _isFollow = isFollow; 
     }
     public bool IsFollow(){ return _isFollow; }
+    public bool IsFollowBaseLock(){ return _isFollow && _isFollowBaseLock; }
     // ---------- Private関数 ----------
 }
