@@ -145,6 +145,8 @@ public class ToonWater:MonoBehaviour{
     }
     
     public void initFloatObject(ToonWaterFloatObject fo){
+			if(fo.GetComponent<Rigidbody>() == null)
+				return;
     		fo.GetComponent<Rigidbody>().drag =(UnityEngine.Random.value*.5f+.3f);		//Adds drag to simulate movement restrictions in water
     		if(!fo.initialized){
     			fo.initialized = true;
