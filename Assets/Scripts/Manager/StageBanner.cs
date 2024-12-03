@@ -27,7 +27,7 @@ public class StageBanner : MonoBehaviour
         bannerAdUnitId  = "unexpected_platform";
 #endif
 
-         InitializeBannerAds();
+        //  InitializeBannerAds();
          MaxSdk.ShowBanner(bannerAdUnitId);
         check= PlayerPrefs.GetInt("banner");
     }
