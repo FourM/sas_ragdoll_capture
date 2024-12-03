@@ -4,6 +4,10 @@ using UnityEngine;
 using UnityEngine.Events;
 
 
+public enum MenuType
+{
+    inGame,
+}
 /// <summary>
 /// ゲーム用の一時保存データ管理
 /// </summary>
@@ -22,6 +26,11 @@ public static class GameDataManager
     private static bool _debugIsShowUi = true;
     private static bool _eventIsDefeat = false; // イベント用：画面から指を離した時、敵が死んていたか
     private static UnityEvent _onStageStart = null;
+    private static GameMode _gameMode = GameMode.main;
+    public static GameMode GameMode{
+        get{ return _gameMode; }
+        set{ _gameMode = value;}
+    }
 
     // セーブデータのロード
     public static void ResetGamePlayData()

@@ -12,6 +12,7 @@ public class AdsManager : MonoBehaviour
     public int buffer;
     public MaxSdkBase.AdInfo _adInfo = null;
     private UnityEvent _onLoaded = default;
+    [SerializeField] private StageBanner _stageBanner = default;
 
     // Start is called before the first frame update
     void Start()
@@ -22,7 +23,7 @@ public class AdsManager : MonoBehaviour
         {
            
         InitializeInterstitialAds();
-          
+        _stageBanner.InitializeBannerAds();
 
 
         };

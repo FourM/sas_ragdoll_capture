@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 using DG.Tweening;
+using UnityEngine.Events;
 
 public class HumanHub : MonoBehaviour
 {
@@ -16,6 +17,7 @@ public class HumanHub : MonoBehaviour
     private Human _activeHuman = null;
     private bool _isInitialize = false;
     private Vector3 _scale = default;
+    private UnityEvent _onInitialize = null;
     // ---------- クラス変数宣言 ----------
     // ---------- インスタンス変数宣言 ----------
     // ---------- Unity組込関数 ----------
@@ -72,5 +74,12 @@ public class HumanHub : MonoBehaviour
         ghost.localScale = _scale;
     }
     public Human GetActiveHuman(){ return _activeHuman; }
+
+    public void AddOnInitialize( UnityAction onInitialize)
+    {
+        if(_onInitialize == null)
+            _onInitialize = new UnityEvent();
+        _onInitialize.AddListener(onInitialize);
+    }
     // ---------- Private関数 ----------
 }
