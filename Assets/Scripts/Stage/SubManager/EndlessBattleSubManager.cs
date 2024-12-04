@@ -8,7 +8,7 @@ public class EndlessBattleSubManager : StageSubManager
     // ---------- ゲームオブジェクト参照変数宣言 ----------
     // ---------- プレハブ ----------------------------
     // ---------- プロパティ --------------------------
-    [SerializeField, Tooltip("hoge")] private int hoge = default;
+    [SerializeField, Tooltip("hoge")] private List<GameStage> _stagePrefabs = default;
     // ---------- クラス変数宣言 -----------------------
     // ---------- インスタンス変数宣言 ------------------
     // ---------- Unity組込関数 -----------------------
