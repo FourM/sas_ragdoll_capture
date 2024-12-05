@@ -12,12 +12,15 @@ public class EndlessBattleSubManager : StageSubManager
     // ---------- クラス変数宣言 -----------------------
     // ---------- インスタンス変数宣言 ------------------
     // ---------- Unity組込関数 -----------------------
-    private void Start(){
-        
-    }
+    private override void InitializeUnique(){
+        for(int i = 0; i < _stagePrefabs.Count; i++)
+        {
+            GameStage segment = Instantiate(_stagePrefabs[i]);
+            segment.transform.parent = this.transform;
+            segment.transform.localPosition = Vector3.zero;
 
-    private void Update(){
-
+            
+        }
     }
     // ---------- Public関数 -------------------------
     // ---------- Private関数 ------------------------
