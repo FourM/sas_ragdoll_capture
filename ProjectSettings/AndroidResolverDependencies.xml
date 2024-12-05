@@ -2,6 +2,7 @@
   <packages>
     <package>androidx.recyclerview:recyclerview:1.2.1</package>
     <package>com.adjust.sdk:adjust-android:5.0.0</package>
+    <package>com.adjust.sdk:adjust-android:5.0.1</package>
     <package>com.android.installreferrer:installreferrer:2.2</package>
     <package>com.android.support:customtabs:28.+</package>
     <package>com.android.support:recyclerview-v7:28.+</package>
