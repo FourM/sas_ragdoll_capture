@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using UnityEngine.Events;
 
 // 広告マネージャー。
 public class AdsManager : MonoBehaviour
@@ -9,6 +10,9 @@ public class AdsManager : MonoBehaviour
     string adUnitId;
     int retryAttempt;
     public int buffer;
+    public MaxSdkBase.AdInfo _adInfo = null;
+    private UnityEvent _onLoaded = default;
+    [SerializeField] private StageBanner _stageBanner = default;
 
     // Start is called before the first frame update
     void Start()
@@ -19,7 +23,7 @@ public class AdsManager : MonoBehaviour
         {
            
         InitializeInterstitialAds();
-          
+        _stageBanner.InitializeBannerAds();
 
 
         };
@@ -63,6 +67,8 @@ public class AdsManager : MonoBehaviour
 
         // Reset retry attempt
         retryAttempt = 0;
+        _adInfo = adInfo;
+        _onLoaded?.Invoke();
     }
 
     private void OnInterstitialLoadFailedEvent(string adUnitId, MaxSdkBase.ErrorInfo errorInfo)
@@ -102,14 +108,52 @@ public class AdsManager : MonoBehaviour
     {
         if (MaxSdk.IsInterstitialReady(adUnitId))
         {
+            // try
+            // {
+            //     double revenue = 0;
+            //     if(_adInfo != null)
+            //     {
+            //         revenue = _adInfo.Revenue * 1000;
+            //         FirebaseManager.instance.EventWatchInste(true, revenue);
+            //     }
+            //     else
+            //         FirebaseManager.instance.EventWatchInste(true, -1);
+            // }
+            // catch
+            // {
+            //     FirebaseManager.instance.EventWatchInste(true, -1);
+            // }
             FirebaseManager.instance.EventWatchInste(true);
             MaxSdk.ShowInterstitial(adUnitId);
         }
         else
         {
+            // FirebaseManager.instance.EventWatchInste(false, 0);
             FirebaseManager.instance.EventWatchInste(false);
             // ステージスタートイベントの発火を試行
             GameDataManager.TryEventStageStart();
+        }
+    }
+
+    
+    
+    public void AddOnLoadedCallback(UnityAction onLoaded)
+    {
+        if(_onLoaded == null)
+            _onLoaded = new UnityEvent();
+        _onLoaded.AddListener(onLoaded);
+    }
+    public double GetAdRevenue()
+    {
+        try
+        {
+            if(_adInfo != null)
+                return _adInfo.Revenue * 1000;
+            return -1;
+        }
+        catch
+        {
+            return -1;
         }
     }
 }

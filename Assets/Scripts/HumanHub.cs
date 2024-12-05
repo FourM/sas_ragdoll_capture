@@ -15,6 +15,7 @@ public class HumanHub : MonoBehaviour
     // ---------- プロパティ ----------
     private Human _activeHuman = null;
     private bool _isInitialize = false;
+    private Vector3 _scale = default;
     // ---------- クラス変数宣言 ----------
     // ---------- インスタンス変数宣言 ----------
     // ---------- Unity組込関数 ----------
@@ -27,12 +28,35 @@ public class HumanHub : MonoBehaviour
 
         _childLayer = 20 + layer;
 
-        int activeIndex = PlayerPrefs.GetInt("is_BananaMan",0);
+        _scale = this.transform.localScale;
+        this.transform.localScale = Vector3.one;
+
+        // int activeIndex = PlayerPrefs.GetInt("is_BananaMan",0);
+
+        int activeIndex = 0;
+        if(PlayerPrefs.GetInt("is_BananaMan") == 1)
+        {
+            if(PlayerPrefs.GetInt("Change_Background") == 0)
+            {
+                if(PlayerPrefs.GetInt("Change_Character") == 0)
+                    activeIndex = 1;    // 今までのバナナマン
+                else
+                    activeIndex = 3;    // 調整モデル+今までの配色
+            }
+            else
+            {
+                if(PlayerPrefs.GetInt("Change_Character") == 0)
+                    activeIndex = 2;    // 新しい配色今までのバナナマンモデル
+                else
+                    activeIndex = 4;    // 新配色＋調整モデル
+            }
+        }
+
         _activeHuman = Instantiate(_ListHuman[activeIndex]);
         _activeHuman.gameObject.SetActive(true);
         _activeHuman.transform.parent = this.transform;
         _activeHuman.transform.localPosition = Vector3.zero;
-        _activeHuman.transform.localScale = Vector3.one;
+        _activeHuman.transform.localScale = _scale;
         _activeHuman.transform.localEulerAngles = Vector3.one;
         _activeHuman.SetChildLayer(_childLayer);
         if(_animeController != null)
@@ -42,6 +66,10 @@ public class HumanHub : MonoBehaviour
                 if(_activeHuman != null)
                     _activeHuman.DesableAnimation();
             });
+
+        Transform ghost = _activeHuman.GetGhost();
+        ghost.parent = this.transform;
+        ghost.localScale = _scale;
     }
     public Human GetActiveHuman(){ return _activeHuman; }
     // ---------- Private関数 ----------

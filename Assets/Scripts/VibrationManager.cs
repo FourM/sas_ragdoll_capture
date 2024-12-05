@@ -15,6 +15,8 @@ public static class VibrationManager
     // ---------- Public関数 ----------
 		public static void VibrateShort()
 		{
+            if(PlayerPrefs.GetInt("Effect_ON", 1) == 0)
+                return;
 #if UNITY_EDITOR
             // Debug.Log("VibrateShort");
 #endif
@@ -27,6 +29,8 @@ public static class VibrationManager
 		}
         public static void VibrateLong()
         {
+            if(PlayerPrefs.GetInt("Effect_ON", 1) == 0)
+                return;
 #if UNITY_EDITOR
             // Debug.Log("VibrateLong");
             // Handheld.Vibrate();

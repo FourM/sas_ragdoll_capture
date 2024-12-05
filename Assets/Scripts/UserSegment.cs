@@ -3,50 +3,42 @@ using System.Collections.Generic;
 using UnityEngine;
 using Firebase.Analytics;
 
-// ABテストフラグ設定クラス。初回起動時にのみ実行する
+// ユーザーの組み分け(ABテストフラグ設定)クラス。
 public class UserSegment : MonoBehaviour
 {
+    [SerializeField, Tooltip("ユーザープロパティランダム")] private SerializedDictionary<List<int>> _userPropertyDic = default;
     // ---------- Public関数 ----------
     public void Initialize()
     {
-        // 初回起動の処理済みか確認。0:未処理、1:処理済み
-        int isInitializeUserSegment = PlayerPrefs.GetInt("isInitializeUserSegment", 0);
-        if( isInitializeUserSegment == 1 )
-            return;
-        PlayerPrefs.SetInt("isInitializeUserSegment", 1);
+        // ユーザープロパティ(ABテストフラグ)設定
+        foreach( string key in _userPropertyDic.Keys )
+        {
+            int currentSetValue = PlayerPrefs.GetInt(key, -1);
+            List<int> valueList = _userPropertyDic[key];
 
-        // HumanはバナナマンかStickManか
-        int is_BananaMan = 1;
-        // int is_BananaMan = Random.Range(0, 2);
-        // Humanが死ぬ衝撃の強さ
-        int killShockStrength = Random.Range(0, 2);
-        // 操作キャラのおててをクモっぽくするか
-        int is_SpiderSkin = 1;
-        // int is_SpiderSkin = Random.Range(0, 2);
-        // キャラクターが起き上がるか 0:立ち上がる、1：立ち上がらない
-        int is_Recovery = Random.Range(0, 2);
-        // レベルバンドル（ステージの順番）
-        int level_Bundle = Random.Range(0, 2);
-        // 一部ステージはギミックでないと倒せないか
-        int gimmick_Kill = Random.Range(0, 2);
+            if(valueList.Count <= 0)
+                Debug.LogError("値が未設定のABテストフラグがあります!! :" + key);
 
-        
+            // ユーザープロパティが未設定or現バージョンに存在しないプロパティになっていたら、ランダムに振り分け直してセーブする
+            // このユーザープロパティが設定済みなら何もしない
+            if(!valueList.Contains(currentSetValue))
+            {
+                int randomIndex = Random.Range(0, valueList.Count);
+                int randomValue = valueList[randomIndex];
+            
+                PlayerPrefs.SetInt(key, randomValue);
+            }
 
-        // セーブデータに保存
-        PlayerPrefs.SetInt("is_BananaMan", is_BananaMan);
-        PlayerPrefs.SetInt("killShockStrength", killShockStrength);
-        PlayerPrefs.SetInt("is_SpiderSkin", is_SpiderSkin);
-        PlayerPrefs.SetInt("is_Recovery", is_Recovery);
-        PlayerPrefs.SetInt("gimmick_Kill", gimmick_Kill);
-
-        
-        // ユーザープロパティ
-        // Firebase.Analytics.FirebaseAnalytics.SetUserProperty("is_BananaMan",PlayerPrefs.GetInt("is_BananaMan").ToString());
-        Firebase.Analytics.FirebaseAnalytics.SetUserProperty("killShockStrength",PlayerPrefs.GetInt("killShockStrength").ToString());
-        Firebase.Analytics.FirebaseAnalytics.SetUserProperty("is_Recovery",PlayerPrefs.GetInt("is_Recovery").ToString());
-        Firebase.Analytics.FirebaseAnalytics.SetUserProperty("Level_Bundle",PlayerPrefs.GetInt("level_Bundle").ToString());
-        // Firebase.Analytics.FirebaseAnalytics.SetUserProperty("is_SpiderSkin",PlayerPrefs.GetInt("is_SpiderSkin").ToString());
-        Firebase.Analytics.FirebaseAnalytics.SetUserProperty("Gimmick_Kill",PlayerPrefs.GetInt("gimmick_Kill").ToString());
+            // フラグが１種類じゃない（検証中のフラグ）であればFirebaseにSetUserPropertyする
+            if( 2 <= valueList.Count )
+            {
+                Firebase.Analytics.FirebaseAnalytics.SetUserProperty(key,PlayerPrefs.GetInt(key).ToString());
+                // Debug.Log("ユーザープロパティ設定！：" + key + ", " + PlayerPrefs.GetInt(key));
+            }
+        }
     }
+
+    // デバッグマネージャー用：ユーザープロパティのディクショナリーを返す
+    public SerializedDictionary<List<int>> DebugGetUserPropertyDictionary(){ return _userPropertyDic; }
     // ---------- Private関数 ----------
 }

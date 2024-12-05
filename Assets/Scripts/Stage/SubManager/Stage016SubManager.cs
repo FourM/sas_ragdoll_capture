@@ -14,7 +14,7 @@ public class Stage016SubManager : MonoBehaviour
     // ---------- プロパティ ----------
     [SerializeField, Tooltip("ステージ")] private GameStage _stage;
     [SerializeField, Tooltip("トリガー")] private ChildTrigger _childTrigger;
-    [SerializeField, Tooltip("煙エフェクト")] private ParticleSystem _effectSmoke;
+    [SerializeField, Tooltip("煙エフェクト")] private List<ParticleSystem> _effectSmokeList;
     private bool _isInitialize = false;
     private bool _isLavaKill = false;
     // ---------- クラス変数宣言 ----------
@@ -48,13 +48,16 @@ public class Stage016SubManager : MonoBehaviour
             human = humanChild.Gethuman();
         if( human == null )
             return;
-        if(_isLavaKill)
+        if( human.IsDead() )
             return;
-        _isLavaKill = true;
 
         human.OnRelease();
 
         human.OnBreak();
+
+        int index = _stage.GetHumanNum();
+
+        ParticleSystem _effectSmoke = _effectSmokeList[index];
 
         Vector3 pos = other.transform.position;
         pos.y = _effectSmoke.transform.position.y;

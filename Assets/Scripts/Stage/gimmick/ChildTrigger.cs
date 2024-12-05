@@ -9,7 +9,9 @@ public class ChildTrigger : MonoBehaviour
     // ---------- ゲームオブジェクト参照変数宣言 ----------
     // ---------- プレハブ ----------
     // ---------- プロパティ ----------
+    [SerializeField, Tooltip("RigidBody")] private Rigidbody _rigidBody;
     private UnityEvent<Collider> _onTriggerEnter = null;
+    private UnityEvent<Collider> _onTriggerStay = null;
     private UnityEvent<Collision> _onCollisionEnter = null;
     private UnityEvent<Collision> _onCollisionStay = null;
     private UnityEvent<Collision> _onCollisionExit = null;
@@ -19,6 +21,9 @@ public class ChildTrigger : MonoBehaviour
     // ---------- Unity組込関数 ----------
     private void OnTriggerEnter(Collider other) {
         _onTriggerEnter?.Invoke(other);
+    }
+    private void OnTriggerStay(Collider other) {
+        _onTriggerStay?.Invoke(other);
     }
     private void OnCollisionEnter(Collision other) {
         _onCollisionEnter?.Invoke(other);
@@ -36,11 +41,23 @@ public class ChildTrigger : MonoBehaviour
         _onJointBreak?.Invoke(breakForce);
     }
     // ---------- Public関数 ----------
+    public Rigidbody GetRigidBody()
+    { 
+        if(_rigidBody == null)
+            _rigidBody = GetComponent<Rigidbody>();
+        return _rigidBody;
+    }
     public void AddCallbackOnTriggerEnter(UnityAction<Collider> onTriggerEnter)
     { 
         if(_onTriggerEnter == null)
             _onTriggerEnter = new UnityEvent<Collider>();
         _onTriggerEnter.AddListener(onTriggerEnter); 
+    }
+    public void AddCallbackOnTriggerStay(UnityAction<Collider> onTriggerStay)
+    { 
+        if(_onTriggerStay == null)
+            _onTriggerStay = new UnityEvent<Collider>();
+        _onTriggerStay.AddListener(onTriggerStay); 
     }
     public void AddCallbackOnCollisionEnter(UnityAction<Collision> onCollisionEnter)
     { 

@@ -16,6 +16,7 @@ public class BomBarret : CatchableObj
     [SerializeField, Tooltip("爆発エフェクト")] private ParticleSystem _effectExplosion = default;
     [SerializeField, Tooltip("爆発攻撃判定")] private ChildTrigger _triggerExplotion = default;
     [SerializeField, Tooltip("爆発音")] private AudioSource _soundExplotion = null;
+    [SerializeField, Tooltip("当たっても爆発しない")] private List<GameObject> _listNotBom = null;
     private Tween _bomTween = null;
     // ---------- クラス変数宣言 ----------
     // ---------- インスタンス変数宣言 ----------
@@ -29,6 +30,8 @@ public class BomBarret : CatchableObj
         if(collision.gameObject.layer == LayerMask.NameToLayer("Wall"))
             return; 
         if(IsBroken())
+            return;
+        if(_listNotBom.Contains(collision.gameObject)) 
             return;
 
         float collisionSpeed = GetBeforeVelocityMagnitude();
@@ -101,9 +104,11 @@ public class BomBarret : CatchableObj
         // GetRigidbody().isKinematic = true;
         _bomTween = DOVirtual.DelayedCall(0.2f, ()=>{ this.gameObject.SetActive(false); });
         
-        _onDoReleaseCallback?.Invoke();
+        // _onDoReleaseCallback?.Invoke();
+        OnRelease();
         this.gameObject.layer = LayerMask.NameToLayer("Ignore Raycast");
 
-        _soundExplotion.PlayOneShot(_soundExplotion.clip);
+        if(PlayerPrefs.GetInt("Effect_ON", 1) == 1)
+            _soundExplotion.PlayOneShot(_soundExplotion.clip);
     }
 }

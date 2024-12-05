@@ -15,6 +15,8 @@ public class GameStage : MonoBehaviour
     [SerializeField, Tooltip("ターゲットリスト")] private List<HumanHub> _targethumanhubList = default;
     [SerializeField, Tooltip("ターゲットリスト")] private List<CatchableObj> _HumanHandyList = default;
     [SerializeField, Tooltip("Humanの捕まる前の参考constraints")] private Rigidbody _rafConstraints = null;
+    [SerializeField, Tooltip("背景色")] private Color32 _backGroundColor = default;
+    [SerializeField, Tooltip("メイン環境光を用いるか")] private bool _isMainLight = true;
     private List<Human> _targethumanList = default;
     private Action _onCliearCallback = default;
     private UnityEvent _onInitialize = null;
@@ -75,16 +77,26 @@ public class GameStage : MonoBehaviour
             // else
             //     Debug.Log("handがNullだぞい");
 
+            _targethumanList[index].AddOnBreakCallback(()=>
+            {
+                obj.transform.parent = this.transform;
+                obj.GetRigidbody().useGravity = true;
+                obj.GetRigidbody().isKinematic = false;
+            });
+
             obj.transform.localPosition = pos;
             obj.transform.localEulerAngles = ang;
         }
 
         _onInitialize?.Invoke();
 
-        if(_isGimmickKill && PlayerPrefs.GetInt("gimmick_Kill", 1) == 1)
+        if(_isGimmickKill && PlayerPrefs.GetInt("Gimmick_Kill", 1) == 1)
             GameDataManager.SetGimmickKill(true);
         else
             GameDataManager.SetGimmickKill(false);
+
+        MaterialManager.instance.SetBackGroundColor(_backGroundColor);
+        MaterialManager.instance.SetEnableMainLight(_isMainLight);
     }
     public Human GetHuman(int index = 0)
     { 
@@ -92,6 +104,7 @@ public class GameStage : MonoBehaviour
             return _targethumanList[index]; 
         return null;
     }
+    public int GetHumanNum(){ return _targethumanList.Count; }
     public void SetOnClearCallBack( Action onCliearCallback)
     {
         _onCliearCallback = onCliearCallback;

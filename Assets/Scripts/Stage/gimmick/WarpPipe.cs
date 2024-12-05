@@ -29,11 +29,28 @@ public class WarpPipe : MonoBehaviour
             humanChild = collitionChatchableObj.TryGetHumanChild();
         if(humanChild != null)
             human = humanChild.Gethuman();
-        if( human == null )
-            return;
-        
-        human.SetPos(_warpToPos.position);
-        human.OnRelease();
+        if( human != null )
+        {
+            human.SetPos(_warpToPos.position);
+            human.OnRelease();
+
+            human.PartsActiion(ChangeVelocityHumanParts);
+        }
+        else if( collitionChatchableObj != null )
+        {
+            collitionChatchableObj.transform.position = _warpToPos.position;
+            collitionChatchableObj.OnRelease();
+            collitionChatchableObj.GetRigidbody().velocity = Vector3.zero;
+        }
+        else
+        {
+            collision.transform.position = _warpToPos.position;
+        }
     }
 
+    // 各パーツに対する処理
+    private void ChangeVelocityHumanParts(HumanChild parts)
+    {
+        parts.GetRigidbody().velocity = Vector3.zero;
+    } 
 }

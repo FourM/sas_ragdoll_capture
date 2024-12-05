@@ -24,10 +24,6 @@ public class FirebaseManager : MonoBehaviour
             Destroy(this);
     }
     private void Start() {
-        if(isInit==0){
-            AddOpen();
-            isInit=1;
-        }
     }
     // ---------- Public関数 ----------
     public void EventStageStart()
@@ -48,37 +44,98 @@ public class FirebaseManager : MonoBehaviour
     /// </summary>
     /// <param name="location"> 0:的をタップ、1:的外をタップ、2:手をタップ </param>
     /// <param name="is_thread"> 0:糸が出なかった、1:糸が出た</param>
-    public void EventTapCount(int location, int is_thread)
+    /// <param name="X_coordinate"> マウスタップの位置X</param>
+    /// <param name="Y_coordinate"> マウスタップの位置Y</param>
+    public void EventTapCount(int location, int is_thread, float X_coordinate, float Y_coordinate)
     {
+        int stage = PlayerPrefs.GetInt("currentStage", 0) + 1;  // 現在のステージ
+        double X_coordinateDouble = (double)X_coordinate;
+        double X_coordinateDouble2 = Math.Round(X_coordinateDouble, 3);
+        double Y_coordinateDouble = (double)Y_coordinate;
+        double Y_coordinateDouble2 = Math.Round(Y_coordinateDouble, 3);
+
         Firebase.Analytics.FirebaseAnalytics.LogEvent("Tap_Count",
-                            new Parameter("Stage", PlayerPrefs.GetInt("currentStage", 0) + 1),
+                            new Parameter("Stage", stage),
                             new Parameter("location", location),
-                            new Parameter("is_thread", is_thread));
-        // Debug.Log("Tap_Count:" + location + ", " + is_thread);
+                            new Parameter("is_thread", is_thread),
+                            new Parameter("X_coordinate", X_coordinateDouble2),
+                            new Parameter("Y_coordinate", Y_coordinateDouble2));
+        // Debug.Log("Tap_Count:" + stage + ", " + location + ", " + is_thread + ", " + X_coordinate + ", " + Y_coordinate + ", " + X_coordinateDouble2 + ", " + Y_coordinateDouble2);
     }
     /// <summary>
     /// 指を離したイベント
     /// </summary>
-    /// <param name="taptime"></param>
-    public void EventTapRelese(float taptime)
+    /// <param name="taptime">タップ時間</param>　
+    /// <param name="is_defeat">画面タップしながら敵を倒したか</param>　
+    public void EventTapRelese(float taptime, bool is_defeat, int location, int is_thread)
     {
         double taptimeDouble = (double)taptime;
         double taptimeDouble2 = Math.Round(taptimeDouble, 1);
         // string taptimeString = taptime.ToString("F1");          // タップ時間をStringにする
         int stage = PlayerPrefs.GetInt("currentStage", 0) + 1;  // 現在のステージ
+        int is_defeatInt = Convert.ToInt32(is_defeat);
 
         Firebase.Analytics.FirebaseAnalytics.LogEvent("Tap_Release",
                             new Parameter("Stage", stage),
-                            new Parameter("taptime", taptimeDouble2));
-        // Debug.Log("tap_release:" + stage + ", " + taptime + ", " + taptimeDouble + ", " + taptimeDouble2);
+                            new Parameter("taptime", taptimeDouble2),
+                            new Parameter("is_defeat", is_defeatInt),
+                            new Parameter("location", location),
+                            new Parameter("is_thread", is_thread));
+        // Debug.Log("tap_release:" + stage + ", タップ時間：" + taptime + ", " + taptimeDouble2 + ", 倒した？：" + is_defeatInt + ", どこタップした？：" + location + ", 糸でた？：" + is_thread);
     }
     public void EventWatchInste(bool isWatch)
     {
+        int watchInsteCount = -1;
+        if(isWatch)
+        {
+            watchInsteCount = PlayerPrefs.GetInt("WatchInsteCount", 1);
+        }
+
         FirebaseAnalytics.LogEvent("Watch_Inste", 
                             new Parameter("Stage", PlayerPrefs.GetInt("currentStage", 0) + 1),
-                            new Parameter("CanWatch", isWatch.ToString()));
-        // Debug.Log("Watch_Inste");
+                            new Parameter("CanWatch", isWatch.ToString()),
+                            new Parameter("WatchInsteCount", watchInsteCount));
+        // Debug.Log("isWatch:" + isWatch + ", " + watchInsteCount);
+        if(isWatch)
+        {
+            watchInsteCount++;
+            PlayerPrefs.SetInt("WatchInsteCount", watchInsteCount);
+        }
     }
+    // public void EventWatchInste(bool isWatch, double revenue)
+    // {
+    //     int watchInsteCount = -1;
+    //     if(isWatch)
+    //     {
+    //         watchInsteCount = PlayerPrefs.GetInt("WatchInsteCount", 1);
+    //     }
+
+    //     FirebaseAnalytics.LogEvent("Watch_Inste", 
+    //                         new Parameter("Stage", PlayerPrefs.GetInt("currentStage", 0) + 1),
+    //                         new Parameter("CanWatch", isWatch.ToString()),
+    //                         new Parameter("Revenue", revenue),
+    //                         new Parameter("WatchInsteCount", watchInsteCount));
+    //     // Debug.Log("isWatch:" + isWatch + ", " + watchInsteCount);
+    //     if(isWatch)
+    //     {
+    //         watchInsteCount++;
+    //         PlayerPrefs.SetInt("WatchInsteCount", watchInsteCount);
+    //     }
+    // }
+    public void EventWatchBanner(bool isWatch)
+    {
+        FirebaseAnalytics.LogEvent("Watch_Banner", 
+                            new Parameter("Stage", PlayerPrefs.GetInt("currentStage", 0) + 1),
+                            new Parameter("CanWatch", isWatch.ToString()));
+    }
+    // public void EventWatchBanner(bool isWatch, double revenue)
+    // {
+    //     FirebaseAnalytics.LogEvent("Watch_Banner", 
+    //                         new Parameter("Stage", PlayerPrefs.GetInt("currentStage", 0) + 1),
+    //                         new Parameter("Revenue", revenue),
+    //                         new Parameter("CanWatch", isWatch.ToString()));
+    //     // Debug.Log("Watch_Inste、Revenue:" + revenue);
+    // }
     public void EventReStart()
     {
         FirebaseAnalytics.LogEvent("Stage_Restart", 
@@ -101,11 +158,5 @@ public class FirebaseManager : MonoBehaviour
         //                     new Parameter("Death", deathInt));
     }
     // ---------- Private関数 ----------
-    private void AddOpen()
-    {
-        // ユーザープロパティ取得
-        Firebase.Analytics.FirebaseAnalytics.SetUserProperty("is_BananaMan",PlayerPrefs.GetInt("is_BananaMan", 1).ToString());
-        Firebase.Analytics.FirebaseAnalytics.SetUserProperty("killShockStrength",PlayerPrefs.GetInt("killShockStrength", 0).ToString());
-        Firebase.Analytics.FirebaseAnalytics.SetUserProperty("is_SpiderSkin",PlayerPrefs.GetInt("is_SpiderSkin", 0).ToString());
-    }
+    // ---------- Private関数 ----------
 }

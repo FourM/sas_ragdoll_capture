@@ -12,13 +12,12 @@ public class StageManager : MonoBehaviour
     // ---------- 定数宣言 ----------
     // ---------- ゲームオブジェクト参照変数宣言 ----------
     // ---------- プレハブ ----------
-    [SerializeField, Tooltip("ステージ")] List<GameStage> _gameStageList = default;
-    [SerializeField, Tooltip("ステージ")] List<GameStage> _gameStageList2 = default;
+    [SerializeField, Tooltip("ステージ")] List<SerializeList<GameStage>> _levelBundleList = default;
     // ---------- プロパティ ----------
     private bool _isInitialize = false;
     private GameStage _currentStage = null;
     private Action _onCliearCallback = default;
-    [SerializeField, Tooltip("ステージ")] List<GameStage> _useGameStageList = default;
+    private List<GameStage> _useGameStageList = default;
     // ---------- クラス変数宣言 ----------
     // ---------- インスタンス変数宣言 ----------
     // ---------- Unity組込関数 ----------
@@ -62,11 +61,14 @@ public class StageManager : MonoBehaviour
     }
     public List<GameStage> GetEnableGameStageList()
     { 
+        int level_Bundle = PlayerPrefs.GetInt("Level_Bundle");
+
         // レベルバンドル。どちらのステージ順を用いるかABで分ける
-        if(PlayerPrefs.GetInt("level_Bundle") == 0)
-            return _gameStageList;
-        else
-            return _gameStageList2;
+        if(level_Bundle < _levelBundleList.Count)
+            return _levelBundleList[level_Bundle].list;
+
+        Debug.Log("レベルバンドルの値が異常かもです。：" + level_Bundle + ", " + _levelBundleList.Count);
+        return _levelBundleList[0].list;
     }
     // ---------- Private関数 ----------
     private void OnClearCallback()

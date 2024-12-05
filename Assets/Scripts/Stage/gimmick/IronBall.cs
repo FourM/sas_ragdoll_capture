@@ -44,15 +44,17 @@ public class IronBall : CatchableObj
             // ぶっ壊す
             if(killShockStrength <= collisionSpeed)
             {
-                if(parentCatchableObj != null)
-                    parentCatchableObj.OnBreak();
-                
-                if(catchableObj.GetRigidbody() != null)
-                    catchableObj.GetRigidbody().velocity = GetBeforeVelocity().normalized * 10f;
-                catchableObj.OnBreak();
-
                 if(humanChild != null)
                     humanChild.SetImpactPos(collision.GetContact(0).point);
+                
+                if(catchableObj.GetRigidbody() != null)
+                {
+                    catchableObj.GetRigidbody().velocity = GetBeforeVelocity().normalized * 10f;
+                }
+                catchableObj.OnBreak();
+
+                if(parentCatchableObj != null)
+                    parentCatchableObj.OnBreak();
             }
             bool isKill = catchableObj.IsBroken();
 

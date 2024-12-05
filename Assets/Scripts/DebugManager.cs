@@ -13,37 +13,43 @@ public class DebugManager : MonoBehaviour
     // ---------- 定数宣言 ----------
     // ---------- ゲームオブジェクト参照変数宣言 ----------
     // ---------- プレハブ ----------
-    [SerializeField, Tooltip("ステージ選択ボタンプレハブ")] private DebugStageSelectButton _stageSelectButtonPrefabs = default;
+    [SerializeField, Tooltip("ステージ選択ボタンプレハブ")] private DebugStageSelectButton _stageSelectButtonPrefab = default;
+    [SerializeField, Tooltip("ステージ選択ボタンプレハブ")] private DebugABTestButton _abTestButtonPrefab = default;
     // ---------- プロパティ ----------
     [SerializeField, Tooltip("インゲームマネージャー")] private InGameManager _inGameManager = default;
     [SerializeField, Tooltip("インゲームUIマネージャー")] private InGameUIManager _inGameUIManager = default;
     [SerializeField, Tooltip("手のスキンマネージャー")] private HandSkinManager _handSkinManager = default;
     [SerializeField, Tooltip("ステージマネージャー")] private StageManager _stageManager = default;
+    [SerializeField, Tooltip("ユーザープロパティ")] private UserSegment _userSegment = default;
     [SerializeField, Tooltip("ポップアップ閉じる")] private Transform _debugPanel = default;
     [SerializeField, Tooltip("閉じるボタン")] private Button _closeBack = default;
     [SerializeField, Tooltip("デバッグモード解放キーボタンリスト")] private List<Button> _showDebugKeyButtons = default;
-    [SerializeField, Tooltip("isRecoveryテキスト")] private TextMeshProUGUI _textIsRecovery = default;
-    [SerializeField, Tooltip("isLevelBundleテキスト")] private TextMeshProUGUI _textIsLevelBundle = default;
-    [SerializeField, Tooltip("killShockStrengthテキスト")] private TextMeshProUGUI _textKillShockStrength = default;
+    [SerializeField, Tooltip("ABテストボタンリスト親")] private RectTransform _abTestButtonContents = default;
     [SerializeField, Tooltip("killShockStrengthテキスト2")] private TextMeshProUGUI _textKillShockStrength2 = default;
-    [SerializeField, Tooltip("GimmickKillテキスト")] private TextMeshProUGUI _textGimmickKill = default;
-
-    [SerializeField, Tooltip("isRecoveryトグル")] private Toggle _toggleIsRecovery = default;
-    [SerializeField, Tooltip("isLevelBundleトグル")] private Toggle _toggleIsLevelBundle = default;
     [SerializeField, Tooltip("killShockStrengthスライダー")] private Slider _sliderKillShockStrength = default;
-    [SerializeField, Tooltip("isGimmickKillトグル")] private Toggle _toggleGimmickKill = default;
     [SerializeField, Tooltip("ステージ選択ボタンリスト親")] private RectTransform _stageSelectButtonContents = default;
-    // [SerializeField, Tooltip("killShockStrengthテキスト")] private TextMeshProUGUI _textKillShockStrength = "";
+    [SerializeField, Tooltip("インステ広告費")] private TextMeshProUGUI _TextAdsManagerRevenue = default;
+    [SerializeField, Tooltip("バナー広告費")] private TextMeshProUGUI _TextBannerRevenue = default;
+    [SerializeField, Tooltip("バナー")] private StageBanner _banner = default;
+    [SerializeField, Tooltip("広告マネージャー")] private AdsManager _adsManager = default;
+    [SerializeField, Tooltip("バナー")] private List<int> _showDebugKeyList = default;
     private List<int> _inputShowDebugKeyList = default;
-    private List<int> _showDebugKeyList = default;
+    // private List<int> _showDebugKeyList = default;
+    private SerializedDictionary<List<int>> _userPropertyDic;
     // ---------- クラス変数宣言 ----------
     // ---------- インスタンス変数宣言 ----------
     // ---------- Unity組込関数 ----------
-    private void Start(){
+    private void Awake(){
+        _inGameManager.AddOnInitialize(Initialize);
+    }
+    private void Initialize(){
         // デバッグモード起動のパスワード処理初期化
         // _showDebugKeyList = new List<int>(){ 1, 7, 9, 3, 2, 5, 6, 7 };
-        _showDebugKeyList = new List<int>(){ 1, 7, 9};
+        // _showDebugKeyList = new List<int>(){ 1, 7, 9};
+        // _showDebugKeyList2 = new List<int>(){ 1, 1, 1};
         _inputShowDebugKeyList = new List<int>();
+
+        _userPropertyDic = _userSegment.DebugGetUserPropertyDictionary();
         
         // デバッグモード起動ボタン初期化
         for(int i = 0; i < _showDebugKeyButtons.Count; i++)
@@ -84,25 +90,42 @@ public class DebugManager : MonoBehaviour
         });
         _debugPanel.gameObject.SetActive(false);
 
-        if(PlayerPrefs.GetInt("is_Recovery", 1) == 0)
-            _toggleIsRecovery.isOn = false;
-        else
-            _toggleIsRecovery.isOn = true;
-    
-        if(PlayerPrefs.GetInt("level_Bundle", 1) == 0)
-            _toggleIsLevelBundle.isOn = false;
-        else
-            _toggleIsLevelBundle.isOn = true;
+
+        // ABテストボタン初期化
+        foreach (Transform child in _abTestButtonContents)
+        {
+            Destroy(child.gameObject);
+        }
+        _userPropertyDic = _userSegment.DebugGetUserPropertyDictionary();
+        // Debug.Log("初期化!:" + _userPropertyDic.Keys.Count);
+        foreach( string key in _userPropertyDic.Keys )
+        {
+            List<int> paramList = _userPropertyDic[key];
+            if( 2 <= paramList.Count )
+            {
+                DebugABTestButton button = Instantiate(_abTestButtonPrefab);
+                button.transform.parent = _abTestButtonContents;
+                button.Initialize(key, _userPropertyDic[key], ()=>{
+                    // ユーザープロパティ更新後の処理
+                    _stageManager.ResetStageBundle();
+                    ResetStageSelectButtons();
+                    _inGameManager.UndoInGame();
+                    GameDataManager.UpdatekillShockStrength();
+                    UpdateText();
+                });
+            }
+        }
 
         _sliderKillShockStrength.onValueChanged.AddListener(OnChangeValueSliderKillShockStrength);
-
         GameDataManager.UpdatekillShockStrength();
 
-        if(PlayerPrefs.GetInt("gimmick_Kill", 1) == 0)
-            _toggleGimmickKill.isOn = false;
-        else
-            _toggleGimmickKill.isOn = true;
-        
+        _banner.AddOnLoadedCallback(()=>
+        {
+            UpdateText();
+        });
+        _adsManager.AddOnLoadedCallback(()=>{
+            UpdateText();
+        });
 
         UpdateText();
         ResetStageSelectButtons();
@@ -113,64 +136,26 @@ public class DebugManager : MonoBehaviour
     }
 
     // ---------- Public関数 ----------
-    public void ChangeIsRecovery(bool is_Recovery)
-    {
-        int is_RecoveryInt = 0;
-        if(is_Recovery)
-            is_RecoveryInt = 1;
-
-        PlayerPrefs.SetInt("is_Recovery", is_RecoveryInt);
-        UpdateText();
-        _inGameManager.UndoInGame();
-    }
-    public void ChangeIsLevelBundle(bool level_Bundle)
-    {
-        int level_BundleInt = 0;
-        if(level_Bundle)
-            level_BundleInt = 1;
-
-        PlayerPrefs.SetInt("level_Bundle", level_BundleInt);
-        _stageManager.ResetStageBundle();
-        UpdateText();
-        _inGameManager.UndoInGame();
-        ResetStageSelectButtons();
-    }
-    public void ChangekillShockStrength()
-    {
-        int killShockStrength = PlayerPrefs.GetInt("killShockStrength", 0);
-        killShockStrength ++;
-        killShockStrength %= 2;
-
-        PlayerPrefs.SetInt("killShockStrength", killShockStrength);
-        GameDataManager.UpdatekillShockStrength();
-        UpdateText();
-    }
     // スライダー
-    public void OnChangeValueSliderKillShockStrength(float value)
+    private void OnChangeValueSliderKillShockStrength(float value)
     {
         GameDataManager.SetKillShockStrength(value);
-        _textKillShockStrength2.text = "killShockStrength:" + value.ToString("F1");
+        // _textKillShockStrength2.text = "killShockStrength:" + value.ToString("F1");
         UpdateText();
-    }
-    public void ChangeGimmickKill(bool gimmick_Kill)
-    {
-        int gimmick_KillInt = 0;
-        if(gimmick_Kill)
-            gimmick_KillInt = 1;
-        // Debug.Log("gimmick_Kill:" + gimmick_Kill);
-
-        PlayerPrefs.SetInt("gimmick_Kill", gimmick_KillInt);
-        _stageManager.ResetStageBundle();
-        UpdateText();
-        _inGameManager.UndoInGame();
-        ResetStageSelectButtons();
     }
     public void ChangeShowUI(bool isShowUI)
     {
+        GameDataManager.SetDebugIsShowUi(isShowUI);
         if(isShowUI)
+        {
             _inGameUIManager.ShowInGameUI();
+            _banner.showads();
+        }
         else
+        {
             _inGameUIManager.HideInGameUI();
+            _banner.DebugHideAds();
+        }
     }
     public void ChangeDebugStageLoop(bool isStageLoop)
     {
@@ -180,8 +165,6 @@ public class DebugManager : MonoBehaviour
     {
         _inGameManager.SetDebugEnebleInste(enebleInste);
     }
-
-    
 
     public void OnClickPrevStage()
     {
@@ -206,14 +189,16 @@ public class DebugManager : MonoBehaviour
     // ---------- Private関数 ----------
     private void UpdateText()
     {
-        _textIsRecovery.text = "is_Recovery_" + PlayerPrefs.GetInt("is_Recovery", 1);
-        _textIsLevelBundle.text = "Level_Bundle_" + PlayerPrefs.GetInt("level_Bundle", 1);
-        _textKillShockStrength.text = "killShockStrength_" + PlayerPrefs.GetInt("killShockStrength", 0);
-        _textIsLevelBundle.text = "level_Bundle_" + PlayerPrefs.GetInt("level_Bundle", 1);
-        _textGimmickKill.text = "Gmmick_Kill_" + PlayerPrefs.GetInt("gimmick_Kill", 1);
-
         float value = GameDataManager.GetKillShockStrength();
         _textKillShockStrength2.text = "killShockStrength:" + value.ToString("F1");
+        _sliderKillShockStrength.value = value;
+
+        _inGameUIManager.UpdateReticleActive();
+
+        // double revenue = _adsManager.GetAdRevenue();
+        // _TextAdsManagerRevenue.text = "Ads revenue:" + revenue;
+        // revenue = _banner.GetAdRevenue();
+        // _TextBannerRevenue.text = "Banner revenue:" + revenue;
     }
 
     private void ResetStageSelectButtons()
@@ -228,14 +213,13 @@ public class DebugManager : MonoBehaviour
             int index = i;
             GameStage stage = stageList[index];
 
-            DebugStageSelectButton stageSelectButton = Instantiate(_stageSelectButtonPrefabs);
+            DebugStageSelectButton stageSelectButton = Instantiate(_stageSelectButtonPrefab);
             stageSelectButton.transform.parent = _stageSelectButtonContents;
             stageSelectButton.transform.localScale = Vector3.one;
 
             // ギミックで倒す必要があることが有効になっているステージは赤文字にする
-            if(stage.IsGimmickKill() && PlayerPrefs.GetInt("gimmick_Kill", 1) == 1)
+            if(stage.IsGimmickKill() && PlayerPrefs.GetInt("Gimmick_Kill", 1) == 1)
                 stageSelectButton.SetTextColor(Color.red);
-
 
             stageSelectButton.SetStageNo(index);
             stageSelectButton.SetStageId(stage.GetStageId());

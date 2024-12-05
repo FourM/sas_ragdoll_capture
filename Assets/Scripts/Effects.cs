@@ -24,7 +24,8 @@ public class Effects : MonoBehaviour
         if( _index < _listSound.Count )
         {
             AudioSource audio = _listSound[_index];
-            audio.PlayOneShot(audio.clip);
+            if(PlayerPrefs.GetInt("Effect_ON", 1) == 1)
+                audio.PlayOneShot(audio.clip);
         }
 
         _index++;

@@ -4,7 +4,7 @@ using UnityEngine;
 using DG.Tweening;
 
 /// <summary>
-/// 車が走ってくるステージ
+/// 虎ステージ
 /// </summary>
 public class Stage10SubManager : MonoBehaviour
 {
@@ -45,8 +45,10 @@ public class Stage10SubManager : MonoBehaviour
 
         _tigerChlidTrigger.AddCallbackOnTriggerEnter((Collider other)=>
         {
+            // Debug.Log(":" + other.gameObject.layer + ", ");
             if(other.gameObject.layer == LayerMask.NameToLayer("Human1"))
             {
+                // Debug.Log("Human1だ！" + other.gameObject.layer + ", ");
                 _isBeastAttack = true;
                 _animator.SetBool("isRunning", false);
                 _animator.SetBool("isAttacking", true);
@@ -55,11 +57,15 @@ public class Stage10SubManager : MonoBehaviour
                     _beastMoveTween.Kill();
                     _beastMoveTween = null;
                 }
-                DOVirtual.DelayedCall(_soundPlayDelay, ()=>
+                // 虎の鳴き声を出す
+                if(PlayerPrefs.GetInt("Effect_ON", 1) == 1)
                 {
-                    if(_soundTigerAttack != null)
-                        _soundTigerAttack.PlayOneShot(_soundTigerAttack.clip);
-                }); 
+                    DOVirtual.DelayedCall(_soundPlayDelay, ()=>
+                    {
+                        if(_soundTigerAttack != null)
+                            _soundTigerAttack.PlayOneShot(_soundTigerAttack.clip);
+                    }); 
+                }
             }
         });
     }
