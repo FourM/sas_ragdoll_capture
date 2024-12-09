@@ -794,8 +794,10 @@ public class InGameManager : MonoBehaviour
     // レビュー促進ポップアップ表示を試行
     private void TryRequestReview()
     {
-        // if(this != null && this.gameObject.activeSelf)
-        //     if(30 <= PlayerPrefs.GetInt("currentStage", 0))
-        //         StartCoroutine(InAppReviewManager.RequestReview());
+        if(this != null && this.gameObject.activeSelf)
+            if(30 <= PlayerPrefs.GetInt("currentStage", 0))
+            {
+                StartCoroutine(InAppReviewManager.RequestReview());
+            }
     }
 }
