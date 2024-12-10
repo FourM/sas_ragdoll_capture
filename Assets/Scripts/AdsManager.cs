@@ -18,7 +18,13 @@ public class AdsManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     { 
-        adUnitId   = "5c90ca19dea88f82";
+#if UNITY_ANDROID
+         adUnitId  = "5c90ca19dea88f82";
+#elif UNITY_IOS
+         adUnitId = "0d5cab18ee7569c6";
+#else
+        adUnitId  = "5c90ca19dea88f82";
+#endif
 
         MaxSdkCallbacks.OnSdkInitializedEvent += (MaxSdkBase.SdkConfiguration sdkConfiguration) =>
         {
