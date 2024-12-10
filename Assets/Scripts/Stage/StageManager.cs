@@ -13,6 +13,7 @@ public class StageManager : MonoBehaviour
     // ---------- ゲームオブジェクト参照変数宣言 ----------
     // ---------- プレハブ ----------
     [SerializeField, Tooltip("ステージ")] List<SerializeList<GameStage>> _levelBundleList = default;
+    [SerializeField, Tooltip("ステージ")] List<GameStage> _endlessBattleList = default;
     // ---------- プロパティ ----------
     private bool _isInitialize = false;
     private GameStage _currentStage = null;
@@ -39,11 +40,23 @@ public class StageManager : MonoBehaviour
     public void StageLoad()
     {
         int currentStageNum = SaveDataManager.GetCurrentStage() % _useGameStageList.Count;
+        GameStage currentStagePrefab = default;
 
-        _currentStage = Instantiate(_useGameStageList[currentStageNum], Vector3.zero, Quaternion.identity);
+        switch( GameDataManager.GameMode )
+        {
+            case GameMode.main:
+            default:
+                currentStagePrefab = _useGameStageList[currentStageNum];
+                break;
+            case GameMode.endlessBattle:    
+                currentStagePrefab = _endlessBattleList[0];
+                break;
+        }
+        _currentStage = Instantiate(currentStagePrefab, Vector3.zero, Quaternion.identity);
         _currentStage.transform.parent = this.transform;
         _currentStage.transform.localScale = Vector3.one;
-        _currentStage.SetOnClearCallBack(OnClearCallback);
+        if(GameDataManager.GameMode == GameMode.main)
+            _currentStage.SetOnClearCallBack(OnClearCallback);
         _currentStage.Initialize();
 
         GameDataManager.SetStage(_currentStage);

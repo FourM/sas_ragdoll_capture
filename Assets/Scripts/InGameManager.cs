@@ -12,6 +12,18 @@ using UnityEngine.EventSystems;
 /// インゲーム管理
 /// </summary>
 
+public enum GameMode
+{
+    main,
+    endlessBattle
+}
+public enum GameState
+{
+    startWait,
+    main,
+    result
+}
+
 public class InGameManager : MonoBehaviour
 {
     // ---------- 定数宣言 ----------
@@ -19,6 +31,8 @@ public class InGameManager : MonoBehaviour
     // ---------- ゲームオブジェクト参照変数宣言 ----------
     // ---------- プレハブ ----------
     // ---------- プロパティ ----------
+    [SerializeField, Tooltip("プレイヤー")] private Player _player = default;
+    [SerializeField, Tooltip("プレイヤー")] private float _endlessBattlePlayerMoveSpd = 0.001f;
     [SerializeField, Tooltip("ステージマネージャー")] private StageManager _stageManager = default;
     [SerializeField, Tooltip("おてて")] private Hand _hand;
     [SerializeField, Tooltip("おてての親")] private Transform _handParent;
@@ -41,8 +55,9 @@ public class InGameManager : MonoBehaviour
     [SerializeField, Tooltip("音リスト")] private List<AudioClip> _listAudioClipWebCatch = null;
     [SerializeField, Tooltip("風切音")] private AudioSource _audioSouceFastSwipe = null;
     [SerializeField, Tooltip("音リスト")] private List<AudioClip> _listAudioClipFastSwipe = null;
-
     [SerializeField, Tooltip("音リスト")] private ObiParticleAttachment _webStartAttachment = default;
+    [SerializeField, Tooltip("ゲームモード")] private GameMode _gameMode = GameMode.main;
+    [SerializeField, Tooltip("ゲームステート")] private GameState _gameState = GameState.main;
     private UnityEvent _onInitialize = null;
     private UnityEvent _onInitializeMaterialManager = null;
     private bool _isCatch = false;
@@ -76,6 +91,32 @@ public class InGameManager : MonoBehaviour
     private bool _isShowUI = false;
     private int _showUINum = 0;
     private bool _isUITouch = false;
+    private Vector3 _playerInitPos;
+    private GameMode _currentGameMode = GameMode.main;
+    public GameMode GameMode{
+        get{ return _gameMode; }
+        set{ 
+            // if( _gameMode ==
+            _gameMode = value; 
+            GameDataManager.GameMode = value;
+            // UndoInGame();
+            switch(_gameMode)
+            {
+                case GameMode.main:
+                    GameState = GameState.main;
+                    break;
+                case GameMode.endlessBattle:
+                    GameState = GameState.startWait;
+                    break; 
+            }
+        }
+    }
+    public GameState GameState{
+        get{ return _gameState; }
+        set{
+            _gameState = value;
+        }
+    }
     // ---------- クラス変数宣言 ----------
     // ---------- インスタンス変数宣言 ----------
     public static InGameManager instance = null;
@@ -88,12 +129,15 @@ public class InGameManager : MonoBehaviour
             Destroy(this.gameObject);
     }
     private void Update(){
-        // UIをクリックしたか
+        if(_currentGameMode != GameMode)
+        {
+            _currentGameMode = GameMode;
+            UndoInGame();
+        }
 
+        // UIをクリックしたか
         if(EventSystem.current.currentSelectedGameObject != null && 
         EventSystem.current.currentSelectedGameObject.layer == LayerMask.NameToLayer("UI"))
-        // if(EventSystem.current.IsPointerOverGameObject() || 
-        //   ( 0 < Input.touchCount && EventSystem.current.IsPointerOverGameObject(Input.GetTouch(0).fingerId)))
         {
             _isUITouch = true;
         }
@@ -101,60 +145,25 @@ public class InGameManager : MonoBehaviour
         {
             _isUITouch = false;
         }
-        // 操作の状態
-        // 画面タップしたら、掴みを試行。
-        if( Input.GetMouseButton(0) && _showUINum == 0 && !_isUITouch)
+        switch(GameMode)
         {
-            if(!_isCatch)
-                TryCatch();
-            // Debug.Log("_isCatch:" + _isCatch);
-            if(!_isCatch && PlayerPrefs.GetInt("Aim_ON") == 1)
-                NotCatchWebShot();
-
-            // イベント用：画面タップ！
-            if(_isTap)
-            {
-                // イベント用：タップ時間取得
-                _tapTime += Time.deltaTime;
-            }
-            _inGameUiManager.SetReticlePos( Input.mousePosition );
-        }
-
-        // 掴み中の挙動
-        if(_isCatch && Input.GetMouseButton(0) && _springjoint.connectedBody != null)
-        {
-            HoldUpdate();
-        }
-
-        // リリースした時（物を掴んでいるが画面がタッチされてない時）
-        if(!Input.GetMouseButton(0) || ( _isCatch && (_springjoint.connectedBody == null || 0 < _showUINum )) )
-        {
-            ReleaseCatchObj();
-        }
-
-        if(!_isUITouch)
-        {
-            // UIを表示していない状態で、画面を押した or　ステージ開始時に長押ししていたら、「タップしてる！」フラグを立てる
-            if(_showUINum == 0 && ( Input.GetMouseButtonDown(0) || (!_isStageFirstTap && Input.GetMouseButton(0))))
-            {
-                _isTap = true;
-                _tapTime = 0.0f;
-                TryTouchHand();
-                _isStageFirstTap = true;
-                _tapPos = Input.mousePosition;
-                // Debug.Log("タップしたお！");
-                GameDataManager.SetIsDefeat(false);
-                _inGameUiManager.OnClick(_tapPos);
-            }
-        }
-        if(Input.GetMouseButtonUp(0))
-        {
-            TapUp();
+            case GameMode.main:
+                InGameMainUpdate();  
+                break;
+            case GameMode.endlessBattle:
+                EndlessBattleUpdate();  
+                break;
         }
     }
     public void FixedUpdate()
     {
         GameDataManager.UpdateMutekiTime();
+    }
+    // インスペクター上で値を変更した時の処理
+    private void OnValidate()
+    {
+        // プロパティを経由して値を設定
+        GameMode = _gameMode;
     }
     // ---------- Public関数 ----------
     public void Initialize() {
@@ -213,6 +222,8 @@ public class InGameManager : MonoBehaviour
 
         GameDataManager.AddOnStageStart(TryRequestReview);
         _onInitialize?.Invoke();
+
+        _playerInitPos = _player.transform.position;
     }
 
     public void UpdateWebRopeMaterial(Material material)
@@ -256,6 +267,9 @@ public class InGameManager : MonoBehaviour
         _stageManager.StageLoad();
         // 何もないとこを捕まえた時の挙動をキャンセル
         CanselNotCatchAction();
+
+        _player.transform.position = _playerInitPos;
+        _player.transform.localEulerAngles = Vector3.zero;
     }
 
     public void SetDebugStageLoop(bool isStageLoop)
@@ -278,6 +292,82 @@ public class InGameManager : MonoBehaviour
     }
     
     // ---------- Private関数 ----------
+    private void InGameMainUpdate()
+    {
+        // 操作の状態
+        // 画面タップしたら、掴みを試行。
+        if( Input.GetMouseButton(0) && _showUINum == 0 && !_isUITouch)
+        {
+            if(!_isCatch)
+                TryCatch();
+            // Debug.Log("_isCatch:" + _isCatch);
+            if(!_isCatch && PlayerPrefs.GetInt("Aim_ON") == 1)
+                NotCatchWebShot();
+
+            // イベント用：画面タップ！
+            if(_isTap)
+            {
+                // イベント用：タップ時間取得
+                _tapTime += Time.deltaTime;
+            }
+            _inGameUiManager.SetReticlePos( Input.mousePosition );
+        }
+
+        // 掴み中の挙動
+        if(_isCatch && Input.GetMouseButton(0) && _springjoint.connectedBody != null)
+        {
+            HoldUpdate();
+        }
+
+        // リリースした時（物を掴んでいるが画面がタッチされてない時）
+        if(!Input.GetMouseButton(0) || ( _isCatch && (_springjoint.connectedBody == null || 0 < _showUINum )) )
+        {
+            ReleaseCatchObj();
+        }
+
+        if(!_isUITouch)
+        {
+            // UIを表示していない状態で、画面を押した or　ステージ開始時に長押ししていたら、「タップしてる！」フラグを立てる
+            if(_showUINum == 0 && ( Input.GetMouseButtonDown(0) || (!_isStageFirstTap && Input.GetMouseButton(0))))
+            {
+                _isTap = true;
+                _tapTime = 0.0f;
+                TryTouchHand();
+                _isStageFirstTap = true;
+                _tapPos = Input.mousePosition;
+                // Debug.Log("タップしたお！");
+                GameDataManager.SetIsDefeat(false);
+                _inGameUiManager.OnClick(_tapPos);
+            }
+        }
+        if(Input.GetMouseButtonUp(0))
+        {
+            TapUp();
+        }
+    }
+
+    /// <summary>
+    /// エンドレスバトル用のUpdate文
+    /// </summary>
+    private void EndlessBattleUpdate()
+    {
+        switch(GameState)
+        {
+            case GameState.startWait:
+                if(!_isUITouch && Input.GetMouseButton(0) && _showUINum == 0)
+                    GameState = GameState.main;
+                break;
+            case GameState.main:
+                _player.transform.position += _player.transform.forward * Time.deltaTime * _endlessBattlePlayerMoveSpd;
+                InGameMainUpdate();  
+                break;
+            case GameState.result:
+                // if(!_isUITouch && Input.GetMouseButton(0) && _showUINum == 0)
+                //     GameState = GameState.startWait;
+                break;
+        }
+    }
+
     // イベント用：おててタッチ判定
     private void TryTouchHand()
     {
@@ -800,4 +890,6 @@ public class InGameManager : MonoBehaviour
                 StartCoroutine(InAppReviewManager.RequestReview());
             }
     }
+
+
 }

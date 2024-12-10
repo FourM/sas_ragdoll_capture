@@ -168,6 +168,10 @@ public class HumanChild : CatchableObj
         _mass = rigidbody.mass;
         rigidbody.useGravity = false;
 
+        // エンドレスバトルなら前後移動ロックを外す
+        if(GameDataManager.GameMode == GameMode.endlessBattle)
+            rigidbody.constraints = RigidbodyConstraints.None;
+
         // 「各パーツの質量を変える」コールバックの処理設定
         _parentHuman.AddCallbackChangePartsMass(()=>
         {
