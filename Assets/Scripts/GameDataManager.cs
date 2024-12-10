@@ -19,7 +19,6 @@ public static class GameDataManager
     private static float _killShockStrength = 7f;
     private static bool _isCatchSomething = false;
     private static bool _waitEventStageStart = false;   // ステージスタートイベント待機状態か。新しいステージを始めたらOnになる。インステを見終わるか、インステが流れなかったらOffにしてイベントを発火させるようにする。
-
     private static Transform _lookAtTransform = null;
     private static Vector3 _lookAtShift = default;
     private static bool _isGimmickKill = false;
@@ -27,10 +26,14 @@ public static class GameDataManager
     private static bool _eventIsDefeat = false; // イベント用：画面から指を離した時、敵が死んていたか
     private static UnityEvent _onStageStart = null;
     private static GameMode _gameMode = GameMode.main;
+    private static InGameMainEventManager _inGameMainEventManager;
+    public static InGameMainEventManager InGameMainEvent{ get{ return _inGameMainEventManager; } }
+    private static Player _player;
+    
     public static GameMode GameMode{
         get{ return _gameMode; }
-        set{ _gameMode = value;}
     }
+    public static void SetGameMode(GameMode gameMode){ _gameMode = gameMode; }
 
     // セーブデータのロード
     public static void ResetGamePlayData()
@@ -40,6 +43,7 @@ public static class GameDataManager
             _stage = null;
         _mutekiTime = 10;
     }
+    public static void SetInGameMainEventManager(InGameMainEventManager inGameMainEventManager){ _inGameMainEventManager = inGameMainEventManager; }
     
     // 捕まえられるパーツの登録と参照
     public static void AddCatchableObjDic(GameObject gObj, CatchableObj cObj)
@@ -57,6 +61,15 @@ public static class GameDataManager
         else
             return null;
     }
+    // Human取得の試行
+    public static Human TryGetHuman(GameObject key)
+    {
+        CatchableObj catchableObj = GetCatchableObj(key);
+        if(catchableObj == null)
+            return null;
+        return catchableObj.TryGetParentHuman();
+    }
+
 
     public static void SetStage(GameStage stage){ _stage = stage; }
     public static GameStage GetStage(){ return _stage; }
@@ -129,4 +142,7 @@ public static class GameDataManager
             _onStageStart = new UnityEvent();
         _onStageStart.AddListener(onStageStart); 
     }   
+
+    public static void SetPlayer(Player player){ _player = player; }
+    public static Player GetPlayer(){ return _player; }
 }

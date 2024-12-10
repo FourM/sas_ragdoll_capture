@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 using UnityEngine.Events;
-using AdjustSdk;
 
 // 広告マネージャー。
 public class AdsManager : MonoBehaviour
@@ -18,13 +17,7 @@ public class AdsManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     { 
-#if UNITY_ANDROID
-         adUnitId  = "5c90ca19dea88f82";
-#elif UNITY_IOS
-         adUnitId = "0d5cab18ee7569c6";
-#else
-        adUnitId  = "5c90ca19dea88f82";
-#endif
+        adUnitId   = "5c90ca19dea88f82";
 
         MaxSdkCallbacks.OnSdkInitializedEvent += (MaxSdkBase.SdkConfiguration sdkConfiguration) =>
         {
@@ -56,7 +49,6 @@ public class AdsManager : MonoBehaviour
         MaxSdkCallbacks.Interstitial.OnAdLoadFailedEvent += OnInterstitialLoadFailedEvent;
         MaxSdkCallbacks.Interstitial.OnAdDisplayedEvent += OnInterstitialDisplayedEvent;
         MaxSdkCallbacks.Interstitial.OnAdClickedEvent += OnInterstitialClickedEvent;
-        MaxSdkCallbacks.Interstitial.OnAdRevenuePaidEvent += OnBannerAdRevenuePaidEvent;
         MaxSdkCallbacks.Interstitial.OnAdHiddenEvent += OnInterstitialHiddenEvent;
         MaxSdkCallbacks.Interstitial.OnAdDisplayFailedEvent += OnInterstitialAdFailedToDisplayEvent;
 
@@ -104,42 +96,6 @@ public class AdsManager : MonoBehaviour
     }
 
     private void OnInterstitialClickedEvent(string adUnitId, MaxSdkBase.AdInfo adInfo) { }
-
-    private void OnBannerAdRevenuePaidEvent(string adUnitId, MaxSdkBase.AdInfo adInfo)
-    {
-        // Banner ad revenue paid. Use this callback to track user revenue.
-
-        // Ad revenue
-        double revenue = adInfo.Revenue;
-
-        // Miscellaneous data
-        string countryCode = MaxSdk.GetSdkConfiguration().CountryCode; // "US" for the United States, etc - Note: Do not confuse this with currency code which is "USD"!
-        string networkName = adInfo.NetworkName; // Display name of the network that showed the ad (e.g. "AdColony")
-        string adUnitIdentifier = adInfo.AdUnitIdentifier; // The MAX Ad Unit ID
-        string placement = adInfo.Placement; // The placement this ad's postbacks are tied to
-
-        TrackAdRevenue(adInfo);
-    }
-    private void TrackAdRevenue(MaxSdkBase.AdInfo adInfo)
-    {
-        AdjustAdRevenue adjustAdRevenue = new AdjustAdRevenue("applovin_max_sdk");
-
-        adjustAdRevenue.SetRevenue(adInfo.Revenue, "USD");
-        adjustAdRevenue.AdRevenueNetwork = adInfo.NetworkName;
-        adjustAdRevenue.AdRevenueUnit = adInfo.AdUnitIdentifier;
-        adjustAdRevenue.AdRevenuePlacement = adInfo.Placement;
-
-        Adjust.TrackAdRevenue(adjustAdRevenue);
-
-        // AdjustAdRevenue adjustAdRevenue = new AdjustAdRevenue(AdjustConfig.AdjustAdRevenueSourceAppLovinMAX);
-
-        // adjustAdRevenue.setRevenue(adInfo.Revenue, "USD");
-        // adjustAdRevenue.setAdRevenueNetwork(adInfo.NetworkName);
-        // adjustAdRevenue.setAdRevenueUnit(adInfo.AdUnitIdentifier);
-        // adjustAdRevenue.setAdRevenuePlacement(adInfo.Placement);
-
-        // AdjustSdk.Adjust.trackAdRevenue(adjustAdRevenue);
-    }
 
     private void OnInterstitialHiddenEvent(string adUnitId, MaxSdkBase.AdInfo adInfo)
     {

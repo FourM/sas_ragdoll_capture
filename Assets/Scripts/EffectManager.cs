@@ -39,8 +39,6 @@ public class EffectManager : MonoBehaviour
     }
     public void PlayEffect(Vector3 pos, effectType effectType)
     {
-        if(!_isInitialize)
-            return;
         int index = (int)effectType;
         if(index < 0 || _listEffecs.Count <= index)
         {
@@ -54,8 +52,6 @@ public class EffectManager : MonoBehaviour
 
     public MissRope PlayMissRope(Transform startPos, Vector3 endPos, float waitTime, Material material)
     {
-        if(!_isInitialize)
-            return null;
         MissRope missRope = Instantiate( _missRopePrefab );
 
         missRope.transform.parent = startPos.transform;
@@ -81,8 +77,6 @@ public class EffectManager : MonoBehaviour
     }
     public void StopAllEffect()
     {
-        if(!_isInitialize)
-            return;
         for(int i = 0; i < _listEffecs.Count; i++)
         {
             _listEffecs[i].StopAllEffect();

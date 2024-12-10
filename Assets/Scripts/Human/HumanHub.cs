@@ -72,6 +72,8 @@ public class HumanHub : MonoBehaviour
         Transform ghost = _activeHuman.GetGhost();
         ghost.parent = this.transform;
         ghost.localScale = _scale;
+
+        _onInitialize?.Invoke();
     }
     public Human GetActiveHuman(){ return _activeHuman; }
 

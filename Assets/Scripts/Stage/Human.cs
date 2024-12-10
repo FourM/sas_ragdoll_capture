@@ -68,13 +68,9 @@ public class Human : CatchableObj
     }
     protected override void UpdateUnique()
     {
-        // このfor文の中のコメントアウトを外すと、不具合を改修できる
         for(int i = 0; i < _lookers.Count; i++)
         {
-            // if(!IsCatch() && !IsDead())
-                LookAtTarget(_lookers[i], _lookerInitAngle[i], i);
-            // else if( i != 0 )
-            //     _lookers[i].transform.localEulerAngles = Vector3.zero;
+            LookAtTarget(_lookers[i], _lookerInitAngle[i], i);
         }
 
         // 直前に触れていたオブジェクトカウンターを減らす

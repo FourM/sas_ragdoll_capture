@@ -21,10 +21,11 @@ public enum GameState
 {
     startWait,
     main,
+    endlessBattleEnemyAttack,
     result
 }
 
-public class InGameManager : MonoBehaviour
+public class InGameManager : MonoBehaviour, InGameMainEventManager
 {
     // ---------- 定数宣言 ----------
     private const float CATCH_OBJ_MASS = 2.0f;
@@ -32,7 +33,7 @@ public class InGameManager : MonoBehaviour
     // ---------- プレハブ ----------
     // ---------- プロパティ ----------
     [SerializeField, Tooltip("プレイヤー")] private Player _player = default;
-    [SerializeField, Tooltip("プレイヤー")] private float _endlessBattlePlayerMoveSpd = 0.001f;
+    [SerializeField, Tooltip("プレイヤー")] private float _endlessBattlePlayerMoveSpd = 3f;
     [SerializeField, Tooltip("ステージマネージャー")] private StageManager _stageManager = default;
     [SerializeField, Tooltip("おてて")] private Hand _hand;
     [SerializeField, Tooltip("おてての親")] private Transform _handParent;
@@ -98,8 +99,8 @@ public class InGameManager : MonoBehaviour
         set{ 
             // if( _gameMode ==
             _gameMode = value; 
-            GameDataManager.GameMode = value;
-            // UndoInGame();
+            GameDataManager.SetGameMode(value);
+            UndoInGame();
             switch(_gameMode)
             {
                 case GameMode.main:
@@ -145,13 +146,33 @@ public class InGameManager : MonoBehaviour
         {
             _isUITouch = false;
         }
-        switch(GameMode)
+        switch(GameState)
         {
-            case GameMode.main:
+            case GameState.startWait:
+                if(GameMode == GameMode.main)
+                    GameState = GameState.main;
+                if(!_isUITouch && Input.GetMouseButton(0) && _showUINum == 0)
+                    GameState = GameState.main;
+                break;
+            case GameState.main:
+            case GameState.endlessBattleEnemyAttack:
+                if(GameMode == GameMode.endlessBattle && GameState == GameState.main)
+                {
+                    _player.transform.position += _player.transform.forward * Time.deltaTime * _endlessBattlePlayerMoveSpd;
+                    if(_springPosZ < 5f)
+                        _springPosZ = 5f;
+                    if(_springPosZ < 6.5f)
+                    {
+                        _springPosZ += Time.deltaTime * 1f;
+                        if( 6.5f <= _springPosZ )
+                            _springPosZ = 6.5f;
+                    }
+                }
                 InGameMainUpdate();  
                 break;
-            case GameMode.endlessBattle:
-                EndlessBattleUpdate();  
+            case GameState.result:
+                // if(!_isUITouch && Input.GetMouseButton(0) && _showUINum == 0)
+                //     GameState = GameState.startWait;
                 break;
         }
     }
@@ -175,6 +196,8 @@ public class InGameManager : MonoBehaviour
         _onInitializeMaterialManager?.Invoke();
 
         GameDataManager.ResetGamePlayData();
+        GameDataManager.SetInGameMainEventManager(this);
+        GameDataManager.SetGameMode(_gameMode);
 
         // ステージ初期化
         _stageManager.Iniiialize();
@@ -224,6 +247,8 @@ public class InGameManager : MonoBehaviour
         _onInitialize?.Invoke();
 
         _playerInitPos = _player.transform.position;
+
+        GameDataManager.SetPlayer(_player);
     }
 
     public void UpdateWebRopeMaterial(Material material)
@@ -262,6 +287,8 @@ public class InGameManager : MonoBehaviour
     {
         if(!_isInitialize)
             return;
+        if(GameMode == GameMode.endlessBattle)
+            GameState = GameState.startWait;
         _webLineEndPos.parent = this.transform;
         _stageManager.DeleteStage();
         _stageManager.StageLoad();
@@ -290,7 +317,36 @@ public class InGameManager : MonoBehaviour
         if(_showUINum < 0)
             Debug.LogError("_showUINumが0未満になったよおおお!?:" + _showUINum);
     }
-    
+
+    // 敵の攻撃開始時の処理
+    public void OnEnemyAttackStart()
+    {
+        if( GameMode == GameMode.endlessBattle)
+        {
+            ReleaseCatchObj();
+            TapUp();
+            GameState = GameState.endlessBattleEnemyAttack;
+        }
+    }
+    // 敵の攻撃をキャンセルさせた時の演出
+    public void OnEnemyAttackCansel()
+    {
+        if( GameMode == GameMode.endlessBattle)
+        {
+            GameState = GameState.main;
+        }
+    }
+    // 敵になぐられた時の演出
+    public void OnEnemyAttackHit()
+    {
+        if( GameMode == GameMode.endlessBattle)
+        {
+            GameState = GameState.startWait;
+            UndoInGame();
+            Debug.Log("ぎゃああ");
+        }
+    }
+
     // ---------- Private関数 ----------
     private void InGameMainUpdate()
     {
@@ -343,28 +399,6 @@ public class InGameManager : MonoBehaviour
         if(Input.GetMouseButtonUp(0))
         {
             TapUp();
-        }
-    }
-
-    /// <summary>
-    /// エンドレスバトル用のUpdate文
-    /// </summary>
-    private void EndlessBattleUpdate()
-    {
-        switch(GameState)
-        {
-            case GameState.startWait:
-                if(!_isUITouch && Input.GetMouseButton(0) && _showUINum == 0)
-                    GameState = GameState.main;
-                break;
-            case GameState.main:
-                _player.transform.position += _player.transform.forward * Time.deltaTime * _endlessBattlePlayerMoveSpd;
-                InGameMainUpdate();  
-                break;
-            case GameState.result:
-                // if(!_isUITouch && Input.GetMouseButton(0) && _showUINum == 0)
-                //     GameState = GameState.startWait;
-                break;
         }
     }
 
@@ -450,7 +484,10 @@ public class InGameManager : MonoBehaviour
             CanselNotCatchAction(false);
 
             // 捕まえたものがHumanChildならこちらを通る
-            if( (catchableObj != null && catchableObj.GetAlternate() != null) || _isTaphuman)
+            HumanChild humanChild = catchableObj.TryGetHumanChild();
+
+            // if( (catchableObj != null && catchableObj.GetAlternate() != null) || _isTaphuman)
+            if(humanChild != null )
             {
                 // if(isOtherCatchHuman)   // 糸以外の何かに捕まっているHumanならここを通る
                 //     catchableObj = human.GetParts(HumanParts.body);
@@ -886,10 +923,6 @@ public class InGameManager : MonoBehaviour
     {
         if(this != null && this.gameObject.activeSelf)
             if(30 <= PlayerPrefs.GetInt("currentStage", 0))
-            {
                 StartCoroutine(InAppReviewManager.RequestReview());
-            }
     }
-
-
 }

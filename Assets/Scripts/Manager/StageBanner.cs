@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using System;
 using Firebase.Analytics;
-using AdjustSdk;
+// using com.adjust.sdk;
 
 
 public class StageBanner : MonoBehaviour
@@ -18,7 +18,7 @@ public class StageBanner : MonoBehaviour
     public void Start()
     {
 #if UNITY_ANDROID
-         bannerAdUnitId  = "231fa7a1b73515a9";
+         bannerAdUnitId  = "68993af9e20b894a";
          check=1;
 #elif UNITY_IOS
          bannerAdUnitId = "0d5cab18ee7569c6";
@@ -125,15 +125,6 @@ private void OnBannerAdCollapsedEvent(string adUnitId, MaxSdkBase.AdInfo adInfo)
     }
     private void TrackAdRevenue(MaxSdkBase.AdInfo adInfo)
     {
-        AdjustAdRevenue adjustAdRevenue = new AdjustAdRevenue("applovin_max_sdk");
-
-        adjustAdRevenue.SetRevenue(adInfo.Revenue, "USD");
-        adjustAdRevenue.AdRevenueNetwork = adInfo.NetworkName;
-        adjustAdRevenue.AdRevenueUnit = adInfo.AdUnitIdentifier;
-        adjustAdRevenue.AdRevenuePlacement = adInfo.Placement;
-
-        Adjust.TrackAdRevenue(adjustAdRevenue);
-        
         // AdjustAdRevenue adjustAdRevenue = new AdjustAdRevenue(AdjustConfig.AdjustAdRevenueSourceAppLovinMAX);
 
         // adjustAdRevenue.setRevenue(adInfo.Revenue, "USD");
@@ -141,7 +132,7 @@ private void OnBannerAdCollapsedEvent(string adUnitId, MaxSdkBase.AdInfo adInfo)
         // adjustAdRevenue.setAdRevenueUnit(adInfo.AdUnitIdentifier);
         // adjustAdRevenue.setAdRevenuePlacement(adInfo.Placement);
 
-        // AdjustSdk.Adjust.trackAdRevenue(adjustAdRevenue);
+        // Adjust.trackAdRevenue(adjustAdRevenue);
     }
 
 
