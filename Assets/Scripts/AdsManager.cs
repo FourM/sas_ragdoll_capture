@@ -21,7 +21,7 @@ public class AdsManager : MonoBehaviour
 #if UNITY_ANDROID
          adUnitId  = "5c90ca19dea88f82";
 #elif UNITY_IOS
-         adUnitId = "0d5cab18ee7569c6";
+         adUnitId = "a2efe763c78307df";
 #else
         adUnitId  = "5c90ca19dea88f82";
 #endif
