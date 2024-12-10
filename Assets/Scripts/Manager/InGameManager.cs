@@ -99,8 +99,8 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
         set{ 
             // if( _gameMode ==
             _gameMode = value; 
-            GameDataManager.GameMode = value;
-            // UndoInGame();
+            GameDataManager.SetGameMode(value);
+            UndoInGame();
             switch(_gameMode)
             {
                 case GameMode.main:
@@ -246,6 +246,8 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
         _onInitialize?.Invoke();
 
         _playerInitPos = _player.transform.position;
+
+        GameDataManager.SetPlayer(_player);
     }
 
     public void UpdateWebRopeMaterial(Material material)
@@ -481,7 +483,10 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
             CanselNotCatchAction(false);
 
             // 捕まえたものがHumanChildならこちらを通る
-            if( (catchableObj != null && catchableObj.GetAlternate() != null) || _isTaphuman)
+            HumanChild humanChild = catchableObj.TryGetHumanChild();
+
+            // if( (catchableObj != null && catchableObj.GetAlternate() != null) || _isTaphuman)
+            if(humanChild != null )
             {
                 // if(isOtherCatchHuman)   // 糸以外の何かに捕まっているHumanならここを通る
                 //     catchableObj = human.GetParts(HumanParts.body);

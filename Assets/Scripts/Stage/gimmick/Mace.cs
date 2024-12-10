@@ -107,10 +107,13 @@ public class Mace : CatchableObj
         angle.x = 0f;
         angle.y = 0f;
         this.transform.DORotate(angle, _moveDuration).SetEase(Ease.OutBack);
-        DOVirtual.DelayedCall(_moveDuration + 0.05f, ()=>
+        if( GameDataManager.GameMode != GameMode.endlessBattle )
         {
-            rigidbody.constraints = RigidbodyConstraints.FreezePositionZ | RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationY;
-        });
+            DOVirtual.DelayedCall(_moveDuration + 0.05f, ()=>
+            {
+                rigidbody.constraints = RigidbodyConstraints.FreezePositionZ | RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationY;
+            });
+        }
     }
 
     protected override void OnReleaseUnique()

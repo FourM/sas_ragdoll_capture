@@ -28,11 +28,12 @@ public static class GameDataManager
     private static GameMode _gameMode = GameMode.main;
     private static InGameMainEventManager _inGameMainEventManager;
     public static InGameMainEventManager InGameMainEvent{ get{ return _inGameMainEventManager; } }
+    private static Player _player;
     
     public static GameMode GameMode{
         get{ return _gameMode; }
-        set{ _gameMode = value;}
     }
+    public static void SetGameMode(GameMode gameMode){ _gameMode = _gameMode; }
 
     // セーブデータのロード
     public static void ResetGamePlayData()
@@ -60,6 +61,15 @@ public static class GameDataManager
         else
             return null;
     }
+    // Human取得の試行
+    public static Human TryGetHuman(GameObject key)
+    {
+        CatchableObj catchableObj = GetCatchableObj(key);
+        if(catchableObj == null)
+            return null;
+        return catchableObj.TryGetParentHuman();
+    }
+
 
     public static void SetStage(GameStage stage){ _stage = stage; }
     public static GameStage GetStage(){ return _stage; }
@@ -132,4 +142,7 @@ public static class GameDataManager
             _onStageStart = new UnityEvent();
         _onStageStart.AddListener(onStageStart); 
     }   
+
+    public static void SetPlayer(Player player){ _player = player; }
+    public static Player GetPlayer(){ return _player; }
 }
