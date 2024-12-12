@@ -12,12 +12,15 @@ public class InGameUIManager : MonoBehaviour
     // ---------- プレハブ ----------
     // ---------- プロパティ ----------
     [SerializeField, Tooltip("キャンバス")] private Canvas _canvas = default;
+    [SerializeField, Tooltip("キャンバススケーラー")] private CanvasScaler _canvasScaler = default;
     [SerializeField, Tooltip("ステージマネージャー")] private Button _buttonUndo = default;
     [SerializeField, Tooltip("照準")] private UIReticle _uiReticle = default;
     private bool _isInitialize = false;
     private UnityEvent _onInitialize = null;
     private UnityEvent _onHideUI = null;
     private UnityEvent _onShowUI = null;
+    private float _posFix = 1.0f;
+    private Vector2 _reticlePosShiftFix = default;
     // ---------- クラス変数宣言 ----------
     // ---------- インスタンス変数宣言 ----------
     // ---------- Unity組込関数 ----------
@@ -26,7 +29,11 @@ public class InGameUIManager : MonoBehaviour
         if(_isInitialize) return;
             _isInitialize = true;
 
+        _posFix = _canvasScaler.referenceResolution.y / Screen.height;
+        _reticlePosShiftFix = new Vector2(-Screen.width / 2, -Screen.height / 2);
+
         _uiReticle.Initialize();
+        SetReticlePos(new Vector2(Screen.width / 2, Screen.height / 2));
         UpdateReticleActive();
 
         _onInitialize?.Invoke();
@@ -51,7 +58,12 @@ public class InGameUIManager : MonoBehaviour
 
     public void SetReticlePos( Vector2 mousePos )
     {
-        _uiReticle.SetPos(mousePos);
+        Vector2 pos = mousePos;
+
+        pos.x = (pos.x + _reticlePosShiftFix.x) * _posFix;
+        pos.y = (pos.y + _reticlePosShiftFix.y) * _posFix;
+
+        _uiReticle.SetPos(pos);
     }
     public void OnClick( Vector2 mousePos )
     {

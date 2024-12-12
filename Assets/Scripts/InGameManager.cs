@@ -795,7 +795,7 @@ public class InGameManager : MonoBehaviour
     private void TryRequestReview()
     {
         if(this != null && this.gameObject.activeSelf)
-            if(30 % PlayerPrefs.GetInt("currentStage", 0) == 0)
+            if(PlayerPrefs.GetInt("currentStage", 0) % 30 == 0)
             {
                 StartCoroutine(InAppReviewManager.RequestReview());
             }

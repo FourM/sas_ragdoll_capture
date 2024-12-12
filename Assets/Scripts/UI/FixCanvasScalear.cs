@@ -8,6 +8,6 @@ public class FixCanvasScalear : MonoBehaviour
     [SerializeField, Tooltip("CanvasScaler")] private CanvasScaler _canvasScaler;
 
     private void Awake() {
-        _canvasScaler.referenceResolution = new Vector2(Screen.width, Screen.height);
+        // _canvasScaler.referenceResolution = new Vector2(Screen.width, Screen.height);
     }
 }
