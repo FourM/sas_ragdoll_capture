@@ -20,6 +20,7 @@ public class HumanChild : CatchableObj
     private float _mass = 0f;
     private Vector3 _impactPos;
     private bool _isFixMass = false;
+    private bool _isPlayImpactEffect = true; // 死ぬ時にエフェクトを発生するか
     // ---------- クラス変数宣言 ----------
     // ---------- インスタンス変数宣言 ----------
     // ---------- Unity組込関数 ----------
@@ -113,7 +114,13 @@ public class HumanChild : CatchableObj
             // 致死衝撃を受けた処理
             OnBreak();
             if(isOtherHuman)
+            {
+                // ぶつかった相手のHumanは死んだ時のエフェクトを発生させない
+                HumanChild humanChild = collitionChatchableObj.TryGetHumanChild();
+                if(humanChild != null)
+                    humanChild.SetIsPlayImpactEffect(false);
                 collitionChatchableObj.OnBreak();
+            }
             // Debug.Log(";" + GameDataManager.IsGimmickKill() + ", " + isOtherHuman + ", " + collision.gameObject.name + ", " + collision.gameObject.layer);
         }
         else if( (killShockStrength / 2f ) <= collisionSpeed && this.gameObject.tag != collision.gameObject.tag)
@@ -332,6 +339,7 @@ public class HumanChild : CatchableObj
         }
     }
     public void SetImpactPos(Vector3 pos ){ _impactPos = pos; }
+    public void SetIsPlayImpactEffect(bool isPlayEffect ){ _isPlayImpactEffect = isPlayEffect; }
     public Human Gethuman(){ return _parentHuman; }
     // ---------- Public関数 ----------
     protected override void OnBreakUnique()
@@ -345,12 +353,12 @@ public class HumanChild : CatchableObj
         if(_isDeadable)
         {
             // 致死衝撃を受けたエフェクト発生
-            if(!_parentHuman.IsDead())
+            if(!_parentHuman.IsDead() && _isPlayImpactEffect)
                 EffectManager.instance.PlayEffect(_impactPos, effectType.impact);
             _parentHuman.OnBreak();
             // MMVibrationManager.Haptic (HapticTypes.Success);
         }
-        else if(!_parentHuman.IsDead())
+        else if(!_parentHuman.IsDead() && _isPlayImpactEffect)
             EffectManager.instance.PlayEffect(_impactPos, effectType.impactSmall);
 
         // これに対応する、壊れるパーツがあるならそれを破壊する
