@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Cinemachine;
 
 public class EndlessBattleSubManager : StageSubManager
 {
@@ -10,6 +11,7 @@ public class EndlessBattleSubManager : StageSubManager
     // ---------- プロパティ --------------------------
     [SerializeField, Tooltip("hoge")] private List<EndlessBattleSegment> _stagePrefabs = default;
     [SerializeField, Tooltip("地面")] private Transform _ground = default;
+    [SerializeField, Tooltip("パス")] private CinemachineSmoothPath _playerMovePath = default;
     private int instanceSegmentIndex = 0;
     private float nextInstancePos = 0;
     private Player _player = null;
@@ -19,13 +21,15 @@ public class EndlessBattleSubManager : StageSubManager
     // ---------- Unity組込関数 -----------------------
     protected override void InitializeUnique(){
         int instanceSegmentIndex = 0;
+        _player = GameDataManager.GetPlayer();
         while( _nextSegmentPosZ <= 100f)
         {
             EndlessBattleSegment segment = InstantiateSegment();
             if(instanceSegmentIndex == 1)
                 nextInstancePos = segment.GetLength();
         }
-        _player = GameDataManager.GetPlayer();
+
+        _player.GetMovePath().m_Path = _playerMovePath;
     }
 
     protected override void UpdateUnique()

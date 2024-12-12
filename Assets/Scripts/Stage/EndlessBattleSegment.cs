@@ -16,6 +16,7 @@ public class EndlessBattleSegment : MonoBehaviour
     [SerializeField, Tooltip("ターゲットリスト")] private List<CatchableObj> _HumanHandyList = default;
     [SerializeField, Tooltip("Humanの捕まる前の参考constraints")] private Rigidbody _rafConstraints = null;
     [SerializeField, Tooltip("長さ")] private float _length = 10.0f;
+    [SerializeField, Tooltip("プレイヤーの移動パス")] private List<Transform> _pathList = null;
     private List<Human> _targethumanList = default;
     private Action _onCliearCallback = default;
     private UnityEvent _onInitialize = null;
@@ -114,5 +115,11 @@ public class EndlessBattleSegment : MonoBehaviour
     public float GetLength(){ return _length; }
     public string GetStageId(){ return _stageId; }
     public bool IsGimmickKill(){ return _isGimmickKill; }
+    public List<Transform> GetPathList()
+    { 
+        if(_pathList == null)
+            _pathList = new List<Transform>();
+        return _pathList; 
+    }
     // ---------- Private関数 ----------
 }
