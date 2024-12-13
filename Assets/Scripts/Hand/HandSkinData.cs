@@ -14,4 +14,5 @@ public class HandSkinData : ScriptableObject
     public Sprite image;
     public Material webMaterial;
     public int needKillNum = 0;
+    public float webTwist = 100f;
 }

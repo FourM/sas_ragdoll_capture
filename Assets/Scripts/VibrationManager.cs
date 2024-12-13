@@ -24,7 +24,7 @@ public static class VibrationManager
 				UniAndroidVibration.Vibrate(5);
 #endif
 #if !UNITY_EDITOR && UNITY_IOS
-				PlaySystemSound(1519);
+				// PlaySystemSound(1519);
 #endif
 		}
         public static void VibrateLong()
@@ -39,7 +39,7 @@ public static class VibrationManager
 			UniAndroidVibration.Vibrate(100);
 #endif
 #if !UNITY_EDITOR && UNITY_IOS
-			PlaySystemSound(1519);
+			// PlaySystemSound(1519);
 #endif
         }
     // ---------- Private関数 ----------
