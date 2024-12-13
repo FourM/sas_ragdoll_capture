@@ -36,6 +36,7 @@ public class EffectManager : MonoBehaviour
         _isInitialize = true;
 
         _missRopeList = new List<MissRope>();
+        StopAllEffect();
     }
     public void PlayEffect(Vector3 pos, effectType effectType)
     {
@@ -77,6 +78,8 @@ public class EffectManager : MonoBehaviour
     }
     public void StopAllEffect()
     {
+        if(!_isInitialize)
+            return;
         for(int i = 0; i < _listEffecs.Count; i++)
         {
             _listEffecs[i].StopAllEffect();

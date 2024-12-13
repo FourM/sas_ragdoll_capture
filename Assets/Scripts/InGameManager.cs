@@ -12,13 +12,28 @@ using UnityEngine.EventSystems;
 /// インゲーム管理
 /// </summary>
 
-public class InGameManager : MonoBehaviour
+public enum GameMode
+{
+    main,
+    endlessBattle
+}
+public enum GameState
+{
+    startWait,
+    main,
+    endlessBattleEnemyAttack,
+    result
+}
+
+public class InGameManager : MonoBehaviour, InGameMainEventManager
 {
     // ---------- 定数宣言 ----------
     private const float CATCH_OBJ_MASS = 2.0f;
     // ---------- ゲームオブジェクト参照変数宣言 ----------
     // ---------- プレハブ ----------
     // ---------- プロパティ ----------
+    [SerializeField, Tooltip("プレイヤー")] private Player _player = default;
+    [SerializeField, Tooltip("プレイヤー")] private float _endlessBattlePlayerMoveSpd = 3f;
     [SerializeField, Tooltip("ステージマネージャー")] private StageManager _stageManager = default;
     [SerializeField, Tooltip("おてて")] private Hand _hand;
     [SerializeField, Tooltip("おてての親")] private Transform _handParent;
@@ -41,8 +56,9 @@ public class InGameManager : MonoBehaviour
     [SerializeField, Tooltip("音リスト")] private List<AudioClip> _listAudioClipWebCatch = null;
     [SerializeField, Tooltip("風切音")] private AudioSource _audioSouceFastSwipe = null;
     [SerializeField, Tooltip("音リスト")] private List<AudioClip> _listAudioClipFastSwipe = null;
-
     [SerializeField, Tooltip("音リスト")] private ObiParticleAttachment _webStartAttachment = default;
+    [SerializeField, Tooltip("ゲームモード")] private GameMode _gameMode = GameMode.main;
+    [SerializeField, Tooltip("ゲームステート")] private GameState _gameState = GameState.main;
     private UnityEvent _onInitialize = null;
     private UnityEvent _onInitializeMaterialManager = null;
     private bool _isCatch = false;
@@ -76,6 +92,33 @@ public class InGameManager : MonoBehaviour
     private bool _isShowUI = false;
     private int _showUINum = 0;
     private bool _isUITouch = false;
+    private Vector3 _playerInitPos;
+    private GameMode _currentGameMode = GameMode.main;
+    public GameMode GameMode{
+        get{ return _gameMode; }
+        set{ 
+            // if( _gameMode ==
+            _gameMode = value; 
+            GameDataManager.SetGameMode(value);
+            UndoInGame();
+            switch(_gameMode)
+            {
+                case GameMode.main:
+                    GameState = GameState.main;
+                    break;
+                case GameMode.endlessBattle:
+                    GameState = GameState.startWait;
+                    break; 
+            }
+        }
+    }
+    public GameState GameState{
+        get{ return _gameState; }
+        set{
+            _gameState = value;
+            _player.StopPathMove();
+        }
+    }
     // ---------- クラス変数宣言 ----------
     // ---------- インスタンス変数宣言 ----------
     public static InGameManager instance = null;
@@ -88,12 +131,15 @@ public class InGameManager : MonoBehaviour
             Destroy(this.gameObject);
     }
     private void Update(){
-        // UIをクリックしたか
+        if(_currentGameMode != GameMode)
+        {
+            _currentGameMode = GameMode;
+            UndoInGame();
+        }
 
+        // UIをクリックしたか
         if(EventSystem.current.currentSelectedGameObject != null && 
         EventSystem.current.currentSelectedGameObject.layer == LayerMask.NameToLayer("UI"))
-        // if(EventSystem.current.IsPointerOverGameObject() || 
-        //   ( 0 < Input.touchCount && EventSystem.current.IsPointerOverGameObject(Input.GetTouch(0).fingerId)))
         {
             _isUITouch = true;
         }
@@ -101,6 +147,210 @@ public class InGameManager : MonoBehaviour
         {
             _isUITouch = false;
         }
+        switch(GameState)
+        {
+            case GameState.startWait:
+                if(GameMode == GameMode.main)
+                    GameState = GameState.main;
+                if(!_isUITouch && Input.GetMouseButton(0) && _showUINum == 0)
+                    GameState = GameState.main;
+                break;
+            case GameState.main:
+            case GameState.endlessBattleEnemyAttack:
+                if(GameMode == GameMode.endlessBattle && GameState == GameState.main)
+                {
+                    // _player.transform.position += _player.transform.forward * Time.deltaTime * _endlessBattlePlayerMoveSpd;
+                    _player.ContinuePathMove();
+                    if(_springPosZ < 5f)
+                        _springPosZ = 5f;
+                    if(_springPosZ < 6.5f)
+                    {
+                        _springPosZ += Time.deltaTime * 1f;
+                        if( 6.5f <= _springPosZ )
+                            _springPosZ = 6.5f;
+                    }
+                }
+                InGameMainUpdate();  
+                break;
+            case GameState.result:
+                // if(!_isUITouch && Input.GetMouseButton(0) && _showUINum == 0)
+                //     GameState = GameState.startWait;
+                break;
+        }
+    }
+    public void FixedUpdate()
+    {
+        GameDataManager.UpdateMutekiTime();
+    }
+    // インスペクター上で値を変更した時の処理
+    private void OnValidate()
+    {
+        // プロパティを経由して値を設定
+        GameMode = _gameMode;
+    }
+    // ---------- Public関数 ----------
+    public void Initialize() {
+        
+        if(_isInitialize) return;
+        _isInitialize = true;
+
+        // マテリアルマネージャー初期化
+        _onInitializeMaterialManager?.Invoke();
+
+        GameDataManager.ResetGamePlayData();
+        GameDataManager.SetInGameMainEventManager(this);
+        GameDataManager.SetGameMode(_gameMode);
+        GameDataManager.SetPlayer(_player);
+
+        // ステージ初期化
+        _stageManager.Iniiialize();
+        _stageManager.SetOnClearCallBack(OnClearCallback);
+
+        // おてての状態フラグ初期化
+        _isCatch = false;
+        _hand.ChangeAction(HandAction.idle);
+
+        // マテリアルを複製（糸の表示非表示用）
+        _webRopeMaterial = new Material(_webRope.material);
+        _webRope.material = _webRopeMaterial;
+        _webRopeColor = _webRopeMaterial.color;
+        _webRopeMaterial2 = _webRope.material;
+        // 糸を非表示
+        SetEnableWebRope(false);
+
+        _inGameUiManager.Initialize();
+        // ステージ再読み込みボタンの処理設定
+        _inGameUiManager.SetOnClickButtonUndo(()=>
+        {
+            UndoInGame();
+            // イベント呼び出し
+            FirebaseManager.instance.EventReStart();
+            GameDataManager.SetIsCatchSomething(false);
+        });
+
+        _catchWeb.gameObject.SetActive(false);
+
+        FirebaseManager.instance.EventStageStart();
+
+        GameDataManager.UpdatekillShockStrength();
+
+        EffectManager.instance.Initialize();
+
+
+        // 「高速スワイプした！」判定の速度の補正。ABテストの死ぬ閾値に比例させる
+        _fastSwipeSpeed *= GameDataManager.GetKillShockStrength() / 30f;
+
+        // 「高速スワイプした！」判定の距離の補正。ABテストの死ぬ閾値に比例させる
+        _fastSwipeAway *= GameDataManager.GetKillShockStrength() / 30f;
+
+        // 「掴んでるやつが高速移動してる！」判定の速度の補正。ABテストの死ぬ閾値に比例させる。最低値5
+        _fastCatchObjSpd = 5f + (_fastCatchObjSpd - 5f) * GameDataManager.GetKillShockStrength() / 30f;
+
+        GameDataManager.AddOnStageStart(TryRequestReview);
+        _onInitialize?.Invoke();
+
+        _playerInitPos = _player.transform.position;
+    }
+
+    public void UpdateWebRopeMaterial(Material material)
+    {       
+        _webRope.gameObject.SetActive(false);
+        _webRope.material = new Material(material);
+        Destroy(_webRopeMaterial);
+        _webRopeMaterial = _webRope.material;
+        _webRopeColor = _webRopeMaterial.color;
+        _webRopeMaterial2 = material;   // 色を変えないマテリアル。何もないとこをタップした時に出る糸とぐるぐる巻き糸に用いる
+        _webRope.gameObject.SetActive(true);
+        for(int i = 0; i < _listCatchRpllWebRope.Count; i++)
+        {
+            _listCatchRpllWebRope[i].material = material;
+        }
+        SetEnableWebRope(false);
+    }
+
+    // 初期化時イベント設定
+    public void AddOnInitialize( UnityAction onInitialize)
+    {
+        if(_onInitialize == null)
+            _onInitialize = new UnityEvent();
+        _onInitialize.AddListener(onInitialize);
+    }
+    // 初期化時イベント設定
+    public void AddOnInitializeMaterialManager( UnityAction onInitialize)
+    {
+        if(_onInitializeMaterialManager == null)
+            _onInitializeMaterialManager = new UnityEvent();
+        _onInitializeMaterialManager.AddListener(onInitialize);
+    }
+
+    public void SetTryShowInterstitialAdAction( Action action ){ _showAdAction = action; }
+    public void UndoInGame()
+    {
+        if(!_isInitialize)
+            return;
+        if(GameMode == GameMode.endlessBattle)
+            GameState = GameState.startWait;
+        _webLineEndPos.parent = this.transform;
+        _stageManager.DeleteStage();
+        _stageManager.StageLoad();
+        // 何もないとこを捕まえた時の挙動をキャンセル
+        CanselNotCatchAction();
+
+        _player.transform.position = _playerInitPos;
+        _player.transform.localEulerAngles = Vector3.zero;
+    }
+
+    public void SetDebugStageLoop(bool isStageLoop)
+    {
+        _debugStageLoop = isStageLoop;
+    }
+    public void SetDebugEnebleInste(bool enebleInste)
+    {
+        _debugEnebleInste = enebleInste;
+    }
+    public void SetIsShowUI(bool isShowUI)
+    {
+        if(isShowUI)
+            _showUINum++;
+        else
+            _showUINum--;
+
+        if(_showUINum < 0)
+            Debug.LogError("_showUINumが0未満になったよおおお!?:" + _showUINum);
+    }
+
+    // 敵の攻撃開始時の処理
+    public void OnEnemyAttackStart()
+    {
+        if( GameMode == GameMode.endlessBattle)
+        {
+            ReleaseCatchObj();
+            TapUp();
+            GameState = GameState.endlessBattleEnemyAttack;
+        }
+    }
+    // 敵の攻撃をキャンセルさせた時の演出
+    public void OnEnemyAttackCansel()
+    {
+        if( GameMode == GameMode.endlessBattle)
+        {
+            GameState = GameState.main;
+        }
+    }
+    // 敵になぐられた時の演出
+    public void OnEnemyAttackHit()
+    {
+        if( GameMode == GameMode.endlessBattle)
+        {
+            GameState = GameState.startWait;
+            UndoInGame();
+            Debug.Log("ぎゃああ");
+        }
+    }
+
+    // ---------- Private関数 ----------
+    private void InGameMainUpdate()
+    {
         // 操作の状態
         // 画面タップしたら、掴みを試行。
         if( Input.GetMouseButton(0) && _showUINum == 0 && !_isUITouch)
@@ -152,132 +402,7 @@ public class InGameManager : MonoBehaviour
             TapUp();
         }
     }
-    public void FixedUpdate()
-    {
-        GameDataManager.UpdateMutekiTime();
-    }
-    // ---------- Public関数 ----------
-    public void Initialize() {
-        
-        if(_isInitialize) return;
-        _isInitialize = true;
 
-        // マテリアルマネージャー初期化
-        _onInitializeMaterialManager?.Invoke();
-
-        GameDataManager.ResetGamePlayData();
-
-        // ステージ初期化
-        _stageManager.Iniiialize();
-        _stageManager.SetOnClearCallBack(OnClearCallback);
-
-        // おてての状態フラグ初期化
-        _isCatch = false;
-        _hand.ChangeAction(HandAction.idle);
-
-        // マテリアルを複製（糸の表示非表示用）
-        _webRopeMaterial = new Material(_webRope.material);
-        _webRope.material = _webRopeMaterial;
-        _webRopeColor = _webRopeMaterial.color;
-        _webRopeMaterial2 = _webRope.material;
-        // 糸を非表示
-        SetEnableWebRope(false);
-
-        _inGameUiManager.Initialize();
-        // ステージ再読み込みボタンの処理設定
-        _inGameUiManager.SetOnClickButtonUndo(()=>
-        {
-            UndoInGame();
-            // イベント呼び出し
-            FirebaseManager.instance.EventReStart();
-            GameDataManager.SetIsCatchSomething(false);
-        });
-
-        _catchWeb.gameObject.SetActive(false);
-
-        FirebaseManager.instance.EventStageStart();
-
-        GameDataManager.UpdatekillShockStrength();
-
-        EffectManager.instance.Initialize();
-
-
-        // 「高速スワイプした！」判定の速度の補正。ABテストの死ぬ閾値に比例させる
-        _fastSwipeSpeed *= GameDataManager.GetKillShockStrength() / 30f;
-
-        // 「高速スワイプした！」判定の距離の補正。ABテストの死ぬ閾値に比例させる
-        _fastSwipeAway *= GameDataManager.GetKillShockStrength() / 30f;
-
-        // 「掴んでるやつが高速移動してる！」判定の速度の補正。ABテストの死ぬ閾値に比例させる。最低値5
-        _fastCatchObjSpd = 5f + (_fastCatchObjSpd - 5f) * GameDataManager.GetKillShockStrength() / 30f;
-
-        GameDataManager.AddOnStageStart(TryRequestReview);
-        _onInitialize?.Invoke();
-    }
-
-    public void UpdateWebRopeMaterial(Material material)
-    {       
-        _webRope.gameObject.SetActive(false);
-        _webRope.material = new Material(material);
-        Destroy(_webRopeMaterial);
-        _webRopeMaterial = _webRope.material;
-        _webRopeColor = _webRopeMaterial.color;
-        _webRopeMaterial2 = material;   // 色を変えないマテリアル。何もないとこをタップした時に出る糸とぐるぐる巻き糸に用いる
-        _webRope.gameObject.SetActive(true);
-        for(int i = 0; i < _listCatchRpllWebRope.Count; i++)
-        {
-            _listCatchRpllWebRope[i].material = material;
-        }
-        SetEnableWebRope(false);
-    }
-
-    // 初期化時イベント設定
-    public void AddOnInitialize( UnityAction onInitialize)
-    {
-        if(_onInitialize == null)
-            _onInitialize = new UnityEvent();
-        _onInitialize.AddListener(onInitialize);
-    }
-    // 初期化時イベント設定
-    public void AddOnInitializeMaterialManager( UnityAction onInitialize)
-    {
-        if(_onInitializeMaterialManager == null)
-            _onInitializeMaterialManager = new UnityEvent();
-        _onInitializeMaterialManager.AddListener(onInitialize);
-    }
-
-    public void SetTryShowInterstitialAdAction( Action action ){ _showAdAction = action; }
-    public void UndoInGame()
-    {
-        if(!_isInitialize)
-            return;
-        _webLineEndPos.parent = this.transform;
-        _stageManager.DeleteStage();
-        _stageManager.StageLoad();
-        // 何もないとこを捕まえた時の挙動をキャンセル
-        CanselNotCatchAction();
-    }
-
-    public void SetDebugStageLoop(bool isStageLoop)
-    {
-        _debugStageLoop = isStageLoop;
-    }
-    public void SetDebugEnebleInste(bool enebleInste)
-    {
-        _debugEnebleInste = enebleInste;
-    }
-    public void SetIsShowUI(bool isShowUI)
-    {
-        if(isShowUI)
-            _showUINum++;
-        else
-            _showUINum--;
-
-        if(_showUINum < 0)
-            Debug.LogError("_showUINumが0未満になったよおおお!?:" + _showUINum);
-    }
-    
-    // ---------- Private関数 ----------
     // イベント用：おててタッチ判定
     private void TryTouchHand()
     {
@@ -360,7 +485,10 @@ public class InGameManager : MonoBehaviour
             CanselNotCatchAction(false);
 
             // 捕まえたものがHumanChildならこちらを通る
-            if( (catchableObj != null && catchableObj.GetAlternate() != null) || _isTaphuman)
+            HumanChild humanChild = catchableObj.TryGetHumanChild();
+
+            // if( (catchableObj != null && catchableObj.GetAlternate() != null) || _isTaphuman)
+            if(humanChild != null )
             {
                 // if(isOtherCatchHuman)   // 糸以外の何かに捕まっているHumanならここを通る
                 //     catchableObj = human.GetParts(HumanParts.body);

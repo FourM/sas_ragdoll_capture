@@ -17,11 +17,18 @@ public class EndlessBattleSegment : MonoBehaviour
     [SerializeField, Tooltip("Humanの捕まる前の参考constraints")] private Rigidbody _rafConstraints = null;
     [SerializeField, Tooltip("長さ")] private float _length = 10.0f;
     [SerializeField, Tooltip("プレイヤーの移動パス")] private List<Transform> _pathList = null;
+    [SerializeField, Tooltip("次のセグメントのアングル")] private Vector3 _nextSegmentAddAngle = default;
     private List<Human> _targethumanList = default;
     private Action _onCliearCallback = default;
     private UnityEvent _onInitialize = null;
     private bool _isInitialize = false;
     private bool _isClear = false;
+    private float _pathLength = -1f;
+    public float PathLength
+    { 
+        get{ return _pathLength; }
+        set{ if(_pathLength == -1f) _pathLength = value; } 
+    }
     // ---------- クラス変数宣言 ----------
     // ---------- インスタンス変数宣言 ----------
     // ---------- Unity組込関数 ----------
@@ -115,6 +122,7 @@ public class EndlessBattleSegment : MonoBehaviour
     public float GetLength(){ return _length; }
     public string GetStageId(){ return _stageId; }
     public bool IsGimmickKill(){ return _isGimmickKill; }
+    public Vector3 GetNextSegmentAddAngle(){ return _nextSegmentAddAngle; }
     public List<Transform> GetPathList()
     { 
         if(_pathList == null)
