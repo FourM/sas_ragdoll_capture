@@ -30,6 +30,7 @@ public class HandSkinManager : MonoBehaviour
         _gameMainManager.AddOnFetchComplete(()=>
         {
             UpdateHandSkin();
+            _gameMainManager.ShowGame();
         });
     }
     // ---------- Public関数 ----------

@@ -22,6 +22,7 @@ public class GameMainManager : MonoBehaviour
     [SerializeField, Tooltip("インゲームマネージャー")] private InGameManager _inGameManager = default;
     [SerializeField, Tooltip("広告マネージャー")] private AdsManager _adManager = default;
     [SerializeField, Tooltip("ABテストフラグ設定クラス")] private UserSegment _userSegment = default;
+    [SerializeField, Tooltip("ゲーム開始時真っ暗画面")] private GameObject _blackOut = default;
     private bool _isInitialize = false;
     private UnityEvent _onFetchComplete = null;
     // ---------- クラス変数宣言 ----------
@@ -29,19 +30,20 @@ public class GameMainManager : MonoBehaviour
     // ---------- Unity組込関数 ----------
     private void Start() {
         // await FetchDataAsync();
+        _blackOut.SetActive(true);
         Initialize();
     }
     // ---------- Public関数 ----------
     // ---------- Private関数 ----------
     // ゲーム初期化
-    // private async void Initialize() {
-    private void Initialize() {
+    private async void Initialize() {
+    // private void Initialize() {
         if(_isInitialize) return;
         _isInitialize = true;
 
         // リモートコンフィグのデータ取得(非同期)
-        FetchDataAsyncStart();
-        // await FetchDataAsync();
+        // FetchDataAsyncStart();
+        await FetchDataAsync();
         // リアルタイム Remote Configによるデータ取得。デバイス上でないと動いてくれないらしい。
         FirebaseRemoteConfig.DefaultInstance.OnConfigUpdateListener += ConfigUpdateListenerEventHandler;
 
@@ -83,6 +85,12 @@ public class GameMainManager : MonoBehaviour
     {
         PlayerPrefs.SetInt("isInitFetch", 1);
         _onFetchComplete?.Invoke();
+        // _blackOut.SetActive(false);
+    }
+
+    public void ShowGame()
+    {
+        _blackOut.SetActive(false);
     }
 
     private async void FetchDataAsyncStart() { await FetchDataAsync(); }
