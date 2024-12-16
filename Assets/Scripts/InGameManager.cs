@@ -14,15 +14,15 @@ using UnityEngine.EventSystems;
 
 public enum GameMode
 {
-    main,
-    endlessBattle
+    main = 1000,
+    endlessBattle = 2000
 }
 public enum GameState
 {
-    startWait,
-    main,
-    endlessBattleEnemyAttack,
-    result
+    startWait = 0,
+    main = 1000,
+    endlessBattleEnemyAttack = 2000,
+    result = 3000
 }
 
 public class InGameManager : MonoBehaviour, InGameMainEventManager
@@ -116,7 +116,8 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
         get{ return _gameState; }
         set{
             _gameState = value;
-            _player.StopPathMove();
+            // _player.StopPathMove();
+            _player.SetState(PlayerState.stop);
         }
     }
     // ---------- クラス変数宣言 ----------
@@ -156,11 +157,26 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
                     GameState = GameState.main;
                 break;
             case GameState.main:
+                if(GameMode == GameMode.endlessBattle && GameState == GameState.main)
+                {
+                    GameState++;
+                    _player.SetState(PlayerState.move);
+                }
+                break;
             case GameState.endlessBattleEnemyAttack:
                 if(GameMode == GameMode.endlessBattle && GameState == GameState.main)
                 {
+                    GameState++;
+                    _player.SetState(PlayerState.stop);
+                }
+                break;
+            case GameState.main + 1:
+            case GameState.endlessBattleEnemyAttack + 1:
+                if(GameMode == GameMode.endlessBattle && GameState == GameState.main)
+                {
                     // _player.transform.position += _player.transform.forward * Time.deltaTime * _endlessBattlePlayerMoveSpd;
-                    _player.ContinuePathMove();
+                    // _player.ContinuePathMove();
+                    
                     if(_springPosZ < 5f)
                         _springPosZ = 5f;
                     if(_springPosZ < 6.5f)
@@ -536,7 +552,8 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
             // _catchObjMass = _springjoint.connectedBody.mass;
             
             // 見えないSpringJointの位置変更
-            _springPosZ = hit.point.z - Camera.main.transform.position.z;  
+            // _springPosZ = hit.point.z - Camera.main.transform.position.z;  
+            _springPosZ = (hit.point - Camera.main.transform.position).magnitude;  
             
             // CatchableObjが取得できていたなら、捕まえた時のコールバック呼び出し
             if(catchableObj != null)
@@ -747,6 +764,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
 
         _catchWeb.parent = this.transform;
         _catchWeb.gameObject.SetActive(false);
+        // Debug.Log("わんたそ");
         _webLineEndPos.parent = this.transform;
 
         // 手を元の位置に戻す

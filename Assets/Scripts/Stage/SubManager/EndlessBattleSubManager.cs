@@ -24,6 +24,7 @@ public class EndlessBattleSubManager : StageSubManager
     private float _beforePathLength = 0;
     private int _initPathNum = 0; // 初期のパス数
     private bool _firstUpdateSegment = false;   // 一番最初のセグメント更新
+    private EndlessBattleSegment _currentSegment = null; // 今のセグメント
     // ---------- クラス変数宣言 -----------------------
     // ---------- インスタンス変数宣言 ------------------
     // ---------- Unity組込関数 -----------------------
@@ -48,23 +49,36 @@ public class EndlessBattleSubManager : StageSubManager
         }
         _wayPointList = new List<CinemachineSmoothPath.Waypoint>(_playerMovePath.m_Waypoints);
 
+        // Debug.Log("_initPathNum" + _initPathNum);
+
         // ステージ生成
         int _instanceSegmentIndex = 0;
-        while( _playerMovePath.PathLength <= 100f && 8 <= _playerMovePath.m_Waypoints.Length )
+        int j = 0;
+        while( (_playerMovePath.PathLength <= 100f || _playerMovePath.m_Waypoints.Length <= 8 ) && j < 15 )
         {
             EndlessBattleSegment segment = InstantiateSegment();
             if(_segmentList.Count == 1)
                 _nextSegmentPos += segment.GetLength();
+            j++;
             // if( _playerMovePath.m_Waypoints.length)
             //     _nextInstancePos = segment.GetLength();
+            // _playerMovePath.GetPathLength();
         }
+        Debug.Log("DistanceCacheIsValid:" + _playerMovePath.DistanceCacheIsValid() + ", m_Waypoints.Length" + _playerMovePath.m_Waypoints.Length);
     }
 
     protected override void UpdateUnique()
     {
+        // 判定地点を超えた
+        if( _nextSegmentPos < _player.GetMovePath().m_Position)
+        {
+            _player.SetState(PlayerState.battle);
+        }
+
         // if( _nextInstancePos <= _player.transform.position.z )
         if(JudgeUpdateSegment())
         {
+            // Debug.Log("セグメント更新！！");
             EndlessBattleSegment segment = InstantiateSegment();
             _nextInstancePos += segment.GetLength();
 
@@ -72,15 +86,25 @@ public class EndlessBattleSubManager : StageSubManager
             DeleteSegment();
         }
         Vector3 pos = _player.transform.position;
-        pos.z += 30f;
+        pos += _player.transform.forward * 30f;
         pos.y = -10f;
-        pos.x = 0f;
         _ground.transform.position = pos;
+        Vector3 angle = _ground.transform.eulerAngles;
+        angle.y = _player.transform.eulerAngles.y;
+        _ground.transform.eulerAngles = angle;
+
+        
+        if(_currentSegment != null && _currentSegment.isAllKill())
+        {
+            _player.SetState(PlayerState.move);
+        }
     }
     // ---------- Public関数 -------------------------
     // ---------- Private関数 ------------------------
     private EndlessBattleSegment InstantiateSegment()
     {
+        _playerMovePath.InvalidateDistanceCache();
+
         EndlessBattleSegment segment = Instantiate(_stagePrefabs[_instanceSegmentIndex]);
         segment.transform.parent = this.transform;
         segment.transform.position = _segmentCreateHead.position;
@@ -124,11 +148,14 @@ public class EndlessBattleSubManager : StageSubManager
                 EndlessBattleSegment segment = _segmentList[index];
                 length += segment.PathLength;
                 pathNum += segment.GetPathList().Count;
+                index++;
 
                 if( doUpdatePathNum <= pathNum )
+                {
+                    _currentSegment = _segmentList[index];
                     return true;
+                }
 
-                index++;
                 if(_segmentList.Count <= index)
                 {
                     Debug.LogError("セグメントの更新がされないよ");
@@ -137,31 +164,39 @@ public class EndlessBattleSubManager : StageSubManager
             }
             // 判定地点を更新
             if(index < _segmentList.Count)
+            {
                 _nextSegmentPos += _segmentList[index].PathLength;
+                _currentSegment = _segmentList[index];
+            }
             else
-                Debug.LogError("おやあ？");
+                Debug.LogError("終点にいるのにセグメントの更新がされないよ！？");
         }
         return false;
     }
     private void DeleteSegment()
     {
+        _playerMovePath.InvalidateDistanceCache();
+        
         // 最初のセグメント更新なら、実行前から設定していたパスも消す
         if(!_firstUpdateSegment)
         {
             _wayPointList.RemoveRange(0, _initPathNum);
             _firstUpdateSegment = true;
         }
-        // 一番最初のセグメント分のパスを消してから、一番最初のセグメントを消す
+        // 現時点で最初のセグメントを、パスを消してから消す
         EndlessBattleSegment segment = _segmentList[0];
         int pathNum = segment.GetPathList().Count;
         _wayPointList.RemoveRange(0, pathNum);
         _playerMovePath.m_Waypoints = _wayPointList.ToArray();
-
+        
         // プレイヤーのパス移動位置を、消したパスの長さ分だけ戻す（これで今の位置を保持する）
-        float length = segment.PathLength;
-        _player.GetMovePath().m_Position -= length;
+        // float length = segment.PathLength;
+        float length = GetSubPathLength();
+        // Debug.Log("length:" + length);
+        _player.GetMovePath().m_Position += length;
 
-        Destroy(segment.gameObject);
+        // Debug.Log("わんたそ3");
+        segment.DestroyThis();
         _segmentList.RemoveAt(0);
     }
     private void IndexNext(){

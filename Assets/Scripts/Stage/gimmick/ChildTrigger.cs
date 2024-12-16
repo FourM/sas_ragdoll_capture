@@ -16,6 +16,8 @@ public class ChildTrigger : MonoBehaviour
     private UnityEvent<Collision> _onCollisionStay = null;
     private UnityEvent<Collision> _onCollisionExit = null;
     private UnityEvent<float> _onJointBreak = null;
+    private UnityEvent _onBecameVisible = null;
+    private UnityEvent _onBecameInvisible = null;
     // ---------- クラス変数宣言 ----------
     // ---------- インスタンス変数宣言 ----------
     // ---------- Unity組込関数 ----------
@@ -33,6 +35,14 @@ public class ChildTrigger : MonoBehaviour
     }
     private void OnCollisionExit(Collision other) {
         _onCollisionExit?.Invoke(other);
+    }
+    private void OnBecameVisible()
+    { 
+        _onBecameVisible?.Invoke();
+    }
+    private void OnBecameInvisible()
+    { 
+        _onBecameInvisible?.Invoke();
     }
     
 
@@ -82,6 +92,20 @@ public class ChildTrigger : MonoBehaviour
         if(_onJointBreak == null)
             _onJointBreak = new UnityEvent<float>();
         _onJointBreak.AddListener(onJointBreak); 
+    }
+    public void AddOnBecameVisible(UnityAction onBecameVisible)
+    {
+        if(_onBecameVisible == null)
+            _onBecameVisible = new UnityEvent();
+        _onBecameVisible.AddListener(onBecameVisible); 
+        // Debug.Log("見えたぁメメタァ");
+    }
+    public void AddOnBecameInVisible(UnityAction onBecameInVisible)
+    {
+        if(_onBecameInvisible == null)
+            _onBecameInvisible = new UnityEvent();
+        _onBecameInvisible.AddListener(onBecameInVisible); 
+        // Debug.Log("みえんごなった");
     }
     // ---------- Private関数 ----------
 }

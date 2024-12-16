@@ -68,6 +68,10 @@ public abstract class CatchableObj : MonoBehaviour
             _onInitialize?.Invoke();
     }
     private void OnDisable(){
+        // if(_isCatch)
+        // {
+        //     _onDoReleaseCallback?.Invoke();
+        // }
         OnDisableUnique();
     }
     // ---------- Public関数 ----------
@@ -152,6 +156,15 @@ public abstract class CatchableObj : MonoBehaviour
         if( 0 < _fastSwipedTime )
             return true;
         return false;
+    }
+    // 削除準備
+    public void DisableReady()
+    {
+        // Debug.Log("わんたそ1");
+        if(_isCatch)
+        {
+            _onDoReleaseCallback?.Invoke();
+        }
     }
     // ---------- Private関数 ----------
     // Startの、継承先の独自処理

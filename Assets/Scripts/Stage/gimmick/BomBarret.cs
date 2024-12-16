@@ -85,7 +85,7 @@ public class BomBarret : CatchableObj
             other.attachedRigidbody.velocity = velocity;
     }
 
-    private void OnDisable()
+    private void OnDisableUnique()
     {
         if(_bomTween != null)
             _bomTween.Kill();

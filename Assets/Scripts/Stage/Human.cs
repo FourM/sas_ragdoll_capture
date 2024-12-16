@@ -37,6 +37,7 @@ public class Human : CatchableObj
     [SerializeField, Tooltip("振り向くパーツ")] private List<Transform> _lookers = null;
     [SerializeField, Tooltip("声")] private AudioSource _audioSouce = default;
     [SerializeField, Tooltip("声リスト")] private List<AudioClip> _listAudioClip = default;
+    [SerializeField, Tooltip("カメラ外、カメラ内イベント")] private ChildTrigger _visibleEventTrigger;
     // private bool _isBroken = false;
     private UnityEvent _onCatchCallback = default;
     private UnityEvent _onReleaseCallback = default;
@@ -50,6 +51,8 @@ public class Human : CatchableObj
     private float _toughness = 1f;  // 死にやすさ。デフォルトは１
     private float _fallTime = 0;
     private bool _isOtherCatch = false;
+    private bool _isVisible = true; // カメラに写っているか
+    public bool IsVisible{ get{ return _isVisible; } }
     // ---------- クラス変数宣言 ----------
     // ---------- インスタンス変数宣言 ----------
     // ---------- Unity組込関数 ----------
@@ -65,6 +68,18 @@ public class Human : CatchableObj
         _stayObjectDic = new Dictionary<GameObject, float>();
 
         int index = PlayerPrefs.GetInt("newStageColor");
+
+        if(_visibleEventTrigger != null)
+        {
+            _visibleEventTrigger.AddOnBecameVisible(()=>
+            {
+                _isVisible = true;
+            });
+            _visibleEventTrigger.AddOnBecameInVisible(()=>
+            {
+                _isVisible = false;
+            });
+        }
     }
     protected override void UpdateUnique()
     {
@@ -322,6 +337,8 @@ public class Human : CatchableObj
     // 他の何かに捕まっているか
     public void SetIsOtherCatch( bool isOtherCatch ){ _isOtherCatch = isOtherCatch; }
     public bool IsOtherCatch(){ return _isOtherCatch; }
+    // カメラに写っているか
+    public void SetIsVisible(bool isVisible){ _isVisible = isVisible; }
     // ---------- Private関数 ----------
     private void LookAtTarget(Transform looker, Vector3 initAngle, int index)
     {

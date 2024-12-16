@@ -330,7 +330,7 @@ public class HumanChild : CatchableObj
         if(_parentHuman.IsDead() && 10f <= GetRigidbody().velocity.magnitude && _breakableParts != null && !IsCatch() && (_alternate == null || !_alternate.IsCatch()))
         {
             // Debug.Log("壊れるぅ：" + this.transform.name);
-            _breakableParts.Break(GetRigidbody().velocity);
+            _breakableParts.Break(GetRigidbody().velocity, _parentHuman.transform.parent);
             gameObject.SetActive(false);
             // if(_breakableParts != null && _breakableParts.transform.parent == this.transform)
             // {
@@ -365,7 +365,7 @@ public class HumanChild : CatchableObj
         if(_breakableParts != null && ( _isDeadable || _parentHuman.IsDead() ) && !_isCatched && (_alternate == null || !_alternate.IsCatch()))
         {
             // Debug.Log("壊れるぅ２:" + this.transform.name);
-            _breakableParts.Break(GetRigidbody().velocity);
+            _breakableParts.Break(GetRigidbody().velocity, _parentHuman.transform.parent);
 
             gameObject.SetActive(false);
             if(_breakableParts != null && _breakableParts.transform.parent == this.transform)

@@ -22,6 +22,7 @@ public class BreakableHumanoidParts : MonoBehaviour
     private UnityEvent _onBreakCallback = default;
     private bool _isBreak = false;
     private GameStage _currentStage = null;
+    // private float _lifeTime = 7f;
     // ---------- クラス変数宣言 ----------
     // ---------- インスタンス変数宣言 ----------
     // ---------- Unity組込関数 ----------
@@ -92,10 +93,23 @@ public class BreakableHumanoidParts : MonoBehaviour
         _currentStage = GameDataManager.GetStage();
     }
 
-    private void Update(){
-        if(_skinnedMeshRenderer == null)
-            return;
-    }
+    // private void Update(){
+    //     if(_skinnedMeshRenderer == null)
+    //         return;
+    // }
+    // private void FixedUpdate() {
+    //     if(GameDataManager.GameMode == GameMode.endlessBattle)
+    //     {
+    //         if(_isBreak)
+    //         {
+    //             _lifeTime -= Time.deltaTime;
+    //             if(_lifeTime <= 0)
+    //             {
+    //                 Destroy(this.gameObject);
+    //             }
+    //         }
+    //     }
+    // }
 
     // private void OnDisable()
     // {
@@ -123,16 +137,19 @@ public class BreakableHumanoidParts : MonoBehaviour
         // Debug.Log("ParentBreak:" + this.transform.name + ", " + this.transform.parent.name);
     }
     // これが壊れた
-    public void Break( Vector3 velocity )
+    public void Break( Vector3 velocity, Transform parent = null)
     {
         if(_isBreak)
             return;
             
-        if(GameDataManager.GetStage() != null && _currentStage == GameDataManager.GetStage())
+        if(GameDataManager.GetStage() != null && _currentStage == GameDataManager.GetStage() && parent == null)
         {
             this.transform.parent = GameDataManager.GetStage().transform;
+
             // Debug.Log("Break、親変更:" + this.transform.name + ", " + this.transform.parent.name);
         }
+        if(parent != null)
+            this.transform.parent = parent;
         // else
         // {
         //     if(GameDataManager.GetStage() == null)

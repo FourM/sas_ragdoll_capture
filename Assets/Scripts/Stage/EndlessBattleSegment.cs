@@ -58,10 +58,10 @@ public class EndlessBattleSegment : MonoBehaviour
             // ターゲットのHumanをリストに追加
             _targethumanList.Add(targetHuman);
             // コールバック設定
-            targetHuman.AddOnBreakCallback(()=>
-            {
-                _targethumanList.Remove(targetHuman);
-            });
+            // targetHuman.AddOnBreakCallback(()=>
+            // {
+            //     _targethumanList.Remove(targetHuman);
+            // });
 
             if(_rafConstraints != null)
                 targetHuman.GetRigidbody().constraints = _rafConstraints.constraints;
@@ -128,6 +128,33 @@ public class EndlessBattleSegment : MonoBehaviour
         if(_pathList == null)
             _pathList = new List<Transform>();
         return _pathList; 
+    }
+    public bool isAllKill()
+    {
+        for(int i = 0; i < _targethumanList.Count; i++)
+        {
+            Human human = _targethumanList[i];
+            if(!human.IsVisible)
+                continue;
+            
+            if(!human.IsBroken())
+                continue;
+            return false;
+        }
+        return true;
+    }
+
+    public void DestroyThis()
+    {
+        for(int i = 0; i < _targethumanList.Count; i++)
+        {
+            Human human = _targethumanList[i];
+            if(human != null)
+                human.DisableReady();
+
+            // Debug.Log("わんたそ2");
+        }
+        Destroy(this.gameObject);
     }
     // ---------- Private関数 ----------
 }
