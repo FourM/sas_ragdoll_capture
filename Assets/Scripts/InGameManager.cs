@@ -159,16 +159,16 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
             case GameState.main:
                 if(GameMode == GameMode.endlessBattle && GameState == GameState.main)
                 {
-                    GameState++;
                     _player.SetState(PlayerState.move);
                 }
+                GameState++;
                 break;
             case GameState.endlessBattleEnemyAttack:
                 if(GameMode == GameMode.endlessBattle && GameState == GameState.main)
                 {
-                    GameState++;
                     _player.SetState(PlayerState.stop);
                 }
+                GameState++;
                 break;
             case GameState.main + 1:
             case GameState.endlessBattleEnemyAttack + 1:
