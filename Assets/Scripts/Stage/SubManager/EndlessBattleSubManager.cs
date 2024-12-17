@@ -18,13 +18,14 @@ public class EndlessBattleSubManager : StageSubManager
     private float _nextInstancePos = 0;
     private bool _initNextInstancePos = false;
     private Player _player = null;
-    float _nextSegmentPosZ = 0f;
     float _nextSegmentPos = 0f;
     private List<CinemachineSmoothPath.Waypoint> _wayPointList = null;
     private float _beforePathLength = 0;
     private int _initPathNum = 0; // 初期のパス数
     private bool _firstUpdateSegment = false;   // 一番最初のセグメント更新
     private EndlessBattleSegment _currentSegment = null; // 今のセグメント
+    private int _currentSegmentIndex = 0; // 今のセグメントインデックス番号
+    private int _laps = 0; // デバッグ用：周回回数
     // ---------- クラス変数宣言 -----------------------
     // ---------- インスタンス変数宣言 ------------------
     // ---------- Unity組込関数 -----------------------
@@ -65,6 +66,9 @@ public class EndlessBattleSubManager : StageSubManager
             // _playerMovePath.GetPathLength();
         }
         Debug.Log("DistanceCacheIsValid:" + _playerMovePath.DistanceCacheIsValid() + ", m_Waypoints.Length" + _playerMovePath.m_Waypoints.Length);
+
+        _currentSegmentIndex = 0;
+        _currentSegment = _stagePrefabs[_currentSegmentIndex];
     }
 
     protected override void UpdateUnique()
@@ -94,13 +98,21 @@ public class EndlessBattleSubManager : StageSubManager
         _ground.transform.eulerAngles = angle;
 
         
-        if(_currentSegment != null && _currentSegment.isAllKill())
+
+        if(_currentSegment != null )
         {
-            _player.SetState(PlayerState.move);
+            // Debug.Log("");
+            if(_currentSegment.isAllKill())
+                _player.SetState(PlayerState.move);
+        }
+        else
+        {
+
         }
     }
     // ---------- Public関数 -------------------------
     // ---------- Private関数 ------------------------
+    // セグメント生成
     private EndlessBattleSegment InstantiateSegment()
     {
         _playerMovePath.InvalidateDistanceCache();
@@ -109,9 +121,7 @@ public class EndlessBattleSubManager : StageSubManager
         segment.transform.parent = this.transform;
         segment.transform.position = _segmentCreateHead.position;
         segment.transform.eulerAngles = _segmentCreateHead.eulerAngles;
-        // segment.transform.localPosition = new Vector3(0, 0, _nextSegmentPosZ);
         segment.Initialize();
-        _nextSegmentPosZ += segment.GetLength();
         IndexNext();
 
         // パスの追加
@@ -124,6 +134,8 @@ public class EndlessBattleSubManager : StageSubManager
         // 以降のセグメント生成の向き設定
         _segmentCreateHead.eulerAngles += segment.GetNextSegmentAddAngle();
         _segmentCreateHead.position += _segmentCreateHead.forward * segment.GetLength();
+
+        segment.gameObject.name = segment.gameObject.name + "_" + _laps;
 
         _segmentList.Add(segment);
 
@@ -151,10 +163,7 @@ public class EndlessBattleSubManager : StageSubManager
                 index++;
 
                 if( doUpdatePathNum <= pathNum )
-                {
-                    _currentSegment = _segmentList[index];
                     return true;
-                }
 
                 if(_segmentList.Count <= index)
                 {
@@ -167,6 +176,7 @@ public class EndlessBattleSubManager : StageSubManager
             {
                 _nextSegmentPos += _segmentList[index].PathLength;
                 _currentSegment = _segmentList[index];
+                Debug.Log("_currentSegment更新：" + _currentSegment.name + ", " + index);
             }
             else
                 Debug.LogError("終点にいるのにセグメントの更新がされないよ！？");
@@ -202,6 +212,10 @@ public class EndlessBattleSubManager : StageSubManager
     private void IndexNext(){
         _instanceSegmentIndex ++;
         _instanceSegmentIndex %= _stagePrefabs.Count;
+        if(_instanceSegmentIndex == 0)
+        {
+            _laps++;
+        }
     }
     // セグメントの方にあるパスリストを、使える形に変換
     private List<CinemachineSmoothPath.Waypoint> CreateWaypointToTransform(List<Transform> transforms)
