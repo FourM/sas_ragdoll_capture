@@ -162,7 +162,7 @@ public class EndlessBattleSegment : MonoBehaviour
     {
         if(_childTrigger == null)
             return;
-        Debug.Log("トリガー設定:" + this.gameObject.name);
+        // Debug.Log("トリガー設定:" + this.gameObject.name);
         _childTrigger.AddCallbackOnTriggerEnter(onTriggerEnter);
     }  
     // ---------- Private関数 ----------

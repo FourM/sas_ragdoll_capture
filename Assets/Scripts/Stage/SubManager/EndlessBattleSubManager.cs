@@ -107,16 +107,28 @@ public class EndlessBattleSubManager : StageSubManager
                 {
                     _player.SetState(PlayerState.move);
                     // Debug.Log("今の区画をクリア！" + _currentSegment.gameObject.name);
+                    int index = _segmentList.IndexOf(_currentSegment);
+                    EndlessBattleSegment segment = _segmentList[index + 1];
 
-                    // EndlessBattleSegment segment = _stagePrefabs[_currentSegmentIndex + 1];
-                    // if( segment != null && segment.GetLookAtTarget() != null)
-                    //     _player.transform.LookAt(segment.GetLookAtTarget());
+                    if(segment != null)
+                    {
+                        Transform lookAtTarget = segment.GetLookAtTarget();
+                        if(lookAtTarget != null)
+                        {
+                            // Debug.Log("クリア済、LookAt対象：" + segment.gameObject.name + ", " + lookAtTarget.gameObject.name);
+                            _player.transform.LookAt(segment.GetLookAtTarget());
+                        }
+                    }
                 }
                 else
                 {
                     _player.SetState(PlayerState.battle);
-                    // if(_currentSegment.GetLookAtTarget() != null)
-                    //     _player.transform.LookAt(_currentSegment.GetLookAtTarget());
+                    Transform lookAtTarget = _currentSegment.GetLookAtTarget();
+                    if(lookAtTarget != null)
+                    {
+                        // Debug.Log("クリア未、LookAt対象：" + _currentSegment.gameObject.name + ", " + lookAtTarget.gameObject.name);
+                        _player.transform.LookAt(_currentSegment.GetLookAtTarget());
+                    }
                 }
             }
         }

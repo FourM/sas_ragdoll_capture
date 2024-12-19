@@ -53,7 +53,7 @@ public class Player : MonoBehaviour
         _beforeState = _state;
         _state = state; 
 
-        Debug.Log("ステータス変更！:" + state);
+        // Debug.Log("ステータス変更！:" + state);
 
         switch(state)
         {

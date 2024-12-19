@@ -43,7 +43,7 @@ public class StageManager : MonoBehaviour
         int currentStageNum = SaveDataManager.GetCurrentStage() % _useGameStageList.Count;
         GameStage currentStagePrefab = default;
 
-        Debug.Log("GameDataManager.GameMode:" + GameDataManager.GameMode);
+        // Debug.Log("GameDataManager.GameMode:" + GameDataManager.GameMode);
 
         switch( GameDataManager.GameMode )
         {

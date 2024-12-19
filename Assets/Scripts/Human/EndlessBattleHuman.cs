@@ -45,20 +45,21 @@ public class EndlessBattleHuman : MonoBehaviour
     // ---------- Private関数 ------------------------
     private void Initialize()
     {
+        // Debug.Log("初期設定！");
         _activeHuman = _humanHub.GetActiveHuman();
         _childTrigger.transform.parent = _activeHuman.transform;
         _childTrigger.AddCallbackOnTriggerEnter((Collider collider)=>{
-                // Debug.Log("あーあ");
-                // このHumanが攻撃できる状態にある
-                if(IsCanAttack())
-                {
-                    // Debug.Log("攻撃！:" + collider.name + ", " + collider.gameObject.layer);
-                    GameDataManager.InGameMainEvent.OnEnemyAttackStart();
-                    // InGameManager.instance.OnEnemyAttackStart()　と書くよりも、InGameManagerへの強い依存関係をなくせる
+            // Debug.Log("あーあ");
+            // このHumanが攻撃できる状態にある
+            if(IsCanAttack())
+            {
+                // Debug.Log("攻撃！:" + collider.name + ", " + collider.gameObject.layer);
+                GameDataManager.InGameMainEvent.OnEnemyAttackStart();
+                // InGameManager.instance.OnEnemyAttackStart()　と書くよりも、InGameManagerへの強い依存関係をなくせる
 
-                    _activeHuman.SetAnimatorController(_attackAnimation);
-                    _isAttack = true;
-                }
+                _activeHuman.SetAnimatorController(_attackAnimation);
+                _isAttack = true;
+            }
         });      
     }
     private bool IsCanAttack()

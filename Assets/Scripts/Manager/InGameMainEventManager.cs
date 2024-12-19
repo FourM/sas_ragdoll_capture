@@ -20,7 +20,7 @@ public interface InGameMainEventManager
     // ---------- Public関数 -------------------------
     public void OnEnemyAttackStart()
     {
-
+        Debug.Log("敵の攻撃");
     }
     public void OnEnemyAttackCansel()
     {

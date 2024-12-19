@@ -295,6 +295,9 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
     {
         if(!_isInitialize)
             return;
+        _player.transform.position = _playerInitPos;
+        _player.GetMovePath().m_Position = 0f;
+        _player.transform.localEulerAngles = Vector3.zero;
         if(GameMode == GameMode.endlessBattle)
             GameState = GameState.startWait;
         _webLineEndPos.parent = this.transform;
@@ -302,9 +305,6 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
         _stageManager.StageLoad();
         // 何もないとこを捕まえた時の挙動をキャンセル
         CanselNotCatchAction();
-
-        _player.transform.position = _playerInitPos;
-        _player.transform.localEulerAngles = Vector3.zero;
     }
 
     public void SetDebugStageLoop(bool isStageLoop)
@@ -329,6 +329,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
     // 敵の攻撃開始時の処理
     public void OnEnemyAttackStart()
     {
+        Debug.Log("敵の攻撃!!");
         if( GameMode == GameMode.endlessBattle)
         {
             ReleaseCatchObj();
@@ -349,6 +350,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
     {
         if( GameMode == GameMode.endlessBattle)
         {
+            // リザルト表示
             GameState = GameState.startWait;
             UndoInGame();
             Debug.Log("ぎゃああ");
@@ -448,6 +450,10 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
             if(hit.rigidbody == null)
                 return;
 
+            CatchableObj catchableObj = GameDataManager.GetCatchableObj(hit.transform.gameObject);
+            if(catchableObj == null)    
+                return;
+
             Transform catchWebParent = null;
 
             // 糸を表示
@@ -471,7 +477,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
             _catchWeb.localScale = Vector3.zero;
 
             // 取った対象のCatchableObj取得を試行
-            CatchableObj catchableObj = GameDataManager.GetCatchableObj(hit.transform.gameObject);
+            // CatchableObj catchableObj = GameDataManager.GetCatchableObj(hit.transform.gameObject);
             GameDataManager.SetIsCatchSomething(true);
             GameDataManager.SetLookAtTransform(hit.transform);
 
