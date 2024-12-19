@@ -450,10 +450,6 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
             if(hit.rigidbody == null)
                 return;
 
-            CatchableObj catchableObj = GameDataManager.GetCatchableObj(hit.transform.gameObject);
-            if(catchableObj == null)    
-                return;
-
             Transform catchWebParent = null;
 
             // 糸を表示
@@ -477,15 +473,17 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
             _catchWeb.localScale = Vector3.zero;
 
             // 取った対象のCatchableObj取得を試行
-            // CatchableObj catchableObj = GameDataManager.GetCatchableObj(hit.transform.gameObject);
+            CatchableObj catchableObj = GameDataManager.GetCatchableObj(hit.transform.gameObject);
             GameDataManager.SetIsCatchSomething(true);
             GameDataManager.SetLookAtTransform(hit.transform);
 
             // Humanをタップしたか否か
             bool isOtherCatchHuman = false; // Humanで、他の何かに捕まってる
             Human human = null;
+            HumanChild humanChild = null;
             if(catchableObj != null) 
             {
+                humanChild = catchableObj.TryGetHumanChild();
                 human = catchableObj.TryGetParentHuman();
                 if(human != null)
                 {
@@ -498,8 +496,6 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
             CanselNotCatchAction(false);
 
             // 捕まえたものがHumanChildならこちらを通る
-            HumanChild humanChild = catchableObj.TryGetHumanChild();
-
             // if( (catchableObj != null && catchableObj.GetAlternate() != null) || _isTaphuman)
             if(humanChild != null )
             {
