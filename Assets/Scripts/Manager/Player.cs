@@ -18,7 +18,9 @@ public class Player : MonoBehaviour
     // ---------- プロパティ --------------------------
     [SerializeField, Tooltip("hoge")] private CinemachineDollyCart _cinemachineDollyCart = default;
     [SerializeField, Tooltip("hoge")] private float _baseSpeed = 0f;
+    [SerializeField, Tooltip("hoge")] private Transform _lookAtTransform = null;
     private Vector3 _initPos = default;
+    private Vector3 _initLookPos = default;
     private PlayerState _state = PlayerState.stop;
     private PlayerState _beforeState = PlayerState.stop;
     public PlayerState State{ get{ return _state; } }
@@ -29,6 +31,7 @@ public class Player : MonoBehaviour
     {
         _initPos = this.transform.position;
         _cinemachineDollyCart.m_Speed = 0f;
+        _initLookPos = _lookAtTransform.transform.localPosition;
     }
     // private void Start(){
         
@@ -70,6 +73,27 @@ public class Player : MonoBehaviour
     }
     public void SetBeforeState(){
         SetState(_beforeState);
+    }
+
+    // プレイヤーの向き更新
+    public void SetLookAtTarget( Transform lookAtTarget )
+    {
+        if(_lookAtTransform == null)
+        {
+            GameObject gameObject = new GameObject("CameraFollowPos");
+            _lookAtTransform = gameObject.transform;
+        }
+
+        if( lookAtTarget != null )
+        {
+            _lookAtTransform.parent = lookAtTarget;
+            _lookAtTransform.localPosition = Vector3.zero;
+        }
+        else
+        {
+            _lookAtTransform.parent = this.transform;
+            _lookAtTransform.localPosition = _initLookPos;
+        }
     }
     // ---------- Private関数 ------------------------
 }

@@ -298,6 +298,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
         _player.transform.position = _playerInitPos;
         _player.GetMovePath().m_Position = 0f;
         _player.transform.localEulerAngles = Vector3.zero;
+        _player.SetLookAtTarget(null);
         if(GameMode == GameMode.endlessBattle)
             GameState = GameState.startWait;
         _webLineEndPos.parent = this.transform;
@@ -431,6 +432,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
     // つかみを試行
     private void TryCatch()
     {
+        Debug.Log("カメラ向き：" + Camera.main.transform.eulerAngles);
         // レイを飛ばす
         // レイが、掴めるものに当たったら物を掴んだ状態にする
         Camera mainCamera = Camera.main;/*使用するカメラを指定*/

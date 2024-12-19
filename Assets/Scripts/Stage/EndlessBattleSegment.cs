@@ -18,7 +18,8 @@ public class EndlessBattleSegment : MonoBehaviour
     [SerializeField, Tooltip("長さ")] private float _length = 10.0f;
     [SerializeField, Tooltip("プレイヤーの移動パス")] private List<Transform> _pathList = null;
     [SerializeField, Tooltip("次のセグメントのアングル")] private Vector3 _nextSegmentAddAngle = default;
-    [SerializeField, Tooltip("次のセグメントのアングル")] private Transform _lookAtTarget = null;
+    [SerializeField, Tooltip("次のセグメントの位置")] private Transform _nextSegmentPos = null;
+    [SerializeField, Tooltip("プレイヤーが見る位置")] private Transform _lookAtTarget = null;
     [SerializeField, Tooltip("トリガー")] private ChildTrigger _childTrigger = null;
     private List<Human> _targethumanList = default;
     private Action _onCliearCallback = default;
@@ -126,6 +127,7 @@ public class EndlessBattleSegment : MonoBehaviour
     public bool IsGimmickKill(){ return _isGimmickKill; }
     public Vector3 GetNextSegmentAddAngle(){ return _nextSegmentAddAngle; }
     public Transform GetLookAtTarget(){ return _lookAtTarget; }
+    public Transform GetNextSegmentPos(){ return _nextSegmentPos; }
     public List<Transform> GetPathList()
     { 
         if(_pathList == null)
