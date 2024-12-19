@@ -26,6 +26,7 @@ public static class GameDataManager
     private static bool _eventIsDefeat = false; // イベント用：画面から指を離した時、敵が死んていたか
     private static UnityEvent _onStageStart = null;
     private static GameMode _gameMode = GameMode.main;
+    private static GameState _gameState = GameState.main;
     private static InGameMainEventManager _inGameMainEventManager;
     public static InGameMainEventManager InGameMainEvent{ get{ return _inGameMainEventManager; } }
     private static Player _player;
@@ -34,6 +35,10 @@ public static class GameDataManager
         get{ return _gameMode; }
     }
     public static void SetGameMode(GameMode gameMode){ _gameMode = gameMode; }
+    public static GameState GameState{
+        get{ return _gameState; }
+    }
+    public static void SetGameState(GameState gameState){ _gameState = gameState; }
 
     // セーブデータのロード
     public static void ResetGamePlayData()

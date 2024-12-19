@@ -18,6 +18,8 @@ public class EndlessBattleSegment : MonoBehaviour
     [SerializeField, Tooltip("長さ")] private float _length = 10.0f;
     [SerializeField, Tooltip("プレイヤーの移動パス")] private List<Transform> _pathList = null;
     [SerializeField, Tooltip("次のセグメントのアングル")] private Vector3 _nextSegmentAddAngle = default;
+    [SerializeField, Tooltip("次のセグメントのアングル")] private Transform _lookAtTarget = null;
+    [SerializeField, Tooltip("トリガー")] private ChildTrigger _childTrigger = null;
     private List<Human> _targethumanList = default;
     private Action _onCliearCallback = default;
     private UnityEvent _onInitialize = null;
@@ -123,6 +125,7 @@ public class EndlessBattleSegment : MonoBehaviour
     public string GetStageId(){ return _stageId; }
     public bool IsGimmickKill(){ return _isGimmickKill; }
     public Vector3 GetNextSegmentAddAngle(){ return _nextSegmentAddAngle; }
+    public Transform GetLookAtTarget(){ return _lookAtTarget; }
     public List<Transform> GetPathList()
     { 
         if(_pathList == null)
@@ -131,15 +134,13 @@ public class EndlessBattleSegment : MonoBehaviour
     }
     public bool isAllKill()
     {
+        // Debug.Log("今の区画のクリア判定。人数：" + _targethumanList.Count);
         for(int i = 0; i < _targethumanList.Count; i++)
         {
             Human human = _targethumanList[i];
-            if(!human.IsVisible)
-                continue;
-            
-            if(!human.IsBroken())
-                continue;
-            return false;
+            // 生きてる&カメラ内にいるヤツが一人でもいたらNo
+            if(human.IsVisible && !human.IsBroken())
+                return false;
         }
         return true;
     }
@@ -156,5 +157,13 @@ public class EndlessBattleSegment : MonoBehaviour
         }
         Destroy(this.gameObject);
     }
+
+    public void AddCallbackOnTriggerEnter(UnityAction<Collider> onTriggerEnter)
+    {
+        if(_childTrigger == null)
+            return;
+        Debug.Log("トリガー設定:" + this.gameObject.name);
+        _childTrigger.AddCallbackOnTriggerEnter(onTriggerEnter);
+    }  
     // ---------- Private関数 ----------
 }

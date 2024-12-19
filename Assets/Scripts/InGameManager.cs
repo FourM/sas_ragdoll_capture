@@ -100,7 +100,8 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
             // if( _gameMode ==
             _gameMode = value; 
             GameDataManager.SetGameMode(value);
-            UndoInGame();
+            if(_stageManager.IsInitialize)
+                UndoInGame();
             switch(_gameMode)
             {
                 case GameMode.main:
@@ -115,9 +116,13 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
     public GameState GameState{
         get{ return _gameState; }
         set{
+            // if(_gameState == value) 
+            //     return;
+            Debug.Log("gameState変更!:" + _gameState);
             _gameState = value;
+            GameDataManager.SetGameState(value);
             // _player.StopPathMove();
-            _player.SetState(PlayerState.stop);
+            OnChangeGameState();
         }
     }
     // ---------- クラス変数宣言 ----------
@@ -157,26 +162,9 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
                     GameState = GameState.main;
                 break;
             case GameState.main:
-                if(GameMode == GameMode.endlessBattle && GameState == GameState.main)
-                {
-                    _player.SetState(PlayerState.move);
-                }
-                GameState++;
-                break;
             case GameState.endlessBattleEnemyAttack:
-                if(GameMode == GameMode.endlessBattle && GameState == GameState.main)
-                {
-                    _player.SetState(PlayerState.stop);
-                }
-                GameState++;
-                break;
-            case GameState.main + 1:
-            case GameState.endlessBattleEnemyAttack + 1:
-                if(GameMode == GameMode.endlessBattle && GameState == GameState.main)
-                {
-                    // _player.transform.position += _player.transform.forward * Time.deltaTime * _endlessBattlePlayerMoveSpd;
-                    // _player.ContinuePathMove();
-                    
+                if(GameMode == GameMode.endlessBattle)
+                {   
                     if(_springPosZ < 5f)
                         _springPosZ = 5f;
                     if(_springPosZ < 6.5f)
@@ -217,6 +205,9 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
         GameDataManager.SetInGameMainEventManager(this);
         GameDataManager.SetGameMode(_gameMode);
         GameDataManager.SetPlayer(_player);
+
+        // ゲームモード別の処理を初期化
+        GameMode = GameMode;
 
         // ステージ初期化
         _stageManager.Iniiialize();
@@ -947,6 +938,36 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
                 StartCoroutine(InAppReviewManager.RequestReview());
                 Debug.Log("Show InAppReview!!!");
             }
+        }
+    }
+
+    // インゲームの状態が切り替わる時に呼び出される処理
+    private void OnChangeGameState()
+    {
+        _player.SetState(PlayerState.stop);
+        switch(GameState)
+        {
+            case GameState.startWait:
+                _player.SetState(PlayerState.stop);
+                break;
+            case GameState.main:
+                if(GameMode == GameMode.main)
+                {
+                    _player.SetState(PlayerState.stop);
+                }
+                if(GameMode == GameMode.endlessBattle)
+                {
+                    _player.SetState(PlayerState.move);
+                }
+                break;
+            case GameState.endlessBattleEnemyAttack:
+                if(GameMode == GameMode.endlessBattle)
+                {
+                    _player.SetState(PlayerState.stop);
+                }
+                break;
+            case GameState.result:
+                break;
         }
     }
 }

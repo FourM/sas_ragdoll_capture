@@ -19,6 +19,7 @@ public class StageManager : MonoBehaviour
     private GameStage _currentStage = null;
     private Action _onCliearCallback = default;
     private List<GameStage> _useGameStageList = default;
+    public bool IsInitialize{ get{ return _isInitialize; } }
     // ---------- クラス変数宣言 ----------
     // ---------- インスタンス変数宣言 ----------
     // ---------- Unity組込関数 ----------

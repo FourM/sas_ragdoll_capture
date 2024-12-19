@@ -30,13 +30,13 @@ public class Player : MonoBehaviour
         _initPos = this.transform.position;
         _cinemachineDollyCart.m_Speed = 0f;
     }
-    private void Start(){
+    // private void Start(){
         
-    }
+    // }
 
-    private void Update(){
+    // private void Update(){
 
-    }
+    // }
     // ---------- Public関数 ------------------------- 
     public CinemachineDollyCart GetMovePath(){ return _cinemachineDollyCart; }
     public void StopPathMove(){ _cinemachineDollyCart.m_Speed = 0f; }
