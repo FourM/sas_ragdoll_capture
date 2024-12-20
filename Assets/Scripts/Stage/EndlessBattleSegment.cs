@@ -15,12 +15,11 @@ public class EndlessBattleSegment : MonoBehaviour
     [SerializeField, Tooltip("ターゲットリスト")] private List<HumanHub> _targethumanhubList = default;
     [SerializeField, Tooltip("ターゲットリスト")] private List<CatchableObj> _HumanHandyList = default;
     [SerializeField, Tooltip("Humanの捕まる前の参考constraints")] private Rigidbody _rafConstraints = null;
-    [SerializeField, Tooltip("長さ")] private float _length = 10.0f;
-    [SerializeField, Tooltip("プレイヤーの移動パス")] private List<Transform> _pathList = null;
-    [SerializeField, Tooltip("次のセグメントのアングル")] private Vector3 _nextSegmentAddAngle = default;
+    [SerializeField, Tooltip("プレイヤーの移動パス")] private List<EndlessBattlePath> _pathList = null;
     [SerializeField, Tooltip("次のセグメントの位置")] private Transform _nextSegmentPos = null;
     [SerializeField, Tooltip("プレイヤーが見る位置")] private Transform _lookAtTarget = null;
     [SerializeField, Tooltip("トリガー")] private ChildTrigger _childTrigger = null;
+    private List<Transform> _pathListTransform = null;
     private List<Human> _targethumanList = default;
     private Action _onCliearCallback = default;
     private UnityEvent _onInitialize = null;
@@ -104,6 +103,13 @@ public class EndlessBattleSegment : MonoBehaviour
             GameDataManager.SetGimmickKill(true);
         else
             GameDataManager.SetGimmickKill(false);
+
+
+        _pathListTransform = new List<Transform>();
+        for(int i = 0; i < _pathList.Count; i++)
+        {
+            _pathListTransform.Add(_pathList[i].transform);
+        }
     }
     public Human GetHuman(int index = 0)
     { 
@@ -122,16 +128,20 @@ public class EndlessBattleSegment : MonoBehaviour
             _onInitialize = new UnityEvent();
         _onInitialize.AddListener(onInitialize);
     }
-    public float GetLength(){ return _length; }
     public string GetStageId(){ return _stageId; }
     public bool IsGimmickKill(){ return _isGimmickKill; }
-    public Vector3 GetNextSegmentAddAngle(){ return _nextSegmentAddAngle; }
     public Transform GetLookAtTarget(){ return _lookAtTarget; }
     public Transform GetNextSegmentPos(){ return _nextSegmentPos; }
-    public List<Transform> GetPathList()
+    public List<Transform> GetPathListTransform()
+    { 
+        if(_pathListTransform == null)
+            _pathListTransform = new List<Transform>();
+        return _pathListTransform; 
+    }
+    public List<EndlessBattlePath> GetPathList()
     { 
         if(_pathList == null)
-            _pathList = new List<Transform>();
+            _pathList = new List<EndlessBattlePath>();
         return _pathList; 
     }
     public bool isAllKill()

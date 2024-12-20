@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Cinemachine;
+using UnityEngine.Events;
 
 public class EndlessBattleSubManager : StageSubManager
 {
@@ -15,7 +16,7 @@ public class EndlessBattleSubManager : StageSubManager
     [SerializeField, Tooltip("パス")] private CinemachineSmoothPath _playerMovePath = default;
     private List<EndlessBattleSegment> _segmentList = default;
     private int _instanceSegmentIndex = 0;
-    private float _nextInstancePos = 0;
+    // private float _nextInstancePos = 0;
     private bool _initNextInstancePos = false;
     private Player _player = null;
     float _nextSegmentPos = 0f;
@@ -27,6 +28,7 @@ public class EndlessBattleSubManager : StageSubManager
     private EndlessBattleSegment _beforeSegment = null; // 直前にプレイヤーがいたセグメント
     private int _currentSegmentIndex = 0; // 今のセグメントインデックス番号
     private int _laps = 0; // デバッグ用：周回回数
+    private ClearLook _carrentClearLook = ClearLook.none;   // 今のセグメントをクリアしたらどこを見るか
     // ---------- クラス変数宣言 -----------------------
     // ---------- インスタンス変数宣言 ------------------
     // ---------- Unity組込関数 -----------------------
@@ -61,9 +63,6 @@ public class EndlessBattleSubManager : StageSubManager
         {
             EndlessBattleSegment segment = InstantiateSegment();
             j++;
-            // if( _playerMovePath.m_Waypoints.length)
-            //     _nextInstancePos = segment.GetLength();
-            // _playerMovePath.GetPathLength();
         }
         Debug.Log("DistanceCacheIsValid:" + _playerMovePath.DistanceCacheIsValid() + ", m_Waypoints.Length" + _playerMovePath.m_Waypoints.Length);
 
@@ -80,7 +79,6 @@ public class EndlessBattleSubManager : StageSubManager
             {
                 // Debug.Log("セグメント更新！！");
                 EndlessBattleSegment segment = InstantiateSegment();
-                _nextInstancePos += segment.GetLength();
 
                 // 後ろのセグメントを消す
                 DeleteSegment();
@@ -144,21 +142,27 @@ public class EndlessBattleSubManager : StageSubManager
         IndexNext();
 
         // パスの追加
-        _wayPointList.AddRange(CreateWaypointToTransform(segment.GetPathList()));
+        _wayPointList.AddRange(CreateWaypointToTransform(segment.GetPathListTransform()));
         _playerMovePath.m_Waypoints = _wayPointList.ToArray();
 
         // このセグメントを増やしたことで増えたPathLengthを覚えさせておく
         segment.PathLength = GetSubPathLength();
 
         // 以降のセグメント生成の向き設定
-        _segmentCreateHead.eulerAngles += segment.GetNextSegmentAddAngle();
-        _segmentCreateHead.position += _segmentCreateHead.forward * segment.GetLength();
+        _segmentCreateHead.eulerAngles = segment.GetNextSegmentPos().eulerAngles;
+        _segmentCreateHead.position = segment.GetNextSegmentPos().position;
 
         segment.gameObject.name = segment.gameObject.name + "_" + _laps;
 
+        // 各パス通過時の設定
+        List<EndlessBattlePath> endlessBattlePathList = segment.GetPathList();
+        for(int i = 0; i < endlessBattlePathList.Count; i++)
+        {
+            EndlessBattlePath path = endlessBattlePathList[i];
+            path.AddCallbackOnTriggerEnter(OnEnterPass(segment, path));
+        }
+
         _segmentList.Add(segment);
-
-
         segment.AddCallbackOnTriggerEnter((Collider collider)=>
         {
             // Debug.Log("トリガーからセグメント更新:" + segment.gameObject.name);
@@ -205,7 +209,7 @@ public class EndlessBattleSubManager : StageSubManager
 
                 if( 0 < index)
                 {
-                    pathNum += segment.GetPathList().Count;
+                    pathNum += segment.GetPathListTransform().Count;
                 }
                 else
                 {
@@ -289,7 +293,7 @@ public class EndlessBattleSubManager : StageSubManager
         }
         // 現時点で最初のセグメントを、パスを消してから消す
         EndlessBattleSegment segment = _segmentList[0];
-        int pathNum = segment.GetPathList().Count;
+        int pathNum = segment.GetPathListTransform().Count;
         _wayPointList.RemoveRange(0, pathNum);
         _playerMovePath.m_Waypoints = _wayPointList.ToArray();
         
@@ -319,13 +323,22 @@ public class EndlessBattleSubManager : StageSubManager
         List<CinemachineSmoothPath.Waypoint> retList = new List<CinemachineSmoothPath.Waypoint>();
         for(int i = 0; i < transforms.Count; i++)
         {
-            CinemachineSmoothPath.Waypoint waypoint = new CinemachineSmoothPath.Waypoint();
-            Vector3 pos = transforms[i].position;
-            pos.y += _player.GetInitPos().y;
-            waypoint.position = pos;
+            // CinemachineSmoothPath.Waypoint waypoint = new CinemachineSmoothPath.Waypoint();
+            // Vector3 pos = transforms[i].position;
+            // pos.y += _player.GetInitPos().y;
+            // waypoint.position = pos;
+            CinemachineSmoothPath.Waypoint waypoint = CreateWaypointToTransform(transforms[i]);
             retList.Add( waypoint );
         }
         return retList;
+    }
+    private CinemachineSmoothPath.Waypoint CreateWaypointToTransform(Transform transforms)
+    {
+        CinemachineSmoothPath.Waypoint waypoint = new CinemachineSmoothPath.Waypoint();
+        Vector3 pos = transforms.position;
+        pos.y += _player.GetInitPos().y;
+        waypoint.position = pos;
+        return waypoint;
     }
 
     // パスの長さ差分取得&更新
@@ -335,5 +348,45 @@ public class EndlessBattleSubManager : StageSubManager
         _beforePathLength = _playerMovePath.PathLength;
          
         return ret;
+    }
+
+    // プレイヤーがパスを通過した時の処理を返す
+    private UnityAction<Collider> OnEnterPass( EndlessBattleSegment segment, EndlessBattlePath path )
+    {
+        SetCurrentSegment(segment);
+        return (Collider collider)=>{
+
+            // プレイヤーの移動状態の切り替え
+            switch(path.EnterPlayerState)
+            {
+                case EnterPlayerState.battle:
+                    if(!_currentSegment.isAllKill())
+                        _player.SetState(PlayerState.battle);
+                    break;
+                case EnterPlayerState.move:
+                    _player.SetState(PlayerState.move);
+                    break;
+            }
+            if(_currentSegment.isAllKill())
+                _player.SetState(PlayerState.move);
+
+            // ここを通過したときプレイヤーは何を見るか
+            switch(path.EnterLook)
+            {
+                case EnterLook.front:
+                    _player.SetLookAtTarget(null);
+                    break;
+                case EnterLook.next:
+                    
+                    break;
+                case EnterLook.look:
+                    
+                    _player.SetLookAtTarget(null);
+                    break;
+            }
+
+            // ここを通過後、クリアしたらorクリアしてたらプレイヤーは何を見るか
+            _carrentClearLook = path.ClearLook;
+        };
     }
 }

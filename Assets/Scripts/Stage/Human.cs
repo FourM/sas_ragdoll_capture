@@ -85,7 +85,19 @@ public class Human : CatchableObj
     {
         for(int i = 0; i < _lookers.Count; i++)
         {
-            LookAtTarget(_lookers[i], _lookerInitAngle[i], i);
+            if(!_isBroken)
+            {
+                // 生きてたらそちらを向く
+                LookAtTarget(_lookers[i], _lookerInitAngle[i], i);
+            }
+            else
+            {
+                // 死んでたら首だけそのまま、目はデフォルトに戻す
+                if( 0 < i )
+                {
+                    _lookers[i].localEulerAngles = _lookerInitAngle[i];
+                }
+            }
         }
 
         // 直前に触れていたオブジェクトカウンターを減らす
