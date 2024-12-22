@@ -63,6 +63,6 @@ public class EndlessBattlePath : MonoBehaviour
             }
         });
     }
-    public Transform LookPos(){ return _lookPos; }
+    public Transform GetLookPos(){ return _lookPos; }
     // ---------- Private関数 ------------------------
 }

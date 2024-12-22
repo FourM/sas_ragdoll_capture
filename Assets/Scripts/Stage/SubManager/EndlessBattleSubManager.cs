@@ -25,10 +25,12 @@ public class EndlessBattleSubManager : StageSubManager
     private int _initPathNum = 0; // 初期のパス数
     private bool _firstUpdateSegment = false;   // 一番最初のセグメント更新
     private EndlessBattleSegment _currentSegment = null; // 今のプレイヤーがいるセグメント
+    private bool _isSegmentClear = false;
     private EndlessBattleSegment _beforeSegment = null; // 直前にプレイヤーがいたセグメント
     private int _currentSegmentIndex = 0; // 今のセグメントインデックス番号
     private int _laps = 0; // デバッグ用：周回回数
     private ClearLook _carrentClearLook = ClearLook.none;   // 今のセグメントをクリアしたらどこを見るか
+    private bool _newPath = true;
     // ---------- クラス変数宣言 -----------------------
     // ---------- インスタンス変数宣言 ------------------
     // ---------- Unity組込関数 -----------------------
@@ -64,7 +66,7 @@ public class EndlessBattleSubManager : StageSubManager
             EndlessBattleSegment segment = InstantiateSegment();
             j++;
         }
-        Debug.Log("DistanceCacheIsValid:" + _playerMovePath.DistanceCacheIsValid() + ", m_Waypoints.Length" + _playerMovePath.m_Waypoints.Length);
+        // Debug.Log("DistanceCacheIsValid:" + _playerMovePath.DistanceCacheIsValid() + ", m_Waypoints.Length" + _playerMovePath.m_Waypoints.Length);
 
         _currentSegmentIndex = 0;
         _currentSegment = _stagePrefabs[_currentSegmentIndex];
@@ -101,24 +103,30 @@ public class EndlessBattleSubManager : StageSubManager
         {
             if(GameDataManager.GameState == GameState.main)
             {
-                if(_currentSegment.isAllKill())
+                if(_currentSegment.isAllKill() && _newPath)
                 {
                     _player.SetState(PlayerState.move);
-                    // Debug.Log("今の区画をクリア！" + _currentSegment.gameObject.name);
-                    int index = _segmentList.IndexOf(_currentSegment);
-                    EndlessBattleSegment segment = _segmentList[index + 1];
-
-                    if(segment != null)
+                    switch(_carrentClearLook)
                     {
-                        Transform lookAtTarget = segment.GetLookAtTarget();
-                        _player.SetLookAtTarget(lookAtTarget);
+                        case ClearLook.front:
+                            _player.SetLookAtTarget(null);
+                            break;
+                        case ClearLook.next:
+                            // Debug.Log("今の区画をクリア！" + _currentSegment.gameObject.name);
+                            Transform lookAtTarget = NextLook(_currentSegment);
+                            // if(lookAtTarget == null)
+                            //     Debug.Log("Updから見るのセット！:next:lookAtTarget is NUll, from " + _currentSegment.gameObject.name);
+                            // else
+                            //     Debug.Log("Updから見るのセット！:next:" + lookAtTarget.gameObject.name + ", from " + _currentSegment.gameObject.name);
+                            break;
                     }
+                    _newPath = false;
                 }
                 else
                 {
-                    _player.SetState(PlayerState.battle);
-                    Transform lookAtTarget = _currentSegment.GetLookAtTarget();
-                    _player.SetLookAtTarget(lookAtTarget);
+                    // _player.SetState(PlayerState.battle);
+                    // Transform lookAtTarget = _currentSegment.GetLookAtTarget();
+                    // _player.SetLookAtTarget(lookAtTarget);
                 }
             }
         }
@@ -159,6 +167,7 @@ public class EndlessBattleSubManager : StageSubManager
         for(int i = 0; i < endlessBattlePathList.Count; i++)
         {
             EndlessBattlePath path = endlessBattlePathList[i];
+            path.gameObject.name = segment.gameObject.name + "_" + i;
             path.AddCallbackOnTriggerEnter(OnEnterPass(segment, path));
         }
 
@@ -270,14 +279,14 @@ public class EndlessBattleSubManager : StageSubManager
         
         if(_beforeSegment != _currentSegment)
         {
-            if(_beforeSegment == null)
-            {
-                // Debug.Log("currentSegment更新:Null→" + _currentSegment.gameObject.name);
-            }
-            else
-            {
-                // Debug.Log("currentSegment更新:" + _beforeSegment.gameObject.name + "→" + _currentSegment.gameObject.name);
-            }
+            // if(_beforeSegment == null)
+            // {
+            //     Debug.Log("currentSegment更新:Null→" + _currentSegment.gameObject.name);
+            // }
+            // else
+            // {
+            //     Debug.Log("currentSegment更新:" + _beforeSegment.gameObject.name + "→" + _currentSegment.gameObject.name);
+            // }
             _beforeSegment = _currentSegment;
         }
     }
@@ -353,9 +362,9 @@ public class EndlessBattleSubManager : StageSubManager
     // プレイヤーがパスを通過した時の処理を返す
     private UnityAction<Collider> OnEnterPass( EndlessBattleSegment segment, EndlessBattlePath path )
     {
-        SetCurrentSegment(segment);
         return (Collider collider)=>{
-
+            // Debug.Log("最新の通過パス！:" + segment.gameObject.name + ", " + path.gameObject.name);
+            SetCurrentSegment(segment);
             // プレイヤーの移動状態の切り替え
             switch(path.EnterPlayerState)
             {
@@ -371,22 +380,48 @@ public class EndlessBattleSubManager : StageSubManager
                 _player.SetState(PlayerState.move);
 
             // ここを通過したときプレイヤーは何を見るか
-            switch(path.EnterLook)
+            if(!_currentSegment.isAllKill())
             {
-                case EnterLook.front:
-                    _player.SetLookAtTarget(null);
-                    break;
-                case EnterLook.next:
-                    
-                    break;
-                case EnterLook.look:
-                    
-                    _player.SetLookAtTarget(null);
-                    break;
+                switch(path.EnterLook)
+                {
+                    case EnterLook.front:
+                        _player.SetLookAtTarget(null);
+                        break;
+                    case EnterLook.next:
+                        Transform lookAtTarget = NextLook(_currentSegment);
+                        // if(lookAtTarget == null)
+                        //     Debug.Log("パスから見るのセット！:next:lookAtTarget is NUll, from " + path.gameObject.name);
+                        // else
+                        //     Debug.Log("パスから見るのセット！:next:" + lookAtTarget.gameObject.name + ", from " + path.gameObject.name);
+                        break;
+                    case EnterLook.look:
+                        Transform lookPos = path.GetLookPos();
+                        _player.SetLookAtTarget(lookPos);
+                        // Debug.Log("パスから見るのセット！:look:" + lookPos.gameObject.name + ", from " + path.gameObject.name);
+                        break;
+                }
             }
 
             // ここを通過後、クリアしたらorクリアしてたらプレイヤーは何を見るか
             _carrentClearLook = path.ClearLook;
+            _newPath = true;
         };
+    }
+
+    private Transform NextLook(EndlessBattleSegment segment)
+    {
+        int index = _segmentList.IndexOf(segment);
+        EndlessBattleSegment nextSegment = _segmentList[index + 1];
+        Transform ret = null;
+        if(nextSegment != null)
+        {
+            Transform lookAtTarget = nextSegment.GetLookAtTarget();
+            _player.SetLookAtTarget(lookAtTarget);
+            ret = lookAtTarget;
+        }
+        else
+            _player.SetLookAtTarget(null);
+
+        return ret;
     }
 }
