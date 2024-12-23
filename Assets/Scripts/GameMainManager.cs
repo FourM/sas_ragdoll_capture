@@ -30,7 +30,11 @@ public class GameMainManager : MonoBehaviour
     // ---------- Unity組込関数 ----------
     private void Start() {
         // await FetchDataAsync();
+#if UNITY_IOS
         _blackOut.SetActive(true);
+#else
+        _blackOut.SetActive(false);
+#endif
         Initialize();
     }
     // ---------- Public関数 ----------
@@ -41,9 +45,14 @@ public class GameMainManager : MonoBehaviour
         if(_isInitialize) return;
         _isInitialize = true;
 
+#if UNITY_IOS
         // リモートコンフィグのデータ取得(非同期)
-        // FetchDataAsyncStart();
-        await FetchDataAsync();
+        FetchDataAsyncStart();
+        Debug.Log("リモートコンフィグを通るよ");
+#else
+        Debug.Log("リモートコンフィグを通らないよ");
+#endif
+        // await FetchDataAsync();
         // リアルタイム Remote Configによるデータ取得。デバイス上でないと動いてくれないらしい。
         FirebaseRemoteConfig.DefaultInstance.OnConfigUpdateListener += ConfigUpdateListenerEventHandler;
 
