@@ -31,22 +31,14 @@ public class StageBanner : MonoBehaviour
          MaxSdk.ShowBanner(bannerAdUnitId);
         check= PlayerPrefs.GetInt("banner");
     }
-    public void FixedUpdate()
-    {
-       
-
-
-
-
-
-    }
+    public void FixedUpdate(){}
     public void InitializeBannerAds()
     {
 
 #if UNITY_ANDROID
          bannerAdUnitId  = "231fa7a1b73515a9";
 #elif UNITY_IOS
-        bannerAdUnitId = "9616ebb8764e92aa";
+        bannerAdUnitId = "91a0381dd83e7a2b";
 #else
         bannerAdUnitId  = "unexpected_platform";
 #endif
