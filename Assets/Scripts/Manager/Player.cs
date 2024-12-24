@@ -2,14 +2,20 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Cinemachine;
-
+using DG.Tweening;
+using UnityEngine.Events;
 
 public enum PlayerState{
     stop,
     move,
     battle,
+    down
 }
-
+// public enum PlayerAction
+// {
+//     idle,
+//     down,
+// }
 public class Player : MonoBehaviour
 {
     // ---------- 定数宣言 ----------------------------
@@ -19,6 +25,15 @@ public class Player : MonoBehaviour
     [SerializeField, Tooltip("hoge")] private CinemachineDollyCart _cinemachineDollyCart = default;
     [SerializeField, Tooltip("hoge")] private float _baseSpeed = 0f;
     [SerializeField, Tooltip("hoge")] private Transform _lookAtTransform = null;
+    [SerializeField, Tooltip("プレイヤーの仮想の体")] private Transform _playerBody = null;
+    [SerializeField, Tooltip("プレイヤー倒れる角度")] private float _downAngle = -11f;
+    [SerializeField, Tooltip("プレイヤー倒れる時間")] private float _downDulation = 1.0f;
+    [SerializeField, Tooltip("プレイヤー倒れるディレイ")] private float _downDelay = 0.3f;
+    [SerializeField, Tooltip("ヒットエフェクト")] private ParticleSystem _hitEffect = null;
+    [SerializeField, Tooltip("おててのアニメーション")] private Animator _handAnimator = default;
+    [SerializeField, Tooltip("おててのアニメーション")] private Animation _handAnimation = default;
+    [SerializeField, Tooltip("カメラ振動")] private CinemachineImpulseSource _cinemachineImpulseSource = default;
+    private string[] character_anim_parameter = {"Idle", "Down"};
     private Vector3 _initPos = default;
     private Vector3 _initLookPos = default;
     private PlayerState _state = PlayerState.stop;
@@ -41,6 +56,14 @@ public class Player : MonoBehaviour
 
     // }
     // ---------- Public関数 ------------------------- 
+    public void Reset()
+    {
+        _playerBody.localEulerAngles = Vector3.zero;
+        _cinemachineDollyCart.enabled = true;
+        // アニメーションに関係する手をゲーム起動時に再生成していて、アニメーションから手の参照が切れているため、再スキャンする
+        _handAnimator.Rebind();
+        _handAnimator.Update(0);  // これも重要
+    }
     public CinemachineDollyCart GetMovePath(){ return _cinemachineDollyCart; }
     public void StopPathMove(){ _cinemachineDollyCart.m_Speed = 0f; }
     public void ContinuePathMove()
@@ -55,7 +78,6 @@ public class Player : MonoBehaviour
             return;
         _beforeState = _state;
         _state = state; 
-
         // Debug.Log("ステータス変更！:" + state);
 
         switch(state)
@@ -69,7 +91,10 @@ public class Player : MonoBehaviour
             case PlayerState.move:
                 ContinuePathMove();
                 break;
+            case PlayerState.down:
+                break;
         }
+        ChangeAction();
     }
     public void SetBeforeState(){
         SetState(_beforeState);
@@ -93,6 +118,56 @@ public class Player : MonoBehaviour
         {
             _lookAtTransform.parent = this.transform;
             _lookAtTransform.localPosition = _initLookPos;
+        }
+    }
+
+    public void Down(TweenCallback onComplete)
+    {
+        _cinemachineDollyCart.enabled = false;
+        _hitEffect?.Play();
+        float cameraHeight = 1.8f;
+        Vector3 pos = this.transform.position;
+        pos -= Camera.main.transform.forward * cameraHeight;
+        float posY = pos.y - cameraHeight + 0.1f;
+
+        // カメラ振動
+        _cinemachineImpulseSource.GenerateImpulse(new Vector3(0.6f, 0.6f, 0));
+
+        Sequence sequence = DOTween.Sequence();
+        sequence.AppendInterval(_downDelay * 0.1f);
+        sequence.Append(_playerBody.DOShakePosition(_downDelay * 0.8f, 0.06f, 30, 1, false, true));
+        sequence.AppendInterval(_downDelay * 0.9f);
+        sequence.AppendCallback(()=>{
+            SetState(PlayerState.down);
+            _lookAtTransform.parent = this.transform;
+            _lookAtTransform.DOLocalMove(new Vector3(0, 10f, 1f), _downDulation + 0.1f).SetEase(Ease.InBack);
+            this.transform.DOMoveX( pos.x, _downDulation).SetEase(Ease.InBack);
+            this.transform.DOMoveZ( pos.z, _downDulation).SetEase(Ease.InBack);
+        });
+        sequence.AppendInterval(0.2f);
+        sequence.Append(this.transform.DOMoveY( posY, _downDulation).SetEase(Ease.InQuad));
+        sequence.AppendInterval(0.1f);
+        sequence.AppendCallback(()=>{ onComplete(); });
+        // sequence.Append(_playerBody.DOLocalRotate(new Vector3(_downAngle, 0, 0), _downDulation).SetEase(Ease.InBack).OnComplete(onComplete));
+    }
+
+    // アニメーション変更
+    public void ChangeAction()
+    {
+        foreach(string animParamin in character_anim_parameter)
+        {
+            _handAnimator.SetBool(animParamin, false);
+        }
+        switch(_state)
+        {
+            case PlayerState.down:
+                _handAnimator.SetBool("Down", true);
+                _handAnimator.Play("Base Layer.Down");
+                break;
+            default:
+                _handAnimator.SetBool("Idle", true);
+                _handAnimator.Play("Base Layer.Idle");
+                break;
         }
     }
     // ---------- Private関数 ------------------------

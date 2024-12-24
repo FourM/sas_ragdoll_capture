@@ -36,12 +36,14 @@ public class Hand : MonoBehaviour
     public HandSkin SetLeftHandSkin(HandSkin handSkinPrefab)
     {
         SetHandSkin(ref _leftHand, handSkinPrefab);
+        _leftHand.gameObject.name = "hand_L";
         _handAnimator = _leftHand.GetHandAnimator();
         return _leftHand;
     }
     public HandSkin SetRightHandSkin(HandSkin handSkinPrefab)
     {
         SetHandSkin(ref _rightHand, handSkinPrefab);
+        _rightHand.gameObject.name = "hand_R";
         return _rightHand;
     }
     // ---------- Private関数 ----------

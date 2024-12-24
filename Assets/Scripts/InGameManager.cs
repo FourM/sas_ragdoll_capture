@@ -118,7 +118,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
         set{
             // if(_gameState == value) 
             //     return;
-            Debug.Log("gameState変更!:" + _gameState);
+            // Debug.Log("gameState変更!:" + _gameState);
             _gameState = value;
             GameDataManager.SetGameState(value);
             // _player.StopPathMove();
@@ -299,6 +299,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
         _player.GetMovePath().m_Position = 0f;
         _player.transform.localEulerAngles = Vector3.zero;
         _player.SetLookAtTarget(null);
+        _player.Reset();
         if(GameMode == GameMode.endlessBattle)
             GameState = GameState.startWait;
         _webLineEndPos.parent = this.transform;
@@ -330,7 +331,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
     // 敵の攻撃開始時の処理
     public void OnEnemyAttackStart()
     {
-        Debug.Log("敵の攻撃!!");
+        // Debug.Log("敵の攻撃!!");
         if( GameMode == GameMode.endlessBattle)
         {
             ReleaseCatchObj();
@@ -352,9 +353,15 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
         if( GameMode == GameMode.endlessBattle)
         {
             // リザルト表示
-            GameState = GameState.startWait;
-            UndoInGame();
-            Debug.Log("ぎゃああ");
+            VibrationManager.VibrateShort();
+            GameState = GameState.result;
+            _player.Down(()=>
+            {
+                DOVirtual.DelayedCall(0.75f, ()=>
+                {
+                    UndoInGame();
+                });
+            });
         }
     }
 
@@ -432,7 +439,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
     // つかみを試行
     private void TryCatch()
     {
-        Debug.Log("カメラ向き：" + Camera.main.transform.eulerAngles);
+        // Debug.Log("カメラ向き：" + Camera.main.transform.eulerAngles);
         // レイを飛ばす
         // レイが、掴めるものに当たったら物を掴んだ状態にする
         Camera mainCamera = Camera.main;/*使用するカメラを指定*/
