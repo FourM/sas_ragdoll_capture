@@ -38,6 +38,7 @@ public class Human : CatchableObj
     [SerializeField, Tooltip("声")] private AudioSource _audioSouce = default;
     [SerializeField, Tooltip("声リスト")] private List<AudioClip> _listAudioClip = default;
     [SerializeField, Tooltip("カメラ外、カメラ内イベント")] private ChildTrigger _visibleEventTrigger;
+    [SerializeField, Tooltip("Ragdoll根本の位置の補助オブジェクト")] private Transform _basePosChild;
     // private bool _isBroken = false;
     private UnityEvent _onCatchCallback = default;
     private UnityEvent _onReleaseCallback = default;
@@ -45,6 +46,7 @@ public class Human : CatchableObj
     private UnityEvent _onChangePartsMassCallback = default;
     private UnityEvent<UnityAction<HumanChild>> _onPartsActiion = default;
     private Dictionary<HumanParts, HumanChild> _humanPartsDictionary = null;
+    private UnityEvent<float> _onDamage = default;
     private List<Vector3> _lookerInitAngle = default;
     private bool _isGround = true;
     private Dictionary<GameObject, float> _stayObjectDic = null;
@@ -52,7 +54,14 @@ public class Human : CatchableObj
     private float _fallTime = 0;
     private bool _isOtherCatch = false;
     private bool _isVisible = true; // カメラに写っているか
+    private Vector3 _baseInitPos = default;
     public bool IsVisible{ get{ return _isVisible; } }
+    private float _maxHp = 100;
+    public float MaxHP{ get{ return _maxHp; } }
+    private float _currentHp = 100;
+    public float HP{ get{ return _currentHp; } }
+    private Vector3 _impactPos;
+    private Transform _LookPlayer = null;
     // ---------- クラス変数宣言 ----------
     // ---------- インスタンス変数宣言 ----------
     // ---------- Unity組込関数 ----------
@@ -80,6 +89,7 @@ public class Human : CatchableObj
                 _isVisible = false;
             });
         }
+        _baseInitPos = _basePos.localPosition;
     }
     protected override void UpdateUnique()
     {
@@ -98,6 +108,8 @@ public class Human : CatchableObj
                     _lookers[i].localEulerAngles = _lookerInitAngle[i];
                 }
             }
+
+            _basePosChild.position = _basePos.position;
         }
 
         // 直前に触れていたオブジェクトカウンターを減らす
@@ -129,11 +141,19 @@ public class Human : CatchableObj
         {
             _fallTime = 0f;
         }
+
+        if(_LookPlayer != null)
+        {
+            Vector3 LookPos = _LookPlayer.position;
+            LookPos.y = _basePos.position.y;
+            _basePos.LookAt(LookPos);
+        }
     }
     protected override void OnCatchUnique()
     { 
         DesableAnimation();
         _onCatchCallback?.Invoke();
+        _LookPlayer = null;
 
         // ぐてっとさせる
         SetIsPartsFollow(false);
@@ -146,8 +166,35 @@ public class Human : CatchableObj
         _onReleaseCallback?.Invoke();
     }
 
+    protected override void OnDamageUnique(float damage)
+    {
+        _currentHp -= damage;
+        
+        bool isBigDamage = false;
+        if( _maxHp * 0.5f <= damage || 100 <= damage )
+            isBigDamage = true;
+        if( !_isBroken )
+        {
+            // エフェクト発生
+            if( isBigDamage || GameDataManager.GameMode == GameMode.main )
+                EffectManager.instance.PlayEffect(_impactPos, effectType.impact);
+            else
+                EffectManager.instance.PlayEffect(_impactPos, effectType.impactSmall);
+        }
+
+        _onDamage?.Invoke(damage);
+        if(_currentHp <= 0 || GameDataManager.GameMode == GameMode.main)
+            OnBreak();
+
+        DesableAnimation();
+        // ぐてっとさせる
+        SetIsPartsFollow(false);
+        _LookPlayer = null;
+    }
+
     protected override void OnBreakUnique()
     {
+        // Debug.Log("OnBreakだお");
         // イベント用：プレイヤー画面を押している間に56された
         if( Input.GetMouseButton(0) )
             GameDataManager.SetIsDefeat(true);
@@ -181,6 +228,7 @@ public class Human : CatchableObj
         }
             
         _isBroken = true;
+        _LookPlayer = null;
 
         // ぐてっとさせる
         SetIsPartsFollow(false);
@@ -206,7 +254,7 @@ public class Human : CatchableObj
         _onDesableAnimationCallback.AddListener(callback);
     }
     
-
+    // アニメーション無効化
     public void DesableAnimation() {
         _animator.enabled = false;
         _onDesableAnimationCallback?.Invoke();
@@ -226,6 +274,32 @@ public class Human : CatchableObj
         
         if(_collider != null)
             _collider.enabled = false;
+    }
+    // アニメーションの再有効化
+    public void EnableAnimation() {
+
+        // 直前までアニメーションが無効化されてたら位置補正
+        if(!_animator.enabled)
+        {
+            _basePosChild.parent = this.transform.parent.parent;
+
+            Vector3 setpos = _basePosChild.position;
+
+            setpos.y -= _basePos.localPosition.z * _basePos.parent.localScale.z;
+            this.transform.position = setpos;
+        }
+
+        _animator.enabled = true;
+
+        Rigidbody rigidBody = GetRigidbody();
+        if(rigidBody != null)
+        {
+            rigidBody.useGravity = true;
+            rigidBody.isKinematic = false;
+        }
+        
+        if(_collider != null)
+            _collider.enabled = true;
     }
     public bool IsEnableAnimation(){ return _animator.enabled; }
     public void SetChildLayer(int layerMask){ _childLayer = layerMask; } 
@@ -329,6 +403,13 @@ public class Human : CatchableObj
         _onPartsActiion?.Invoke(partsActiion);
     }
 
+    public void AddOnDamage( UnityAction<float> onDamage )
+    {
+        if(_onDamage == null)
+            _onDamage = new UnityEvent<float>();
+        _onDamage.AddListener(onDamage);
+    }
+
     // 接地判定。ギミックなどが参考にする
     public bool IsGround(){ return _isGround; }
     // 接地判定。設定。HumanChildなどから設定する
@@ -351,6 +432,9 @@ public class Human : CatchableObj
     public bool IsOtherCatch(){ return _isOtherCatch; }
     // カメラに写っているか
     public void SetIsVisible(bool isVisible){ _isVisible = isVisible; }
+    public void SetImpactPos(Vector3 pos ){ _impactPos = pos; }
+
+    public void ActiveLookPlayer( Transform player ){ _LookPlayer = player; }
     // ---------- Private関数 ----------
     private void LookAtTarget(Transform looker, Vector3 initAngle, int index)
     {

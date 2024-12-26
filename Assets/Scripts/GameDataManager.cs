@@ -150,4 +150,13 @@ public static class GameDataManager
 
     public static void SetPlayer(Player player){ _player = player; }
     public static Player GetPlayer(){ return _player; }
+    public static float GetPower()
+    { 
+        float power = 1.0f;
+
+        int powerLevel = PlayerPrefs.GetInt("PowerLevel", 1);
+        power += powerLevel * 0.02f;
+
+        return power; 
+    }
 }

@@ -59,7 +59,10 @@ public class BomBarret : CatchableObj
             // 致死衝撃を受けた処理
             OnBreak();
             if(isHuman)
-                collitionChatchableObj.OnBreak();
+            {
+                humanChild.SetImpactPos(collision.GetContact(0).point);
+                collitionChatchableObj.OnDamage(150);
+            }
         }
     }
 

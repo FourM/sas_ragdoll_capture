@@ -57,7 +57,8 @@ public class Mace : CatchableObj
                 
                 if(catchableObj.GetRigidbody() != null)
                     catchableObj.GetRigidbody().velocity = GetRigidbody().velocity * 5f;
-                catchableObj.OnBreak();
+                // catchableObj.OnBreak();
+                catchableObj.OnDamage(110);
 
                 if(humanChild != null)
                     humanChild.SetImpactPos(collision.GetContact(0).point);

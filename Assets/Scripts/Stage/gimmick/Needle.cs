@@ -22,14 +22,14 @@ public class Needle : MonoBehaviour
     // 触れた相手を倒す
     private void OnCollisionEnter(Collision collision)
     {
-        TryBreakObject(collision.transform.gameObject, collision);
+        TryBreakObject(collision.transform.gameObject, collision.GetContact(0).point);
     }
     private void OnTriggerEnter(Collider collider)
     {
         if(!_isTriggerKill)
             return;
         if(collider != null && collider.transform != null && collider.transform.gameObject != null)
-            TryBreakObject(collider.transform.gameObject, null);
+            TryBreakObject(collider.transform.gameObject, collider.ClosestPointOnBounds(this.transform.position));
     }
     private void Update()
     {
@@ -42,15 +42,15 @@ public class Needle : MonoBehaviour
     }
     // ---------- Public関数 ----------
     // ---------- Private関数 ----------
-    private void TryBreakObject(GameObject gameObject, Collision collision)
+    private void TryBreakObject(GameObject gameObject, Vector3 effectPos)
     {
         CatchableObj catchableObj = GameDataManager.GetCatchableObj(gameObject);
         if(catchableObj != null )
         {
             HumanChild humanChild = catchableObj.TryGetHumanChild();
-            if(humanChild != null && collision != null)
+            if(humanChild != null)
             {
-                humanChild.SetImpactPos(collision.GetContact(0).point);
+                humanChild.SetImpactPos(effectPos);
             }
 
             if(_rigidbody != null)
@@ -75,9 +75,11 @@ public class Needle : MonoBehaviour
                 {
                     human.GetRigidbody().constraints = RigidbodyConstraints.None;
                     human.GetRigidbody().velocity = addVelocity;
+                    human.SetImpactPos(effectPos);
                 }
             }
-            catchableObj.OnBreak();
+            // catchableObj.OnBreak();
+            catchableObj.OnDamage(150);
         }
     }
 }

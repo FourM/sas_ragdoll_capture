@@ -40,8 +40,19 @@ public class HumanPartsFollow : MonoBehaviour
     private void FixedUpdate(){
         if(!_isFollow)
             return;
+
+        float movePosFactor = 0.2f;
+
         _followStartTime -= Time.deltaTime;
-        _followTime += Time.deltaTime * 0.05f + _followTime * 0.02f;
+        if( GameDataManager.GameMode != GameMode.endlessBattle )
+        {
+            _followTime += Time.deltaTime * 0.05f + _followTime * 0.02f;
+        }
+        else
+        {
+            _followTime += Time.deltaTime * 0.12f + _followTime * 0.05f;
+            movePosFactor = 0.5f;
+        }
         _realTime += Time.deltaTime;
         _beforeRealTime = _realTime;
 
@@ -89,7 +100,7 @@ public class HumanPartsFollow : MonoBehaviour
 
                 // Debug.Log("追従してるよ！:" + parts.gameObject.name + ", " + followForce + ", " + followTorque);
 
-                Vector3 movePos = parts.transform.position + GetSubPos(index) * _followTime * 0.2f;
+                Vector3 movePos = parts.transform.position + GetSubPos(index) * _followTime * movePosFactor;
 
                 // 下から上にかかる力が掛かっているなら、下方向へ行く補正をなくす
                 if( 0f < parts.velocity.y )
@@ -99,7 +110,7 @@ public class HumanPartsFollow : MonoBehaviour
                     if( movePos.y < parts.transform.position.y )
                         movePos.y = parts.transform.position.y;
                 }
-            
+
                 parts.AddForce(followForce, ForceMode.Acceleration);
                 parts.MovePosition(movePos);
                 // parts.AddTorque(followTorque, ForceMode.Acceleration);
@@ -198,9 +209,17 @@ public class HumanPartsFollow : MonoBehaviour
             
         }
         else
-        {
-            _followStartTime = 0.1f;
-            _followTime = 0f;
+        {   
+            if( GameDataManager.GameMode != GameMode.endlessBattle )
+            {
+                _followStartTime = 0.1f;
+                _followTime = 0f;
+            }
+            else
+            {
+                _followStartTime = 0.0f;
+                _followTime = 0.4f;
+            }
             _realTime = 0;
             _isFollowBaseLock = false;
         }

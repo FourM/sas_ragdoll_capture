@@ -29,7 +29,6 @@ public class Player : MonoBehaviour
     [SerializeField, Tooltip("プレイヤー倒れる角度")] private float _downAngle = -11f;
     [SerializeField, Tooltip("プレイヤー倒れる時間")] private float _downDulation = 1.0f;
     [SerializeField, Tooltip("プレイヤー倒れるディレイ")] private float _downDelay = 0.3f;
-    [SerializeField, Tooltip("ヒットエフェクト")] private ParticleSystem _hitEffect = null;
     [SerializeField, Tooltip("おててのアニメーション")] private Animator _handAnimator = default;
     [SerializeField, Tooltip("おててのアニメーション")] private Animation _handAnimation = default;
     [SerializeField, Tooltip("カメラ振動")] private CinemachineImpulseSource _cinemachineImpulseSource = default;
@@ -123,8 +122,13 @@ public class Player : MonoBehaviour
 
     public void Down(TweenCallback onComplete)
     {
+        Vector3 effectPos = this.transform.position;
+        effectPos += this.transform.forward * 0.508f;
+        effectPos += this.transform.up * -0.46f;
+        effectPos += this.transform.right * 0.11f;
+
         _cinemachineDollyCart.enabled = false;
-        _hitEffect?.Play();
+        EffectManager.instance.PlayEffect(effectPos, effectType.impact);
         float cameraHeight = 1.8f;
         Vector3 pos = this.transform.position;
         pos -= Camera.main.transform.forward * cameraHeight;

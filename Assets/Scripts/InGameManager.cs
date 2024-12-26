@@ -329,7 +329,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
     }
 
     // 敵の攻撃開始時の処理
-    public void OnEnemyAttackStart()
+    public void OnEnemyAttackStart(Human human)
     {
         // Debug.Log("敵の攻撃!!");
         if( GameMode == GameMode.endlessBattle)
@@ -338,6 +338,13 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
             TapUp();
             GameState = GameState.endlessBattleEnemyAttack;
         }
+    }
+    // 敵とお互いに見合う時の処理
+    public void OnEnemyLook(Human human)
+    {
+        Transform lookAt = human.GetParts(HumanParts.head).transform;
+        _player.SetLookAtTarget(lookAt);
+        human.ActiveLookPlayer(_player.transform);
     }
     // 敵の攻撃をキャンセルさせた時の演出
     public void OnEnemyAttackCansel()
@@ -355,6 +362,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
             // リザルト表示
             VibrationManager.VibrateShort();
             GameState = GameState.result;
+            ReleaseCatchObj();
             _player.Down(()=>
             {
                 DOVirtual.DelayedCall(0.75f, ()=>

@@ -366,18 +366,22 @@ public class EndlessBattleSubManager : StageSubManager
             // Debug.Log("最新の通過パス！:" + segment.gameObject.name + ", " + path.gameObject.name);
             SetCurrentSegment(segment);
             // プレイヤーの移動状態の切り替え
-            switch(path.EnterPlayerState)
+
+            if(GameDataManager.GameState == GameState.main)
             {
-                case EnterPlayerState.battle:
-                    if(!_currentSegment.isAllKill())
-                        _player.SetState(PlayerState.battle);
-                    break;
-                case EnterPlayerState.move:
+                switch(path.EnterPlayerState)
+                {
+                    case EnterPlayerState.battle:
+                        if(!_currentSegment.isAllKill())
+                            _player.SetState(PlayerState.battle);
+                        break;
+                    case EnterPlayerState.move:
+                        _player.SetState(PlayerState.move);
+                        break;
+                }
+                if(_currentSegment.isAllKill())
                     _player.SetState(PlayerState.move);
-                    break;
             }
-            if(_currentSegment.isAllKill())
-                _player.SetState(PlayerState.move);
 
             // ここを通過したときプレイヤーは何を見るか
             if(!_currentSegment.isAllKill())

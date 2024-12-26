@@ -112,14 +112,15 @@ public class HumanChild : CatchableObj
             // Debug.Log("collision.gameObject.layer:" + collision.gameObject.layer + ", " + collision.gameObject.name);
             // Debug.Log("killShockStrength:" + killShockStrength + ", " + collisionSpeed);
             // 致死衝撃を受けた処理
-            OnBreak();
+            // OnBreak();
+            OnDamage(collisionSpeed);
             if(isOtherHuman)
             {
                 // ぶつかった相手のHumanは死んだ時のエフェクトを発生させない
                 HumanChild humanChild = collitionChatchableObj.TryGetHumanChild();
                 if(humanChild != null)
                     humanChild.SetIsPlayImpactEffect(false);
-                collitionChatchableObj.OnBreak();
+                collitionChatchableObj.OnDamage(collisionSpeed);
             }
             // Debug.Log(";" + GameDataManager.IsGimmickKill() + ", " + isOtherHuman + ", " + collision.gameObject.name + ", " + collision.gameObject.layer);
         }
@@ -164,7 +165,7 @@ public class HumanChild : CatchableObj
     protected override void StartUnique(){
         this.tag = _parentHuman.tag;
         SetParent(_parentHuman.gameObject);
-        _impactPos = Vector3.zero;
+        _impactPos = _parentHuman.transform.position;
 
         // パーツ登録
         if(_partsType != HumanParts.none)
@@ -338,10 +339,37 @@ public class HumanChild : CatchableObj
             // }
         }
     }
-    public void SetImpactPos(Vector3 pos ){ _impactPos = pos; }
+    public void SetImpactPos(Vector3 pos )
+    { 
+        _impactPos = pos; 
+        _parentHuman.SetImpactPos(pos);
+    }
     public void SetIsPlayImpactEffect(bool isPlayEffect ){ _isPlayImpactEffect = isPlayEffect; }
     public Human Gethuman(){ return _parentHuman; }
     // ---------- Public関数 ----------
+    protected override void OnDamageUnique(float damage)
+    {
+        _parentHuman.SetImpactPos(_impactPos);
+        _parentHuman.OnDamage(damage);
+
+        bool _isCatched = IsCatch();
+        CatchableObj alternate = GetAlternate();
+        if(alternate != null)
+            _isCatched |= alternate.IsCatch();
+
+        // これに対応する、壊れるパーツがあるならそれを破壊する
+        if(_breakableParts != null && _parentHuman.IsDead() && !_isCatched && (_alternate == null || !_alternate.IsCatch()))
+        {
+            // Debug.Log("壊れるぅ２:" + this.transform.name);
+            _breakableParts.Break(GetRigidbody().velocity, _parentHuman.transform.parent);
+
+            gameObject.SetActive(false);
+            if(_breakableParts != null && _breakableParts.transform.parent == this.transform)
+            {
+                Debug.Log("逃げ遅れたで。1:" + _breakableParts.transform.name);
+            }
+        }
+    }
     protected override void OnBreakUnique()
     { 
         bool _isCatched = IsCatch();

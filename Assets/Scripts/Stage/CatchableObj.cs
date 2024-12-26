@@ -110,6 +110,17 @@ public abstract class CatchableObj : MonoBehaviour
         _onBreakCallback?.Invoke();
         _isBroken = true;
     }
+    public void OnDamage(float damage)
+    {
+        damage *= GameDataManager.GetPower();
+        damage *= 4;
+
+        if(TryGetHumanChild() != null || TryGetHuman() != null)
+            OnDamageUnique(damage);
+        else
+            OnBreak();
+        _onBreakCallback?.Invoke();
+    }
     public void AddOnBreakCallback(UnityAction onBreak)
     {
         if(_onBreakCallback == null)
@@ -136,6 +147,18 @@ public abstract class CatchableObj : MonoBehaviour
             return null;
         return humanChild.Gethuman();
     }
+    public Human TryGetHuman()
+    {
+        if(typeof(Human) == this.GetType())
+            return (Human)this;
+        return null;
+    }
+    // public T TryGetType<T>()
+    // {
+    //     if(typeof(T) == this.GetType())
+    //         return (T)this;
+    //     return null;
+    // }
     public void AddOnInitialize( UnityAction onInitialize)
     {
         if(_onInitialize == null)
@@ -175,6 +198,7 @@ public abstract class CatchableObj : MonoBehaviour
     // 離された時の継承先の独自処理
     protected virtual void OnReleaseUnique(){  }
     protected virtual void OnBreakUnique(){  }
+    protected virtual void OnDamageUnique( float damage ){  }
     protected virtual void OnDisableUnique(){  }
     protected void SetParent( GameObject parent ){ _parent = parent; }
     //　衝突相手が(他の)Humanかチェック
@@ -210,7 +234,7 @@ public abstract class CatchableObj : MonoBehaviour
     }
 
     // 何かにぶつかったらそれを壊すギミックの共通処理
-    protected void GimmickOnCollisionHuman(Collision collision, Vector3 velocity)
+    protected void GimmickOnCollisionHuman(Collision collision, Vector3 velocity, float damage = 150)
     {
         if(GetRigidbody() == null)
             return;
@@ -236,7 +260,6 @@ public abstract class CatchableObj : MonoBehaviour
             return;
 
         
-
         float killShockStrength = GameDataManager.GetKillShockStrength();
         killShockStrength /= 2f;
         if(catchableObj != null )
@@ -251,25 +274,12 @@ public abstract class CatchableObj : MonoBehaviour
                 if(humanChild != null)
                     humanChild.SetImpactPos(collision.GetContact(0).point);
 
-                catchableObj.OnBreak();
+                // catchableObj.OnBreak();
+                catchableObj.OnDamage(damage);
                 if(parentCatchableObj != null)
                     parentCatchableObj.OnBreak();
             }
             bool isKill = catchableObj.IsBroken();
-
-            if(!isBroken &&
-            ( collision.gameObject.layer == LayerMask.NameToLayer("Human1") || 
-            collision.gameObject.layer == LayerMask.NameToLayer("Human2") ||
-            collision.gameObject.layer == LayerMask.NameToLayer("Human3") ||
-            collision.gameObject.layer == LayerMask.NameToLayer("Human4") ||
-            collision.gameObject.layer == LayerMask.NameToLayer("Human5") ||
-            collision.gameObject.layer == LayerMask.NameToLayer("Human6") ||
-            collision.gameObject.layer == LayerMask.NameToLayer("Human7") ||
-            collision.gameObject.layer == LayerMask.NameToLayer("Human8") ||
-            collision.gameObject.layer == LayerMask.NameToLayer("Human9") ||
-            collision.gameObject.layer == LayerMask.NameToLayer("Human10")
-            ))
-                FirebaseManager.instance.EventCrashed(GetRigidbody().velocity.magnitude, isKill);
         }
     }
 }

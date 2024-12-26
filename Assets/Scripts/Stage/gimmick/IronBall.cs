@@ -51,7 +51,8 @@ public class IronBall : CatchableObj
                 {
                     catchableObj.GetRigidbody().velocity = GetBeforeVelocity().normalized * 10f;
                 }
-                catchableObj.OnBreak();
+                // catchableObj.OnBreak();
+                catchableObj.OnDamage(150);
 
                 if(parentCatchableObj != null)
                     parentCatchableObj.OnBreak();
