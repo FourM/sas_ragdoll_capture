@@ -100,7 +100,7 @@ public class EndlessBattleHuman : MonoBehaviour
     }
     private void OnDamage(float damage)
     {
-        Debug.Log("OnDamage:1");
+        // Debug.Log("OnDamage:1");
         _hpBar.value = _activeHuman.HP / _activeHuman.MaxHP * 100f;
         if(_hpBar.value <= 0 )
         {
