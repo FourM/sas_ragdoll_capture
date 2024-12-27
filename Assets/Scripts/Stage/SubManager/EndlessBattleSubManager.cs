@@ -16,7 +16,7 @@ public class EndlessBattleSubManager : StageSubManager
     [SerializeField, Tooltip("パス")] private CinemachineSmoothPath _playerMovePath = default;
     private List<EndlessBattleSegment> _segmentList = default;
     private int _instanceSegmentIndex = 0;
-    // private float _nextInstancePos = 0;
+    private int _newSegmentNo = 0;
     private bool _initNextInstancePos = false;
     private Player _player = null;
     float _nextSegmentPos = 0f;
@@ -146,7 +146,7 @@ public class EndlessBattleSubManager : StageSubManager
         segment.transform.parent = this.transform;
         segment.transform.position = _segmentCreateHead.position;
         segment.transform.eulerAngles = _segmentCreateHead.eulerAngles;
-        segment.Initialize();
+        segment.Initialize(_newSegmentNo);
         IndexNext();
 
         // パスの追加
@@ -181,10 +181,11 @@ public class EndlessBattleSubManager : StageSubManager
         if(segment.GetLookAtTarget() != null)
         {
             Transform lookAtTarget = segment.GetLookAtTarget();
-            Vector3 pos = lookAtTarget.transform.position;
-            pos.y = _player.transform.position.y;
-            lookAtTarget.transform.position = pos;
+            // Vector3 pos = lookAtTarget.transform.position;
+            // lookAtTarget.transform.position = pos;
         }
+        // 生成したセグメントの数をカウント
+        _newSegmentNo++;
 
         return segment;
     }

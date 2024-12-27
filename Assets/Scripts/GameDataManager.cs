@@ -154,8 +154,8 @@ public static class GameDataManager
     { 
         float power = 1.0f;
 
-        int powerLevel = PlayerPrefs.GetInt("PowerLevel", 1);
-        power += powerLevel * 0.02f;
+        int powerLevel = SaveDataManager.GetLevelPower();
+        power += ( powerLevel - 1 ) * 0.02f;
 
         return power; 
     }

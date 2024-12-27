@@ -43,7 +43,7 @@ public class EndlessBattleSegment : MonoBehaviour
         }
     }
     // ---------- Public関数 ----------
-    public void Initialize(){
+    public void Initialize(int segmentNo){
         if(_isInitialize) return;
         _isInitialize = true;
 
@@ -57,6 +57,7 @@ public class EndlessBattleSegment : MonoBehaviour
             _targethumanhubList[index].Initialize(index);
             Human targetHuman = _targethumanhubList[index].GetActiveHuman();
             targetHuman.Initialize();
+            targetHuman.InitMaxHp(GetHumanHp(segmentNo));
             // ターゲットのHumanをリストに追加
             _targethumanList.Add(targetHuman);
             // コールバック設定
@@ -178,4 +179,16 @@ public class EndlessBattleSegment : MonoBehaviour
         _childTrigger.AddCallbackOnTriggerEnter(onTriggerEnter);
     }  
     // ---------- Private関数 ----------
+    private float GetHumanHp(int segmentNo)
+    {
+        float humanHp = 10f;
+        float addHp = segmentNo * 2f;
+        if(addHp <= 0)
+            return humanHp;
+        else
+        {
+            humanHp += addHp;
+            return humanHp;
+        }
+    }
 }

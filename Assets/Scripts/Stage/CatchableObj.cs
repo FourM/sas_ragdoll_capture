@@ -43,6 +43,9 @@ public abstract class CatchableObj : MonoBehaviour
             _fastSwipedTime = 0;
         UpdateUnique();
     }
+    private void FixedUpdate(){
+        FixedUpdateUnique();
+    }
     
     public void Initialize(){
         if(_isInitialize)
@@ -113,7 +116,15 @@ public abstract class CatchableObj : MonoBehaviour
     public void OnDamage(float damage)
     {
         damage *= GameDataManager.GetPower();
-        damage *= 4;
+        damage *= 1.0f;
+        float maxDamage = 15 * GameDataManager.GetPower();
+        if(IsFastSwiped())
+            maxDamage *= 2f;
+        // ダメージキャップ
+        if(maxDamage <= damage )
+        {
+            damage = maxDamage + (damage - maxDamage) / 3;
+        }
 
         if(TryGetHumanChild() != null || TryGetHuman() != null)
             OnDamageUnique(damage);
@@ -193,6 +204,7 @@ public abstract class CatchableObj : MonoBehaviour
     // Startの、継承先の独自処理
     protected virtual void StartUnique(){  }
     protected virtual void UpdateUnique(){  }
+    protected virtual void FixedUpdateUnique(){  }
     // 捕まった時の継承先の独自処理
     protected virtual void OnCatchUnique(){  }
     // 離された時の継承先の独自処理

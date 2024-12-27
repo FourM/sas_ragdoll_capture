@@ -337,13 +337,16 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
             ReleaseCatchObj();
             TapUp();
             GameState = GameState.endlessBattleEnemyAttack;
+            Transform lookAt = human.GetParts(HumanParts.head).transform;
+            _player.SetLookAtTarget(lookAt, true);
+            human.ActiveLookPlayer(_player.transform);
         }
     }
     // 敵とお互いに見合う時の処理
     public void OnEnemyLook(Human human)
     {
         Transform lookAt = human.GetParts(HumanParts.head).transform;
-        _player.SetLookAtTarget(lookAt);
+        _player.SetLookAtTarget(lookAt, true);
         human.ActiveLookPlayer(_player.transform);
     }
     // 敵の攻撃をキャンセルさせた時の演出
@@ -353,6 +356,10 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
         {
             GameState = GameState.main;
         }
+    }
+    public void EndlessBattleOnEnemyBreak(Human human)
+    {
+        _player.AddWebNum(+1);
     }
     // 敵になぐられた時の演出
     public void OnEnemyAttackHit()
@@ -367,7 +374,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
             {
                 DOVirtual.DelayedCall(0.75f, ()=>
                 {
-                    UndoInGame();
+                    ShowResult();
                 });
             });
         }
@@ -471,6 +478,9 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
 
             // 糸を表示
             SetEnableWebRope(true);
+            _player.AddWebNum(-1);
+            if(_player.IsEnemyLook)
+                _player.SetLookAtTarget(null);
 
             // イベント用：対象をタップした
             if(!_isTap)
@@ -834,6 +844,12 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
             // _isNotCatchShot = false;
             // _isNotCatchHandLookAt = true;
             GameDataManager.SetIsDefeat(false);
+
+            // Debug.Log("_player.WebNum:" + _player.WebNum);
+            if( _player.WebNum <= 0 && GameMode == GameMode.endlessBattle )
+            {
+                OnWebNumEmplty();
+            }
         }
         else
         {
@@ -986,7 +1002,23 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
                 }
                 break;
             case GameState.result:
+                if(GameMode == GameMode.endlessBattle && _player.State != PlayerState.down)
+                {
+                    _player.SetState(PlayerState.stop);
+                }
                 break;
         }
+    }
+    private void ShowResult()
+    {
+        UndoInGame();
+    }
+    private void OnWebNumEmplty()
+    {
+        GameState = GameState.result;
+        DOVirtual.DelayedCall(0.75f, ()=>
+        {
+            ShowResult();
+        });
     }
 }

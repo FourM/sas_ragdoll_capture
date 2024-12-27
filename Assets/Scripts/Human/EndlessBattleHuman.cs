@@ -2,6 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
+using DG.Tweening;
 
 public class EndlessBattleHuman : MonoBehaviour
 {
@@ -17,10 +19,14 @@ public class EndlessBattleHuman : MonoBehaviour
     [SerializeField, Tooltip("キャンバス")] private Canvas _canvas = default;
     [SerializeField, Tooltip("HPバー")] private Slider _hpBar = default;
     [SerializeField, Tooltip("HPバ-の色")] private Image _hpBarFill = default;
+    [SerializeField, Tooltip("ダメージ")] private Transform _damage = default;
+    [SerializeField, Tooltip("ダメージ")] private TextMeshProUGUI _textDamage = default;
     private Human _activeHuman = null;
     private bool _isAttack = false;
     private bool _isAttackEnd = false;
     private bool _isSetHpBar = false;
+    private bool _isDead = false;
+    private Sequence _damageSeq = default;
     // ---------- クラス変数宣言 -----------------------
     // ---------- インスタンス変数宣言 ------------------
     // ---------- Unity組込関数 -----------------------
@@ -59,6 +65,7 @@ public class EndlessBattleHuman : MonoBehaviour
             }
         }
         _hpBar.transform.rotation = Camera.main.transform.rotation;
+        _damage.transform.rotation = Camera.main.transform.rotation;
     }
     // ---------- Public関数 -------------------------
     // ---------- Private関数 ------------------------
@@ -90,8 +97,16 @@ public class EndlessBattleHuman : MonoBehaviour
         });      
 
         _activeHuman.AddOnDamage(OnDamage);
+        _activeHuman.AddOnBreakCallback(()=>{
+            if(!_isDead)
+            {
+                GameDataManager.InGameMainEvent.EndlessBattleOnEnemyBreak(_activeHuman);
+                _isDead = true;
+            }
+        });
         _hpBar.value = 100f;
         _hpBar.gameObject.SetActive(false);
+        _damage.localScale = Vector3.zero;
     }
     private bool IsCanAttack()
     {
@@ -117,5 +132,19 @@ public class EndlessBattleHuman : MonoBehaviour
             _hpBarFill.color = new Color32(255, 225, 0, 255);
         else
             _hpBarFill.color = new Color32(0, 225, 0, 255);
+
+
+        if(_damageSeq != null)
+        {
+            _damageSeq.Kill();
+        }
+        _damageSeq = DOTween.Sequence();
+        _textDamage.text = "" + Mathf.Round(damage);
+        _damage.localScale = Vector3.zero;
+        _textDamage.transform.localScale = Vector3.zero;
+        _damageSeq.Append(_damage.DOScale(Vector3.one * 4, 0.2f).SetEase(Ease.Linear));
+        _damageSeq.Join(_textDamage.transform.DOScale(Vector3.one, 0.35f).SetEase(Ease.OutBack));
+        _damageSeq.AppendInterval(1.5f);
+        _damageSeq.Append(_damage.DOScale(Vector3.zero, 0.1f).SetEase(Ease.InBack));
     }
 }

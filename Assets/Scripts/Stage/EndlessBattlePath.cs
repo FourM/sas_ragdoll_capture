@@ -39,6 +39,7 @@ public class EndlessBattlePath : MonoBehaviour
     [SerializeField, Tooltip("ここを通過したらプレイヤーはどう動くか")] private EnterPlayerState _enterPlayerState = EnterPlayerState.move;
     [SerializeField, Tooltip("ここを通過したときプレイヤーは何を見るか")] private EnterLook _enterLook = EnterLook.none;
     [SerializeField, Tooltip("ここを通過後、クリアしたらorクリアしてたらプレイヤーは何を見るか")] private ClearLook _clearLook = ClearLook.next;
+    [SerializeField, Tooltip("クリア判定に用いるオブジェクト")] private List<CatchableObj> _refCatchableObjList = default;
     private bool _isPath = false;
 
     public EnterPlayerState EnterPlayerState{ get{ return _enterPlayerState; } }
@@ -64,5 +65,15 @@ public class EndlessBattlePath : MonoBehaviour
         });
     }
     public Transform GetLookPos(){ return _lookPos; }
+    public bool IsRefPathClear(){ return 0 < _refCatchableObjList.Count; }
+    public bool IsPathClear()
+    { 
+        for(int i = 0; i < _refCatchableObjList.Count; i++)
+        {
+            if(!_refCatchableObjList[i].IsBroken())
+                return false;
+        }
+        return true;
+    }
     // ---------- Private関数 ------------------------
 }

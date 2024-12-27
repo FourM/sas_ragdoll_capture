@@ -6,7 +6,7 @@ using UnityEngine.Events;
 /// <summary>
 /// 孫クラスがインゲームマネージャーの処理を呼び出すための窓口(インターフェース)
 /// ゲームマネージャーがイベントを設定する。孫クラスがイベントを呼び出す
-/// 直接呼び出すより孫の独立性を高められる
+/// 直接呼び出すより孫の独立性を高められる...はず
 /// </summary>
 public interface InGameMainEventManager
 {
@@ -25,6 +25,10 @@ public interface InGameMainEventManager
     public void OnEnemyLook(Human human)
     {
         Debug.Log("敵と見合う");
+    }
+    public void EndlessBattleOnEnemyBreak(Human human)
+    {
+
     }
     public void OnEnemyAttackCansel()
     {

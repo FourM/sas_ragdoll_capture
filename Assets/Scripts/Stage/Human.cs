@@ -56,12 +56,13 @@ public class Human : CatchableObj
     private bool _isVisible = true; // カメラに写っているか
     private Vector3 _baseInitPos = default;
     public bool IsVisible{ get{ return _isVisible; } }
-    private float _maxHp = 100;
+    private float _maxHp = 10;
     public float MaxHP{ get{ return _maxHp; } }
-    private float _currentHp = 100;
+    private float _currentHp = 10;
     public float HP{ get{ return _currentHp; } }
     private Vector3 _impactPos;
     private Transform _LookPlayer = null;
+    private int _mutekiTime = 0;
     // ---------- クラス変数宣言 ----------
     // ---------- インスタンス変数宣言 ----------
     // ---------- Unity組込関数 ----------
@@ -149,6 +150,13 @@ public class Human : CatchableObj
             _basePos.LookAt(LookPos);
         }
     }
+
+    protected override void FixedUpdateUnique() {
+        _mutekiTime--;
+        if( _mutekiTime < 0 )
+            _mutekiTime = 0;
+    }
+
     protected override void OnCatchUnique()
     { 
         DesableAnimation();
@@ -168,6 +176,13 @@ public class Human : CatchableObj
 
     protected override void OnDamageUnique(float damage)
     {
+        // if( 0 < _mutekiTime )
+        //     return;
+        // _mutekiTime = 10;
+        if(_isBroken)
+            return;
+
+        damage /= GetToughness();
         _currentHp -= damage;
         
         bool isBigDamage = false;
@@ -435,6 +450,11 @@ public class Human : CatchableObj
     public void SetImpactPos(Vector3 pos ){ _impactPos = pos; }
 
     public void ActiveLookPlayer( Transform player ){ _LookPlayer = player; }
+    public void InitMaxHp(float maxHP)
+    { 
+        _maxHp = maxHP; 
+        _currentHp = _maxHp;
+    }
     // ---------- Private関数 ----------
     private void LookAtTarget(Transform looker, Vector3 initAngle, int index)
     {

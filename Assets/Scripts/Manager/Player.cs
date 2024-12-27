@@ -11,11 +11,6 @@ public enum PlayerState{
     battle,
     down
 }
-// public enum PlayerAction
-// {
-//     idle,
-//     down,
-// }
 public class Player : MonoBehaviour
 {
     // ---------- 定数宣言 ----------------------------
@@ -38,6 +33,11 @@ public class Player : MonoBehaviour
     private PlayerState _state = PlayerState.stop;
     private PlayerState _beforeState = PlayerState.stop;
     public PlayerState State{ get{ return _state; } }
+    private int _webNum = 4;
+    public int WebNum{ get{ return _webNum; } }
+    private UnityEvent _onWebNumEmplty = null;
+    private bool _isEnemyLook = false;
+    public bool IsEnemyLook{ get{ return _isEnemyLook; } }
     // ---------- クラス変数宣言 -----------------------
     // ---------- インスタンス変数宣言 ------------------
     // ---------- Unity組込関数 -----------------------
@@ -62,6 +62,8 @@ public class Player : MonoBehaviour
         // アニメーションに関係する手をゲーム起動時に再生成していて、アニメーションから手の参照が切れているため、再スキャンする
         _handAnimator.Rebind();
         _handAnimator.Update(0);  // これも重要
+        _onWebNumEmplty = new UnityEvent();
+        _webNum = SaveDataManager.GetLevelWebNum() + 3;
     }
     public CinemachineDollyCart GetMovePath(){ return _cinemachineDollyCart; }
     public void StopPathMove(){ _cinemachineDollyCart.m_Speed = 0f; }
@@ -100,7 +102,7 @@ public class Player : MonoBehaviour
     }
 
     // プレイヤーの向き更新
-    public void SetLookAtTarget( Transform lookAtTarget )
+    public void SetLookAtTarget( Transform lookAtTarget, bool isEnemyLook = false)
     {
         if(_lookAtTransform == null)
         {
@@ -112,11 +114,13 @@ public class Player : MonoBehaviour
         {
             _lookAtTransform.parent = lookAtTarget;
             _lookAtTransform.localPosition = Vector3.zero;
+            _isEnemyLook = isEnemyLook;
         }
         else
         {
             _lookAtTransform.parent = this.transform;
             _lookAtTransform.localPosition = _initLookPos;
+            _isEnemyLook = false;
         }
     }
 
@@ -173,6 +177,12 @@ public class Player : MonoBehaviour
                 _handAnimator.Play("Base Layer.Idle");
                 break;
         }
+    }
+
+    public void AddWebNum(int addNum){
+        _webNum += addNum;
+
+        Debug.Log("いとお:" + _webNum);
     }
     // ---------- Private関数 ------------------------
 }
