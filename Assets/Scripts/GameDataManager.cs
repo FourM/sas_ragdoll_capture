@@ -30,6 +30,7 @@ public static class GameDataManager
     private static InGameMainEventManager _inGameMainEventManager;
     public static InGameMainEventManager InGameMainEvent{ get{ return _inGameMainEventManager; } }
     private static Player _player;
+    private static float _addPlayerMoveLength = 0f;    // プレイヤーが移動した距離の補正値
     
     public static GameMode GameMode{
         get{ return _gameMode; }
@@ -47,6 +48,7 @@ public static class GameDataManager
         if(_stage != null)
             _stage = null;
         _mutekiTime = 10;
+        _addPlayerMoveLength = 0;
     }
     public static void SetInGameMainEventManager(InGameMainEventManager inGameMainEventManager){ _inGameMainEventManager = inGameMainEventManager; }
     
@@ -150,13 +152,12 @@ public static class GameDataManager
 
     public static void SetPlayer(Player player){ _player = player; }
     public static Player GetPlayer(){ return _player; }
-    public static float GetPower()
+    // プレイヤーが移動した距離の補正値
+    public static void AddPlayerMoveLength(float length){ _addPlayerMoveLength += length; }
+    // ゲーム開始時のプレイヤーが移動した距離の補正値
+    public static float GetPlayerMoveLength()
     { 
-        float power = 1.0f;
-
-        int powerLevel = SaveDataManager.GetLevelPower();
-        power += ( powerLevel - 1 ) * 0.02f;
-
-        return power; 
+        float length = (SaveDataManager.GetLevelStartPos() - 1) * 5f;
+        return length + _addPlayerMoveLength;
     }
 }

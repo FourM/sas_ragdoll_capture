@@ -56,10 +56,10 @@ public class Human : CatchableObj
     private bool _isVisible = true; // カメラに写っているか
     private Vector3 _baseInitPos = default;
     public bool IsVisible{ get{ return _isVisible; } }
-    private float _maxHp = 10;
-    public float MaxHP{ get{ return _maxHp; } }
-    private float _currentHp = 10;
-    public float HP{ get{ return _currentHp; } }
+    private int _maxHp = 10;
+    public int MaxHP{ get{ return _maxHp; } }
+    private int _currentHp = 10;
+    public int HP{ get{ return _currentHp; } }
     private Vector3 _impactPos;
     private Transform _LookPlayer = null;
     private int _mutekiTime = 0;
@@ -174,27 +174,19 @@ public class Human : CatchableObj
         _onReleaseCallback?.Invoke();
     }
 
-    protected override void OnDamageUnique(float damage)
+    protected override void OnDamageUnique(int damage)
     {
-        // if( 0 < _mutekiTime )
-        //     return;
-        // _mutekiTime = 10;
         if(_isBroken)
             return;
 
-        damage /= GetToughness();
+        if(0 < _mutekiTime )
+            return;
+        _mutekiTime = 30;
+
         _currentHp -= damage;
-        
-        bool isBigDamage = false;
-        if( _maxHp * 0.5f <= damage || 100 <= damage )
-            isBigDamage = true;
         if( !_isBroken )
         {
-            // エフェクト発生
-            if( isBigDamage || GameDataManager.GameMode == GameMode.main )
-                EffectManager.instance.PlayEffect(_impactPos, effectType.impact);
-            else
-                EffectManager.instance.PlayEffect(_impactPos, effectType.impactSmall);
+            EffectManager.instance.PlayEffect(_impactPos, effectType.impact);
         }
 
         _onDamage?.Invoke(damage);
@@ -450,7 +442,7 @@ public class Human : CatchableObj
     public void SetImpactPos(Vector3 pos ){ _impactPos = pos; }
 
     public void ActiveLookPlayer( Transform player ){ _LookPlayer = player; }
-    public void InitMaxHp(float maxHP)
+    public void InitMaxHp(int maxHP)
     { 
         _maxHp = maxHP; 
         _currentHp = _maxHp;

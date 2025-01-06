@@ -113,18 +113,9 @@ public abstract class CatchableObj : MonoBehaviour
         _onBreakCallback?.Invoke();
         _isBroken = true;
     }
-    public void OnDamage(float damage)
+    public void OnDamage(int damage)
     {
-        damage *= GameDataManager.GetPower();
-        damage *= 1.0f;
-        float maxDamage = 15 * GameDataManager.GetPower();
-        if(IsFastSwiped())
-            maxDamage *= 2f;
-        // ダメージキャップ
-        if(maxDamage <= damage )
-        {
-            damage = maxDamage + (damage - maxDamage) / 3;
-        }
+        damage = 1;
 
         if(TryGetHumanChild() != null || TryGetHuman() != null)
             OnDamageUnique(damage);
@@ -210,7 +201,7 @@ public abstract class CatchableObj : MonoBehaviour
     // 離された時の継承先の独自処理
     protected virtual void OnReleaseUnique(){  }
     protected virtual void OnBreakUnique(){  }
-    protected virtual void OnDamageUnique( float damage ){  }
+    protected virtual void OnDamageUnique( int damage ){  }
     protected virtual void OnDisableUnique(){  }
     protected void SetParent( GameObject parent ){ _parent = parent; }
     //　衝突相手が(他の)Humanかチェック
@@ -246,7 +237,7 @@ public abstract class CatchableObj : MonoBehaviour
     }
 
     // 何かにぶつかったらそれを壊すギミックの共通処理
-    protected void GimmickOnCollisionHuman(Collision collision, Vector3 velocity, float damage = 150)
+    protected void GimmickOnCollisionHuman(Collision collision, Vector3 velocity, int damage = 1)
     {
         if(GetRigidbody() == null)
             return;

@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Events;
 using DG.Tweening;
+using TMPro;
 
 public class InGameUIManager : MonoBehaviour
 {
@@ -15,6 +16,8 @@ public class InGameUIManager : MonoBehaviour
     [SerializeField, Tooltip("キャンバススケーラー")] private CanvasScaler _canvasScaler = default;
     [SerializeField, Tooltip("ステージマネージャー")] private Button _buttonUndo = default;
     [SerializeField, Tooltip("照準")] private UIReticle _uiReticle = default;
+    [SerializeField, Tooltip("プレイヤーの進んだ位置")] private TextMeshProUGUI _playerMoveLenth = default;
+    [SerializeField, Tooltip("リザルトUI")] private EndlessBattleResultUIManager _endlessBattleResultUI = default;
     private bool _isInitialize = false;
     private UnityEvent _onInitialize = null;
     private UnityEvent _onHideUI = null;
@@ -37,6 +40,24 @@ public class InGameUIManager : MonoBehaviour
         UpdateReticleActive();
 
         _onInitialize?.Invoke();
+
+        ChangeGameMode( GameDataManager.GameMode );
+
+        _endlessBattleResultUI.Initialize();
+    }
+
+    public void ChangeGameMode(GameMode gameMode)
+    {
+        switch(gameMode)
+        {
+            case GameMode.main:
+                _playerMoveLenth.gameObject.SetActive(false);
+                break;
+            case GameMode.endlessBattle:
+                _playerMoveLenth.gameObject.SetActive(true);
+                _playerMoveLenth.text = GameDataManager.GetPlayerMoveLength() + "m";
+                break; 
+        }
     }
 
     public void SetOnClickButtonUndo( UnityAction onClick )
@@ -106,6 +127,11 @@ public class InGameUIManager : MonoBehaviour
         if(_onHideUI == null)
             _onHideUI = new UnityEvent();
         _onHideUI.AddListener(onHide);
+    }
+    // プレイヤーの移動距離表示設定
+    public void SetTextPlayerMoveLength(float length)
+    {
+        _playerMoveLenth.text = Mathf.Round(length) + "m";
     }
     // ---------- Private関数 ----------
     private void ShowButtonUndo()

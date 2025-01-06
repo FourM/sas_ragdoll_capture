@@ -180,9 +180,9 @@ public class Player : MonoBehaviour
     }
 
     public void AddWebNum(int addNum){
-        _webNum += addNum;
+        // _webNum += addNum;
 
-        Debug.Log("いとお:" + _webNum);
+        // Debug.Log("いとお:" + _webNum);
     }
     // ---------- Private関数 ------------------------
 }

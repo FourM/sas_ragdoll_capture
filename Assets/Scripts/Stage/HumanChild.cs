@@ -113,14 +113,14 @@ public class HumanChild : CatchableObj
             // Debug.Log("killShockStrength:" + killShockStrength + ", " + collisionSpeed);
             // 致死衝撃を受けた処理
             // OnBreak();
-            OnDamage(collisionSpeed);
+            OnDamage(1);
             if(isOtherHuman)
             {
                 // ぶつかった相手のHumanは死んだ時のエフェクトを発生させない
                 HumanChild humanChild = collitionChatchableObj.TryGetHumanChild();
                 if(humanChild != null)
                     humanChild.SetIsPlayImpactEffect(false);
-                collitionChatchableObj.OnDamage(collisionSpeed);
+                collitionChatchableObj.OnDamage(1);
             }
             // Debug.Log(";" + GameDataManager.IsGimmickKill() + ", " + isOtherHuman + ", " + collision.gameObject.name + ", " + collision.gameObject.layer);
         }
@@ -347,7 +347,7 @@ public class HumanChild : CatchableObj
     public void SetIsPlayImpactEffect(bool isPlayEffect ){ _isPlayImpactEffect = isPlayEffect; }
     public Human Gethuman(){ return _parentHuman; }
     // ---------- Public関数 ----------
-    protected override void OnDamageUnique(float damage)
+    protected override void OnDamageUnique(int damage)
     {
         _parentHuman.SetImpactPos(_impactPos);
         _parentHuman.OnDamage(damage);

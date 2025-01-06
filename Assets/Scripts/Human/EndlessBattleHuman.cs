@@ -17,16 +17,14 @@ public class EndlessBattleHuman : MonoBehaviour
     [SerializeField, Tooltip("Hub")] private float _attackTime = 0.3f;
     [SerializeField, Tooltip("攻撃アニメーション")] private RuntimeAnimatorController _attackAnimation = default;
     [SerializeField, Tooltip("キャンバス")] private Canvas _canvas = default;
-    [SerializeField, Tooltip("HPバー")] private Slider _hpBar = default;
-    [SerializeField, Tooltip("HPバ-の色")] private Image _hpBarFill = default;
-    [SerializeField, Tooltip("ダメージ")] private Transform _damage = default;
-    [SerializeField, Tooltip("ダメージ")] private TextMeshProUGUI _textDamage = default;
+    [SerializeField, Tooltip("盾アイコンコンテナ")] private RectTransform _shieldContainer = default;
+    [SerializeField, Tooltip("盾アイコンプレハブ")] private RectTransform _shieldIconPrefab = default;
     private Human _activeHuman = null;
     private bool _isAttack = false;
     private bool _isAttackEnd = false;
     private bool _isSetHpBar = false;
     private bool _isDead = false;
-    private Sequence _damageSeq = default;
+    private List<RectTransform> _shieldList = null;
     // ---------- クラス変数宣言 -----------------------
     // ---------- インスタンス変数宣言 ------------------
     // ---------- Unity組込関数 -----------------------
@@ -61,11 +59,11 @@ public class EndlessBattleHuman : MonoBehaviour
                 _attackTrigger.transform.parent = _activeHuman.GetParts(HumanParts.body).transform;
                 _lookTrigger.transform.parent = _activeHuman.GetParts(HumanParts.body).transform;
                 _isSetHpBar = true;
-                _hpBar.gameObject.SetActive(true);
+                InitShield();
             }
         }
-        _hpBar.transform.rotation = Camera.main.transform.rotation;
-        _damage.transform.rotation = Camera.main.transform.rotation;
+        _shieldContainer.transform.rotation = Camera.main.transform.rotation;
+        _canvas.transform.rotation = Camera.main.transform.rotation;
     }
     // ---------- Public関数 -------------------------
     // ---------- Private関数 ------------------------
@@ -104,47 +102,37 @@ public class EndlessBattleHuman : MonoBehaviour
                 _isDead = true;
             }
         });
-        _hpBar.value = 100f;
-        _hpBar.gameObject.SetActive(false);
-        _damage.localScale = Vector3.zero;
     }
     private bool IsCanAttack()
     {
         // return !_activeHuman.IsCatch() && !_activeHuman.IsDead() && _activeHuman.IsGround() && _activeHuman.IsEnableAnimation();
         return !_activeHuman.IsCatch() && !_activeHuman.IsDead() && _activeHuman.IsGround();
     }
+    private void InitShield()
+    {
+        _shieldList = new List<RectTransform>();
+        foreach( Transform child in _shieldContainer.transform)
+        {
+            Destroy(child.gameObject);
+        }
+        int hp = _activeHuman.MaxHP;
+        for(int i = 0; i < (hp - 1); i++)
+        {
+            RectTransform shield = Instantiate(_shieldIconPrefab);
+            shield.parent = _shieldContainer.transform;
+            _shieldList.Add(shield);
+            shield.transform.localScale = Vector3.one;
+            shield.transform.localPosition = Vector3.zero;
+            shield.transform.localEulerAngles = Vector3.zero;
+        }
+    }
     private void OnDamage(float damage)
     {
-        // Debug.Log("OnDamage:1");
-        _hpBar.value = _activeHuman.HP / _activeHuman.MaxHP * 100f;
-        if(_hpBar.value <= 0 )
+        int hp = _activeHuman.HP;
+        for(int i = _shieldList.Count - 1; (hp - 1) <= i; i--)
         {
-            _hpBar.gameObject.SetActive(false);
+            if( 0 <= i)
+                _shieldList[i].gameObject.SetActive(false);
         }
-        else
-        {
-            _hpBar.gameObject.SetActive(true);
-        }    
-        
-        if(_hpBar.value <= 25 )
-            _hpBarFill.color = new Color32(255, 0, 0, 255);
-        else if( _hpBar.value <= 50 )
-            _hpBarFill.color = new Color32(255, 225, 0, 255);
-        else
-            _hpBarFill.color = new Color32(0, 225, 0, 255);
-
-
-        if(_damageSeq != null)
-        {
-            _damageSeq.Kill();
-        }
-        _damageSeq = DOTween.Sequence();
-        _textDamage.text = "" + Mathf.Round(damage);
-        _damage.localScale = Vector3.zero;
-        _textDamage.transform.localScale = Vector3.zero;
-        _damageSeq.Append(_damage.DOScale(Vector3.one * 4, 0.2f).SetEase(Ease.Linear));
-        _damageSeq.Join(_textDamage.transform.DOScale(Vector3.one, 0.35f).SetEase(Ease.OutBack));
-        _damageSeq.AppendInterval(1.5f);
-        _damageSeq.Append(_damage.DOScale(Vector3.zero, 0.1f).SetEase(Ease.InBack));
     }
 }

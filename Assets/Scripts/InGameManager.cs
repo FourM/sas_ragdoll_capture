@@ -111,6 +111,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
                     GameState = GameState.startWait;
                     break; 
             }
+            _inGameUiManager.ChangeGameMode(_gameMode);
         }
     }
     public GameState GameState{
@@ -173,6 +174,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
                         if( 6.5f <= _springPosZ )
                             _springPosZ = 6.5f;
                     }
+                    _inGameUiManager.SetTextPlayerMoveLength( _player.GetMovePath().m_Position + GameDataManager.GetPlayerMoveLength() );
                 }
                 InGameMainUpdate();  
                 break;
@@ -357,10 +359,11 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
             GameState = GameState.main;
         }
     }
-    public void EndlessBattleOnEnemyBreak(Human human)
-    {
-        _player.AddWebNum(+1);
-    }
+    // 敵を倒した時の処理
+    // public void EndlessBattleOnEnemyBreak(Human human)
+    // {
+    //     _player.AddWebNum(+1);
+    // }
     // 敵になぐられた時の演出
     public void OnEnemyAttackHit()
     {
@@ -478,7 +481,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
 
             // 糸を表示
             SetEnableWebRope(true);
-            _player.AddWebNum(-1);
+            // _player.AddWebNum(-1);
             if(_player.IsEnemyLook)
                 _player.SetLookAtTarget(null);
 

@@ -17,6 +17,6 @@ public static class SaveDataManager
 
     public static int GetLevelWebNum(){ return PlayerPrefs.GetInt("levelWebNum", 1); }
     public static void SetLevelWebNum( int currentStage ){ PlayerPrefs.SetInt("levelWebNum", currentStage); }
-    public static int GetLevelPower(){ return PlayerPrefs.GetInt("levelPower", 1); }
-    public static void SetLevelPower( int currentStage ){ PlayerPrefs.SetInt("levelPower", currentStage); }
+    public static int GetLevelStartPos(){ return PlayerPrefs.GetInt("LevelStartPos", 1); }
+    public static void GetLevelStartPos( int level ){ PlayerPrefs.SetInt("LevelStartPos", level); }
 }

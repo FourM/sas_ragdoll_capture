@@ -312,6 +312,7 @@ public class EndlessBattleSubManager : StageSubManager
         float length = GetSubPathLength();
         // Debug.Log("length:" + length);
         _player.GetMovePath().m_Position += length;
+        GameDataManager.AddPlayerMoveLength(-length);
 
         // Debug.Log("わんたそ3");
         segment.DestroyThis();

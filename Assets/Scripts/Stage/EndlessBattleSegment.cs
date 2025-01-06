@@ -179,16 +179,17 @@ public class EndlessBattleSegment : MonoBehaviour
         _childTrigger.AddCallbackOnTriggerEnter(onTriggerEnter);
     }  
     // ---------- Private関数 ----------
-    private float GetHumanHp(int segmentNo)
+    private int GetHumanHp(int segmentNo)
     {
-        float humanHp = 10f;
-        float addHp = segmentNo * 2f;
-        if(addHp <= 0)
-            return humanHp;
-        else
-        {
-            humanHp += addHp;
-            return humanHp;
-        }
+        return 1 + segmentNo / 10;
+        // float humanHp = 10f;
+        // float addHp = segmentNo * 2f;
+        // if(addHp <= 0)
+        //     return humanHp;
+        // else
+        // {
+        //     humanHp += addHp;
+        //     return humanHp;
+        // }
     }
 }
