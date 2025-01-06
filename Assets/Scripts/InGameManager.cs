@@ -6,6 +6,7 @@ using DG.Tweening;
 using System;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
+using UnityEngine.SceneManagement;
 // using MoreMountains.NiceVibrations;
 
 /// <summary>
@@ -116,7 +117,6 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
                     _isEndlessBattleNewRecord = false;
                     break; 
             }
-            _inGameUiManager.ChangeGameMode(_gameMode);
         }
     }
     public GameState GameState{
@@ -318,6 +318,8 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
         _endlessBattleLastScore = 0;
         // 何もないとこを捕まえた時の挙動をキャンセル
         CanselNotCatchAction();
+        _inGameUiManager.ChangeGameMode(_gameMode);
+        GameDataManager.ResetPlayerMoveLength();
     }
 
     public void SetDebugStageLoop(bool isStageLoop)
@@ -356,6 +358,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
     public void OnUndoInGame()
     {
         UndoInGame();
+        // SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
     // 敵とお互いに見合う時の処理
     public void OnEnemyLook(Human human)
@@ -1025,6 +1028,8 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
                         _isEndlessBattleNewRecord = true;
                         SaveDataManager.SetEndlessBattleBestScore(_endlessBattleLastScore);
                     }
+                    else
+                        _isEndlessBattleNewRecord = false;
                     _player.SetState(PlayerState.stop);
                 }
                 break;

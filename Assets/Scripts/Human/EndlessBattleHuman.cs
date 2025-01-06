@@ -86,7 +86,6 @@ public class EndlessBattleHuman : MonoBehaviour
             }
         });      
         _lookTrigger.AddCallbackOnTriggerEnter((Collider collider)=>{
-            // Debug.Log("あーあ");
             // このHumanが攻撃できる状態にある
             if(IsCanAttack())
             {

@@ -16,7 +16,9 @@ public class InGameUIManager : MonoBehaviour
     [SerializeField, Tooltip("キャンバススケーラー")] private CanvasScaler _canvasScaler = default;
     [SerializeField, Tooltip("ステージマネージャー")] private Button _buttonUndo = default;
     [SerializeField, Tooltip("照準")] private UIReticle _uiReticle = default;
-    [SerializeField, Tooltip("プレイヤーの進んだ位置")] private TextMeshProUGUI _playerMoveLenth = default;
+    [SerializeField, Tooltip("プレイヤーの進んだ位置")] private TextMeshProUGUI _score = default;
+    [SerializeField, Tooltip("スコア背景")] private GameObject _storeBack = default;
+    [SerializeField, Tooltip("ベストスコア")] private TextMeshProUGUI _bestScore = default;
     [SerializeField, Tooltip("リザルトUI")] private EndlessBattleResultUIManager _endlessBattleResultUI = default;
     private bool _isInitialize = false;
     private UnityEvent _onInitialize = null;
@@ -51,11 +53,16 @@ public class InGameUIManager : MonoBehaviour
         switch(gameMode)
         {
             case GameMode.main:
-                _playerMoveLenth.gameObject.SetActive(false);
+                _score.gameObject.SetActive(false);
+                _storeBack.gameObject.SetActive(false);
+                _bestScore.gameObject.SetActive(false);
                 break;
             case GameMode.endlessBattle:
-                _playerMoveLenth.gameObject.SetActive(true);
-                _playerMoveLenth.text = GameDataManager.GetPlayerMoveLength() + "m";
+                _score.gameObject.SetActive(true);
+                _storeBack.gameObject.SetActive(true);
+                _bestScore.gameObject.SetActive(true);
+                _score.text = Mathf.Round(GameDataManager.GetPlayerMoveLength()) + "m";
+                _bestScore.text = "BEST:" + Mathf.Round(SaveDataManager.GetEndlessBattleBestScore()) + "m";
                 break; 
         }
     }
@@ -131,12 +138,15 @@ public class InGameUIManager : MonoBehaviour
     // プレイヤーの移動距離表示設定
     public void SetTextPlayerMoveLength(float length)
     {
-        _playerMoveLenth.text = Mathf.Round(length) + "m";
+        _score.text = Mathf.Round(length) + "m";
         _endlessBattleResultUI.SetTextPlayerMoveLength(length);
     }
 
     public void ShowResult(bool isNewRecord)
     {
+        _score.gameObject.SetActive(false);
+        _storeBack.gameObject.SetActive(false);
+        _bestScore.gameObject.SetActive(false);
         _endlessBattleResultUI.ShowResult(isNewRecord);
     }
     // ---------- Private関数 ----------

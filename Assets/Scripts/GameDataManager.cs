@@ -154,6 +154,7 @@ public static class GameDataManager
     public static Player GetPlayer(){ return _player; }
     // プレイヤーが移動した距離の補正値
     public static void AddPlayerMoveLength(float length){ _addPlayerMoveLength += length; }
+    public static void ResetPlayerMoveLength(){ _addPlayerMoveLength = 0; }
     // ゲーム開始時のプレイヤーが移動した距離の補正値
     public static float GetPlayerMoveLength()
     { 
