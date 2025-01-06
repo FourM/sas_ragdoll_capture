@@ -38,5 +38,9 @@ public interface InGameMainEventManager
     {
 
     }
+    public void OnUndoInGame()
+    {
+
+    }
     // ---------- Private関数 ------------------------
 }

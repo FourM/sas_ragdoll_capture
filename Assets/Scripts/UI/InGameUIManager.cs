@@ -132,6 +132,12 @@ public class InGameUIManager : MonoBehaviour
     public void SetTextPlayerMoveLength(float length)
     {
         _playerMoveLenth.text = Mathf.Round(length) + "m";
+        _endlessBattleResultUI.SetTextPlayerMoveLength(length);
+    }
+
+    public void ShowResult(bool isNewRecord)
+    {
+        _endlessBattleResultUI.ShowResult(isNewRecord);
     }
     // ---------- Private関数 ----------
     private void ShowButtonUndo()

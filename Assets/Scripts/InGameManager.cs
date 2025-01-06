@@ -94,6 +94,8 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
     private bool _isUITouch = false;
     private Vector3 _playerInitPos;
     private GameMode _currentGameMode = GameMode.main;
+    private float _endlessBattleLastScore = 0f;
+    private bool _isEndlessBattleNewRecord = false;
     public GameMode GameMode{
         get{ return _gameMode; }
         set{ 
@@ -109,6 +111,9 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
                     break;
                 case GameMode.endlessBattle:
                     GameState = GameState.startWait;
+                    _inGameUiManager.SetTextPlayerMoveLength(0);
+                    _endlessBattleLastScore = 0;
+                    _isEndlessBattleNewRecord = false;
                     break; 
             }
             _inGameUiManager.ChangeGameMode(_gameMode);
@@ -174,7 +179,9 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
                         if( 6.5f <= _springPosZ )
                             _springPosZ = 6.5f;
                     }
-                    _inGameUiManager.SetTextPlayerMoveLength( _player.GetMovePath().m_Position + GameDataManager.GetPlayerMoveLength() );
+
+                    _endlessBattleLastScore = GetPlayerMoveLength();
+                    _inGameUiManager.SetTextPlayerMoveLength( _endlessBattleLastScore );
                 }
                 InGameMainUpdate();  
                 break;
@@ -307,6 +314,8 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
         _webLineEndPos.parent = this.transform;
         _stageManager.DeleteStage();
         _stageManager.StageLoad();
+        _inGameUiManager.SetTextPlayerMoveLength(0);
+        _endlessBattleLastScore = 0;
         // 何もないとこを捕まえた時の挙動をキャンセル
         CanselNotCatchAction();
     }
@@ -343,6 +352,10 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
             _player.SetLookAtTarget(lookAt, true);
             human.ActiveLookPlayer(_player.transform);
         }
+    }
+    public void OnUndoInGame()
+    {
+        UndoInGame();
     }
     // 敵とお互いに見合う時の処理
     public void OnEnemyLook(Human human)
@@ -1007,6 +1020,11 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
             case GameState.result:
                 if(GameMode == GameMode.endlessBattle && _player.State != PlayerState.down)
                 {
+                    if( SaveDataManager.GetEndlessBattleBestScore() < _endlessBattleLastScore )
+                    {
+                        _isEndlessBattleNewRecord = true;
+                        SaveDataManager.SetEndlessBattleBestScore(_endlessBattleLastScore);
+                    }
                     _player.SetState(PlayerState.stop);
                 }
                 break;
@@ -1014,7 +1032,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
     }
     private void ShowResult()
     {
-        UndoInGame();
+        _inGameUiManager.ShowResult(_isEndlessBattleNewRecord);
     }
     private void OnWebNumEmplty()
     {
@@ -1023,5 +1041,10 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
         {
             ShowResult();
         });
+    }
+
+    private float GetPlayerMoveLength()
+    {
+        return _player.GetMovePath().m_Position + GameDataManager.GetPlayerMoveLength();
     }
 }

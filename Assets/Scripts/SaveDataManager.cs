@@ -17,6 +17,10 @@ public static class SaveDataManager
 
     public static int GetLevelWebNum(){ return PlayerPrefs.GetInt("levelWebNum", 1); }
     public static void SetLevelWebNum( int currentStage ){ PlayerPrefs.SetInt("levelWebNum", currentStage); }
+
     public static int GetLevelStartPos(){ return PlayerPrefs.GetInt("LevelStartPos", 1); }
     public static void GetLevelStartPos( int level ){ PlayerPrefs.SetInt("LevelStartPos", level); }
+
+    public static float GetEndlessBattleBestScore(){ return PlayerPrefs.GetFloat("EndlessBattleBestScore", 0); }
+    public static void SetEndlessBattleBestScore( float score ){ PlayerPrefs.SetFloat("EndlessBattleBestScore", score); }
 }
