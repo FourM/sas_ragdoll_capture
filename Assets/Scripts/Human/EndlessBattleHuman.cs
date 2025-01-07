@@ -102,6 +102,7 @@ public class EndlessBattleHuman : MonoBehaviour
                 _activeHuman.SetAnimatorController(_attackAnimation);
                 _activeHuman.EnableAnimation();
                 _isAttack = true;
+                ChangeState(EndlessBattleHumanState.attack);
             }
         });      
         _lookTrigger.AddCallbackOnTriggerEnter((Collider collider)=>{
@@ -146,7 +147,7 @@ public class EndlessBattleHuman : MonoBehaviour
         if(hp < 1)
             hp = 1;
         _activeHuman.InitMaxHp(hp);
-        
+
         _shieldList = new List<RectTransform>();
         foreach( Transform child in _shieldContainer.transform)
         {

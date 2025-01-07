@@ -7,6 +7,7 @@ using UnityEngine;
 /// </summary>
 public class HumanActiveActionWalk : HumanActiveAction
 {
+    [SerializeField, Tooltip("移動速度")] private float _walkSpd = 0.7f;
     private Transform _lookTarget = null;
     protected override void IniiializeUnique()
     {
@@ -26,6 +27,6 @@ public class HumanActiveActionWalk : HumanActiveAction
         // プレイヤーの方を見る
         MoveTransform.LookAt(lookPos);
         // 前進する
-        MoveTransform.position += MoveForward * Time.deltaTime * 0.7f;
+        MoveTransform.position += MoveForward * Time.deltaTime * _walkSpd;
     }
 }
