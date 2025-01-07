@@ -56,8 +56,8 @@ public class EndlessBattleSegment : MonoBehaviour
             // HumanHubから、有効なHumanを取得
             _targethumanhubList[index].Initialize(index);
             Human targetHuman = _targethumanhubList[index].GetActiveHuman();
-            targetHuman.Initialize();
             targetHuman.InitMaxHp(GetHumanHp(segmentNo));
+            targetHuman.Initialize();
             // ターゲットのHumanをリストに追加
             _targethumanList.Add(targetHuman);
             // コールバック設定
@@ -182,14 +182,5 @@ public class EndlessBattleSegment : MonoBehaviour
     private int GetHumanHp(int segmentNo)
     {
         return 1 + segmentNo / 10;
-        // float humanHp = 10f;
-        // float addHp = segmentNo * 2f;
-        // if(addHp <= 0)
-        //     return humanHp;
-        // else
-        // {
-        //     humanHp += addHp;
-        //     return humanHp;
-        // }
     }
 }

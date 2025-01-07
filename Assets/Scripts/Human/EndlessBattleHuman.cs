@@ -5,6 +5,12 @@ using UnityEngine.UI;
 using TMPro;
 using DG.Tweening;
 
+public enum EndlessBattleHumanState
+{
+    idle,           //  アイドリング
+    ActiveAction,   //  何かしらをトリガーに起こす能動的行動（プレイヤーに近づいてくるなど）
+    attack          //  攻撃
+}
 public class EndlessBattleHuman : MonoBehaviour
 {
     // ---------- 定数宣言 ----------------------------
@@ -19,12 +25,16 @@ public class EndlessBattleHuman : MonoBehaviour
     [SerializeField, Tooltip("キャンバス")] private Canvas _canvas = default;
     [SerializeField, Tooltip("盾アイコンコンテナ")] private RectTransform _shieldContainer = default;
     [SerializeField, Tooltip("盾アイコンプレハブ")] private RectTransform _shieldIconPrefab = default;
+    [SerializeField, Tooltip("プレイヤーが通過したらこれがアクションを起こすパス")] private EndlessBattlePath _triggerPath = default;
+    [SerializeField, Tooltip("能動的アクション")] private HumanActiveAction _activeActionControllrer = null;
+    [SerializeField, Tooltip("HP(シールド)の補正値")] private int _addShield = 0;
     private Human _activeHuman = null;
     private bool _isAttack = false;
     private bool _isAttackEnd = false;
     private bool _isSetHpBar = false;
     private bool _isDead = false;
     private List<RectTransform> _shieldList = null;
+    private EndlessBattleHumanState _state = EndlessBattleHumanState.idle;
     // ---------- クラス変数宣言 -----------------------
     // ---------- インスタンス変数宣言 ------------------
     // ---------- Unity組込関数 -----------------------
@@ -64,6 +74,15 @@ public class EndlessBattleHuman : MonoBehaviour
         }
         _shieldContainer.transform.rotation = Camera.main.transform.rotation;
         _canvas.transform.rotation = Camera.main.transform.rotation;
+
+
+        // ステータス別の行動
+        switch(_state)
+        {
+            case EndlessBattleHumanState.ActiveAction:
+                UpdateActiveAction();
+                break;
+        }
     }
     // ---------- Public関数 -------------------------
     // ---------- Private関数 ------------------------
@@ -74,7 +93,7 @@ public class EndlessBattleHuman : MonoBehaviour
         _attackTrigger.AddCallbackOnTriggerEnter((Collider collider)=>{
             // Debug.Log("あーあ");
             // このHumanが攻撃できる状態にある
-            if(IsCanAttack())
+            if(IsCanAttack() && GameDataManager.GameState == GameState.main)
             {
                 // Debug.Log("攻撃！:" + collider.name + ", " + collider.gameObject.layer);
                 GameDataManager.InGameMainEvent.OnEnemyAttackStart(_activeHuman);
@@ -87,7 +106,7 @@ public class EndlessBattleHuman : MonoBehaviour
         });      
         _lookTrigger.AddCallbackOnTriggerEnter((Collider collider)=>{
             // このHumanが攻撃できる状態にある
-            if(IsCanAttack())
+            if(IsCanAttack() && GameDataManager.GameState == GameState.main)
             {
                 GameDataManager.InGameMainEvent.OnEnemyLook(_activeHuman);
             }
@@ -101,20 +120,39 @@ public class EndlessBattleHuman : MonoBehaviour
                 _isDead = true;
             }
         });
+
+        // プレイヤーが指定のパスを通過したら能動的行動を開始
+        if(_triggerPath != null)
+        {
+            _triggerPath.AddOnPassCallback(()=>{ ChangeState(EndlessBattleHumanState.ActiveAction); });
+        }
+
+        _activeActionControllrer?.Iniiialize();
+        _activeActionControllrer?.SetHuman(_activeHuman);
     }
     private bool IsCanAttack()
     {
-        // return !_activeHuman.IsCatch() && !_activeHuman.IsDead() && _activeHuman.IsGround() && _activeHuman.IsEnableAnimation();
-        return !_activeHuman.IsCatch() && !_activeHuman.IsDead() && _activeHuman.IsGround();
+        bool ret = true;
+        ret &= !_activeHuman.IsCatch();
+        ret &= !_activeHuman.IsDead();
+        ret &= _activeHuman.IsGround();
+        return ret;
     }
     private void InitShield()
     {
+        // HP(シールド)再設定
+        int hp = _activeHuman.MaxHP;
+        hp += _addShield;
+        if(hp < 1)
+            hp = 1;
+        _activeHuman.InitMaxHp(hp);
+        
         _shieldList = new List<RectTransform>();
         foreach( Transform child in _shieldContainer.transform)
         {
             Destroy(child.gameObject);
         }
-        int hp = _activeHuman.MaxHP;
+        
         for(int i = 0; i < (hp - 1); i++)
         {
             RectTransform shield = Instantiate(_shieldIconPrefab);
@@ -133,5 +171,25 @@ public class EndlessBattleHuman : MonoBehaviour
             if( 0 <= i)
                 _shieldList[i].gameObject.SetActive(false);
         }
+    }
+
+    // ステータス変更
+    private void ChangeState(EndlessBattleHumanState state)
+    {
+        if(_state == state)
+            return;
+        _state = state;
+
+        if(_state == EndlessBattleHumanState.ActiveAction)
+        {
+            _activeActionControllrer?.StartActiveAction();
+        }
+    }
+
+    // 能動的行動を開始
+    private void UpdateActiveAction()
+    {
+        if(IsCanAttack())
+            _activeActionControllrer?.UpdateActiveAction();
     }
 }

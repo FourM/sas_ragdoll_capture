@@ -41,6 +41,7 @@ public class EndlessBattlePath : MonoBehaviour
     [SerializeField, Tooltip("ここを通過後、クリアしたらorクリアしてたらプレイヤーは何を見るか")] private ClearLook _clearLook = ClearLook.next;
     [SerializeField, Tooltip("クリア判定に用いるオブジェクト")] private List<CatchableObj> _refCatchableObjList = default;
     private bool _isPath = false;
+    private UnityEvent _onPass = null;
 
     public EnterPlayerState EnterPlayerState{ get{ return _enterPlayerState; } }
     public EnterLook EnterLook{ get{ return _enterLook; } }
@@ -61,6 +62,8 @@ public class EndlessBattlePath : MonoBehaviour
             {
                 onTriggerEnter(collider);
                 _isPath = true;
+
+                _onPass?.Invoke();
             }
         });
     }
@@ -74,6 +77,13 @@ public class EndlessBattlePath : MonoBehaviour
                 return false;
         }
         return true;
+    }
+    // プレイヤーが通過した時の処理
+    public void AddOnPassCallback(UnityAction onPass)
+    {
+        if(_onPass == null)
+            _onPass = new UnityEvent();
+        _onPass.AddListener(onPass);
     }
     // ---------- Private関数 ------------------------
 }

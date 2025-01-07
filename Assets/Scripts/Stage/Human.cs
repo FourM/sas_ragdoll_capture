@@ -288,12 +288,14 @@ public class Human : CatchableObj
         // 直前までアニメーションが無効化されてたら位置補正
         if(!_animator.enabled)
         {
-            _basePosChild.parent = this.transform.parent.parent;
+            // _basePosChild.parent = this.transform.parent.parent;
 
             Vector3 setpos = _basePosChild.position;
 
             setpos.y -= _basePos.localPosition.z * _basePos.parent.localScale.z;
             this.transform.position = setpos;
+
+            _animator.runtimeAnimatorController = _ghostAnimator.runtimeAnimatorController;
         }
 
         _animator.enabled = true;
@@ -312,8 +314,9 @@ public class Human : CatchableObj
     public void SetChildLayer(int layerMask){ _childLayer = layerMask; } 
     public int GetChildLayer(){ return _childLayer; } 
     // public Rigidbody GetRigidbody(){ return _rigidBody; }
-    public void SetAnimatorController(RuntimeAnimatorController _animeController){
-        _animator.runtimeAnimatorController = _animeController;
+    public void SetAnimatorController(RuntimeAnimatorController _animeController, bool isNeko = true){
+        if(_animator.enabled)
+            _animator.runtimeAnimatorController = _animeController;
         if(_ghostAnimator != null)
             _ghostAnimator.runtimeAnimatorController = _animeController;
     }
