@@ -26,6 +26,7 @@ public abstract class CatchableObj : MonoBehaviour
     protected UnityAction _onDoReleaseCallback = null;
     private bool _isInitialize = false;
     private UnityEvent _onInitialize = null;
+    private UnityEvent _onCatch = null;
     private Vector3 _beforevelocity = default;
     // private Vector3 _beforevelocity2 = default;
     private float _fastSwipedTime = 0f;
@@ -85,6 +86,7 @@ public abstract class CatchableObj : MonoBehaviour
         //     return;
         _isCatch = true; 
         OnCatchUnique();
+        _onCatch?.Invoke();
     }
     // 離された時の共通処理
     public void OnRelease()
@@ -96,7 +98,13 @@ public abstract class CatchableObj : MonoBehaviour
         OnReleaseUnique();
     }
 
-    public CatchableObj GetAlternate(){ return _alternate; }
+    public CatchableObj GetAlternate()
+    { 
+        CatchableObj ret = GetAlternateUnique();
+        if(ret == null)
+            ret = _alternate;
+        return ret; 
+    }
     public Transform GetCatchWebParent(){ return _catchWebParent; }
     public Vector3 GetWebScale(){ return _webScale; }
     public Vector3 GetWebPosition(){ return _webPosition; }
@@ -167,6 +175,12 @@ public abstract class CatchableObj : MonoBehaviour
             _onInitialize = new UnityEvent();
         _onInitialize.AddListener(onInitialize);
     }
+    public void AddOnCatch( UnityAction onCatch)
+    {
+        if(_onCatch == null)
+            _onCatch = new UnityEvent();
+        _onCatch.AddListener(onCatch);
+    }
     public float GetBeforeVelocityMagnitude()
     {
         return _beforevelocity.magnitude;
@@ -203,6 +217,8 @@ public abstract class CatchableObj : MonoBehaviour
     protected virtual void OnBreakUnique(){  }
     protected virtual void OnDamageUnique( int damage ){  }
     protected virtual void OnDisableUnique(){  }
+    // 独自処理で代わりに捕まるオブジェクトを返す。nullならデフォルトを用いる
+    protected virtual CatchableObj GetAlternateUnique(){ return null; }
     protected void SetParent( GameObject parent ){ _parent = parent; }
     //　衝突相手が(他の)Humanかチェック
     protected bool IsCollisionHuman( Collision collision )

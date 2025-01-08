@@ -13,7 +13,7 @@ public class EndlessBattleSegment : MonoBehaviour
     [SerializeField, Tooltip("ステージのId")] private String _stageId = "noName";
     [SerializeField, Tooltip("ABフラグによってはギミックで倒すステージか")] private bool _isGimmickKill = false;
     [SerializeField, Tooltip("ターゲットリスト")] private List<HumanHub> _targethumanhubList = default;
-    [SerializeField, Tooltip("ターゲットリスト")] private List<CatchableObj> _HumanHandyList = default;
+    [SerializeField, Tooltip("敵が右手に持つ物のリスト")] private List<CatchableObj> _HumanHandyList = default;
     [SerializeField, Tooltip("Humanの捕まる前の参考constraints")] private Rigidbody _rafConstraints = null;
     [SerializeField, Tooltip("プレイヤーの移動パス")] private List<EndlessBattlePath> _pathList = null;
     [SerializeField, Tooltip("次のセグメントの位置")] private Transform _nextSegmentPos = null;

@@ -415,5 +415,10 @@ public class HumanChild : CatchableObj
         _parentHuman.OnRelease();
         // _parentHuman.SetOnDoReleaseCallback(_onDoReleaseCallback);
     }
+    // 代わりに捕まえさせる物を返す（親を参照）親から帰ってきたのがnullならこのパーツのデフォルト値を返す
+    protected override CatchableObj GetAlternateUnique()
+    {
+        return _parentHuman.GetAlternate();
+    }
 }
 

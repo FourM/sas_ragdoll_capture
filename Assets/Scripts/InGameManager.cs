@@ -359,6 +359,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
     {
         UndoInGame();
         // SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        // GameMainManager.instance.SceneReload();
     }
     // 敵とお互いに見合う時の処理
     public void OnEnemyLook(Human human)
@@ -545,10 +546,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
             // if( (catchableObj != null && catchableObj.GetAlternate() != null) || _isTaphuman)
             if(humanChild != null )
             {
-                // if(isOtherCatchHuman)   // 糸以外の何かに捕まっているHumanならここを通る
-                //     catchableObj = human.GetParts(HumanParts.body);
-                // else
-                    catchableObj = catchableObj.GetAlternate();
+                catchableObj = catchableObj.GetAlternate();
                 _springjoint.connectedBody = catchableObj.GetRigidbody();
                 // 取った対象からの相対位置を設定。
                 _springjoint.connectedAnchor = Vector3.zero;

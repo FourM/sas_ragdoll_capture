@@ -31,6 +31,7 @@ public class EndlessBattleSubManager : StageSubManager
     private int _laps = 0; // デバッグ用：周回回数
     private ClearLook _carrentClearLook = ClearLook.none;   // 今のセグメントをクリアしたらどこを見るか
     private bool _newPath = true;
+    Transform _clearLookPos = null;
     // ---------- クラス変数宣言 -----------------------
     // ---------- インスタンス変数宣言 ------------------
     // ---------- Unity組込関数 -----------------------
@@ -118,6 +119,9 @@ public class EndlessBattleSubManager : StageSubManager
                             //     Debug.Log("Updから見るのセット！:next:lookAtTarget is NUll, from " + _currentSegment.gameObject.name);
                             // else
                             //     Debug.Log("Updから見るのセット！:next:" + lookAtTarget.gameObject.name + ", from " + _currentSegment.gameObject.name);
+                            break;
+                        case ClearLook.look:
+                            _player.SetLookAtTarget(_clearLookPos);
                             break;
                     }
                     _newPath = false;
@@ -410,6 +414,8 @@ public class EndlessBattleSubManager : StageSubManager
 
             // ここを通過後、クリアしたらorクリアしてたらプレイヤーは何を見るか
             _carrentClearLook = path.ClearLook;
+            if(path.ClearLook == ClearLook.look)
+                _clearLookPos = path.GetLookPos();
             _newPath = true;
         };
     }

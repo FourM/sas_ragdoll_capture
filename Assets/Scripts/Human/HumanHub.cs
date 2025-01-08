@@ -13,6 +13,7 @@ public class HumanHub : MonoBehaviour
     [SerializeField, Tooltip("Humanリスト")] private List<Human> _ListHuman;
     [SerializeField, Tooltip("レイヤー")] private int _childLayer = 20;
     [SerializeField, Tooltip("アニメーションコントローラー")] private RuntimeAnimatorController _animeController = null;
+    [SerializeField, Tooltip("盾")] private Shield _shield = null;
     // ---------- プロパティ ----------
     private Human _activeHuman = null;
     private bool _isInitialize = false;
@@ -74,6 +75,9 @@ public class HumanHub : MonoBehaviour
         ghost.localScale = _scale;
 
         _onInitialize?.Invoke();
+
+        if(_shield != null)
+            _activeHuman.AddOnInitialize(HaveShield);
     }
     public Human GetActiveHuman(){ return _activeHuman; }
 
@@ -84,4 +88,10 @@ public class HumanHub : MonoBehaviour
         _onInitialize.AddListener(onInitialize);
     }
     // ---------- Private関数 ----------
+    private void HaveShield()
+    {
+        if(_shield == null)
+            return;
+        _shield.SetUp( this.transform, _activeHuman, _activeHuman.GetParts(HumanParts.forearmL) );
+    }
 }

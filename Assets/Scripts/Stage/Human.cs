@@ -14,7 +14,9 @@ public enum HumanParts
     footL,
     footR,
     body,
-    waist
+    waist,
+    forearmL,
+    forearmR
 }
 
 public class Human : CatchableObj
@@ -63,6 +65,8 @@ public class Human : CatchableObj
     private Vector3 _impactPos;
     private Transform _LookPlayer = null;
     private int _mutekiTime = 0;
+    private Shield _haveShield = null;
+    private bool _isCanGuard = true;
     // ---------- クラス変数宣言 ----------
     // ---------- インスタンス変数宣言 ----------
     // ---------- Unity組込関数 ----------
@@ -320,6 +324,7 @@ public class Human : CatchableObj
         if(_ghostAnimator != null)
             _ghostAnimator.runtimeAnimatorController = _animeController;
     }
+    public RuntimeAnimatorController GetCurrentAnimatorController(){ return _ghostAnimator.runtimeAnimatorController; }
     public void SetPos(Vector3 pos){
         _basePos.position = pos;
     }
@@ -449,6 +454,20 @@ public class Human : CatchableObj
     { 
         _maxHp = maxHP; 
         _currentHp = _maxHp;
+    }
+
+    // シールド設定
+    public void SetHaveShield(Shield haveShield){ _haveShield = haveShield;} 
+    // ガードの可否（シールドを持ってたら）
+    public void SetIsCanGuard(bool isCanGuard){ _isCanGuard = isCanGuard; }
+    // 代わりに捕まえさせる物を返す。nullならデフォルト値を返すけど、それもnull
+    protected override CatchableObj GetAlternateUnique()
+    {
+        CatchableObj ret = null; 
+        // シールドを構えられるならシールドを返す
+        if(_haveShield != null && _isCanGuard)
+            ret = _haveShield;
+        return ret;
     }
     // ---------- Private関数 ----------
     private void LookAtTarget(Transform looker, Vector3 initAngle, int index)

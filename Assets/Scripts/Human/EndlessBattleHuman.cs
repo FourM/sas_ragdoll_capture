@@ -9,7 +9,8 @@ public enum EndlessBattleHumanState
 {
     idle,           //  アイドリング
     ActiveAction,   //  何かしらをトリガーに起こす能動的行動（プレイヤーに近づいてくるなど）
-    attack          //  攻撃
+    attack,         //  攻撃
+    guard           //  ガード
 }
 public class EndlessBattleHuman : MonoBehaviour
 {
@@ -28,6 +29,7 @@ public class EndlessBattleHuman : MonoBehaviour
     [SerializeField, Tooltip("プレイヤーが通過したらこれがアクションを起こすパス")] private EndlessBattlePath _triggerPath = default;
     [SerializeField, Tooltip("能動的アクション")] private HumanActiveAction _activeActionControllrer = null;
     [SerializeField, Tooltip("HP(シールド)の補正値")] private int _addShield = 0;
+    [SerializeField, Tooltip("盾")] private Shield _shield = null;
     private Human _activeHuman = null;
     private bool _isAttack = false;
     private bool _isAttackEnd = false;
@@ -35,6 +37,7 @@ public class EndlessBattleHuman : MonoBehaviour
     private bool _isDead = false;
     private List<RectTransform> _shieldList = null;
     private EndlessBattleHumanState _state = EndlessBattleHumanState.idle;
+    private EndlessBattleHumanState _beforState = EndlessBattleHumanState.idle;
     // ---------- クラス変数宣言 -----------------------
     // ---------- インスタンス変数宣言 ------------------
     // ---------- Unity組込関数 -----------------------
@@ -102,6 +105,7 @@ public class EndlessBattleHuman : MonoBehaviour
                 _activeHuman.SetAnimatorController(_attackAnimation);
                 _activeHuman.EnableAnimation();
                 _isAttack = true;
+                _activeHuman.SetIsCanGuard(false);
                 ChangeState(EndlessBattleHumanState.attack);
             }
         });      
@@ -130,6 +134,22 @@ public class EndlessBattleHuman : MonoBehaviour
 
         _activeActionControllrer?.Iniiialize();
         _activeActionControllrer?.SetHuman(_activeHuman);
+
+
+        // シールドを持っているなら
+        if(_shield != null)
+        {
+            // シールドが取られた時のコールバック設定
+            _shield.AddOnCatch(()=>
+            {
+                ChangeState(EndlessBattleHumanState.guard);
+            });
+            // 構えをやめた時のコールバック設定
+            _shield.AddOnCompleteGuardEnd(()=>
+            {
+                ChangeState(_beforState);
+            });
+        }
     }
     private bool IsCanAttack()
     {
@@ -141,11 +161,13 @@ public class EndlessBattleHuman : MonoBehaviour
     }
     private void InitShield()
     {
-        // HP(シールド)再設定
-        int hp = _activeHuman.MaxHP;
-        hp += _addShield;
-        if(hp < 1)
-            hp = 1;
+        // HPの補正を適用
+        int hp = 1;
+        // int hp = _activeHuman.MaxHP;
+        // hp += _addShield;
+        // if(hp < 1)
+        //     hp = 1;
+        // _activeHuman.InitMaxHp(hp);
         _activeHuman.InitMaxHp(hp);
 
         _shieldList = new List<RectTransform>();
@@ -179,11 +201,18 @@ public class EndlessBattleHuman : MonoBehaviour
     {
         if(_state == state)
             return;
+        _beforState = _state;
         _state = state;
 
         if(_state == EndlessBattleHumanState.ActiveAction)
         {
             _activeActionControllrer?.StartActiveAction();
+        }
+        // ガード以外のアニメーションに移行した時
+        if(_state != EndlessBattleHumanState.guard)
+        {
+            // ガードをやめる待機処理を削除
+            _shield?.CanselGuardEndTween();
         }
     }
 
