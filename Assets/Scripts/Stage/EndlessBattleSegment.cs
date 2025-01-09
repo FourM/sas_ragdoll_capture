@@ -26,6 +26,7 @@ public class EndlessBattleSegment : MonoBehaviour
     private bool _isInitialize = false;
     private bool _isClear = false;
     private float _pathLength = -1f;
+    private bool _isDestroyWait = false;
     public float PathLength
     { 
         get{ return _pathLength; }
@@ -35,6 +36,12 @@ public class EndlessBattleSegment : MonoBehaviour
     // ---------- インスタンス変数宣言 ----------
     // ---------- Unity組込関数 ----------
     private void Update(){
+            
+        // 自己破壊待機中なら破棄する
+        if(_isDestroyWait)
+        {
+            DestroyThis();
+        }
         // クリア
         if(_targethumanList.Count <= 0 && !_isClear)
         {
@@ -158,17 +165,9 @@ public class EndlessBattleSegment : MonoBehaviour
         return true;
     }
 
-    public void DestroyThis()
+    public void DestroyWait()
     {
-        for(int i = 0; i < _targethumanList.Count; i++)
-        {
-            Human human = _targethumanList[i];
-            if(human != null)
-                human.DisableReady();
-
-            // Debug.Log("わんたそ2");
-        }
-        Destroy(this.gameObject);
+        _isDestroyWait = true;
     }
 
     public void AddCallbackOnTriggerEnter(UnityAction<Collider> onTriggerEnter)
@@ -182,5 +181,17 @@ public class EndlessBattleSegment : MonoBehaviour
     private int GetHumanHp(int segmentNo)
     {
         return 1 + segmentNo / 10;
+    }
+    private void DestroyThis()
+    {
+        for(int i = 0; i < _targethumanList.Count; i++)
+        {
+            Human human = _targethumanList[i];
+            if(human != null)
+                human.DisableReady();
+
+            // Debug.Log("わんたそ2");
+        }
+        Destroy(this.gameObject);
     }
 }

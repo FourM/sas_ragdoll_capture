@@ -32,6 +32,7 @@ public class EndlessBattleSubManager : StageSubManager
     private ClearLook _carrentClearLook = ClearLook.none;   // 今のセグメントをクリアしたらどこを見るか
     private bool _newPath = true;
     Transform _clearLookPos = null;
+    private bool _isWaitCreateNewSegment = true;
     // ---------- クラス変数宣言 -----------------------
     // ---------- インスタンス変数宣言 ------------------
     // ---------- Unity組込関数 -----------------------
@@ -76,19 +77,6 @@ public class EndlessBattleSubManager : StageSubManager
     protected override void UpdateUnique()
     {
         float playerPos = _player.GetMovePath().m_Position;
-        if( _nextSegmentPos < playerPos)
-        {
-            if(JudgeUpdateSegment())
-            {
-                // Debug.Log("セグメント更新！！");
-                EndlessBattleSegment segment = InstantiateSegment();
-
-                // 後ろのセグメントを消す
-                DeleteSegment();
-            }
-            // 今プレイヤーがいるセグメントを更新
-            GetCurrentSegment();
-        }
 
         Vector3 pos = _player.transform.position;
         pos += _player.transform.forward * 30f;
@@ -97,8 +85,6 @@ public class EndlessBattleSubManager : StageSubManager
         Vector3 angle = _ground.transform.eulerAngles;
         angle.y = _player.transform.eulerAngles.y;
         _ground.transform.eulerAngles = angle;
-
-
 
         if(_currentSegment != null )
         {
@@ -138,6 +124,12 @@ public class EndlessBattleSubManager : StageSubManager
         {
             // Debug.Log("_currentSegmentがねぇんだぇどおお！？");
         }
+
+        if(_isWaitCreateNewSegment)
+        {
+            EndlessBattleSegment newSegment = InstantiateSegment();
+            _isWaitCreateNewSegment = false;
+        }
     }
     // ---------- Public関数 -------------------------
     // ---------- Private関数 ------------------------
@@ -170,9 +162,10 @@ public class EndlessBattleSubManager : StageSubManager
         List<EndlessBattlePath> endlessBattlePathList = segment.GetPathList();
         for(int i = 0; i < endlessBattlePathList.Count; i++)
         {
+            int index = i;
             EndlessBattlePath path = endlessBattlePathList[i];
             path.gameObject.name = segment.gameObject.name + "_" + i;
-            path.AddCallbackOnTriggerEnter(OnEnterPass(segment, path));
+            path.AddCallbackOnTriggerEnter(OnEnterPass(segment, path, index));
         }
 
         _segmentList.Add(segment);
@@ -201,81 +194,38 @@ public class EndlessBattleSubManager : StageSubManager
         // 一番最初のセグメントを消しても経過したパスが一定個数以上残りそうなら、最初のセグメントを消す
         float playerPos = _player.GetMovePath().m_Position;
 
-        // 判定地点を超えた
-        if( _nextSegmentPos < playerPos)
+        int index = 0;
+        int pathNum = 0;
+        int doUpdatePathNum = 5;    // 経過したパスが何個残るならセグメントの更新を実行するか
+        EndlessBattleSegment segment = null;
+
+        while(segment != _currentSegment)
         {
-            float length = 0f;
-            int index = 0;
-            int pathNum = 0;
-            int doUpdatePathNum = 4;    // 経過したパスが何個残るならセグメントの更新を実行するか
-            // bool retIsTrue = false;
-            while(length <= _nextSegmentPos)
+            segment = _segmentList[index];
+
+            if( 0 < index)
             {
-                EndlessBattleSegment segment = _segmentList[index];
-                // Debug.Log("判定中。NSPos" + _nextSegmentPos + ", Ppos:" + playerPos + ", length:" + length + ", pathNum:" + pathNum + ", index:" + index + ", PathLength:" + segment.PathLength);
-                length += segment.PathLength;
-
-                if(_nextSegmentPos < length)
-                {
-                    // Debug.Log("判定中。今プレイヤーが足を踏み入れたばかりのセグメントまできた:" + index);
-                    break;
-                }
-
-                if( 0 < index)
-                {
-                    pathNum += segment.GetPathListTransform().Count;
-                }
-                else
-                {
-                    // Debug.Log("判定中。一番最初のセグメントのパス数はノーカン");
-                }
-                index++;
-
-                if( doUpdatePathNum <= pathNum )
-                {
-                    // Debug.Log("セグメント更新判定がTRUE。NSPos:" + _nextSegmentPos + ", Ppos:" + playerPos + ", length:" + length + ", index:" + index + ", PathLength:" + segment.PathLength + ", name:" + _segmentList[index].gameObject.name);
-                    return true;
-                }
-
-                if(_segmentList.Count <= index)
-                {
-                    // Debug.LogError("セグメントの更新がされないよ");
-                    break;
-                }
-            }
-            // 判定地点を更新
-            if(index < _segmentList.Count)
-            {
-                // Debug.Log("セグメント更新判定がFALSE。NSPos:" + _nextSegmentPos + ", Ppos:" + playerPos + ", length:" + length + ", index:" + index + ", name:" + _segmentList[index].gameObject.name);
-                _nextSegmentPos += _segmentList[index].PathLength;
-                // _currentSegment = _segmentList[index];
-                // _currentSegmentIndex = index;
-                // Debug.Log("_currentSegment更新：" + _currentSegment.name + ", " + index);
+                pathNum += segment.GetPathListTransform().Count;
             }
             else
-                Debug.LogError("終点にいるのにセグメントの更新がされないよ！？");
+            {
+                // Debug.Log("判定中。一番最初のセグメントのパス数はノーカン");
+            }
+            index++;
+
+            if( doUpdatePathNum <= pathNum )
+            {
+                // Debug.Log("セグメント更新判定がTRUE。NSPos:" + _nextSegmentPos + ", Ppos:" + playerPos + ", length:" + length + ", index:" + index + ", PathLength:" + segment.PathLength + ", name:" + _segmentList[index].gameObject.name);
+                return true;
+            }
+
+            if(_segmentList.Count <= index)
+            {
+                // Debug.LogError("セグメントの更新がされないよ");
+                break;
+            }
         }
         return false;
-    }
-    private void GetCurrentSegment()
-    {
-        int index = 0;
-        float length = 0f;
-        float playerPos = _player.GetMovePath().m_Position;
-        for(index = 0; index < _segmentList.Count; index++)
-        {
-            EndlessBattleSegment segment = _segmentList[index];
-            length += segment.PathLength;
-
-            if( playerPos < length)
-                break;
-        }
-        if( _segmentList.Count <= index )
-        {
-            // Debug.Log("あれ");
-            index = 0;
-        }
-        SetCurrentSegment(_segmentList[index]);
     }
     private void SetCurrentSegment(EndlessBattleSegment segment)
     {   
@@ -319,7 +269,7 @@ public class EndlessBattleSubManager : StageSubManager
         GameDataManager.AddPlayerMoveLength(-length);
 
         // Debug.Log("わんたそ3");
-        segment.DestroyThis();
+        segment.DestroyWait();
         _segmentList.RemoveAt(0);
 
         // _currentSegmentIndex--;
@@ -366,7 +316,7 @@ public class EndlessBattleSubManager : StageSubManager
     }
 
     // プレイヤーがパスを通過した時の処理を返す
-    private UnityAction<Collider> OnEnterPass( EndlessBattleSegment segment, EndlessBattlePath path )
+    private UnityAction<Collider> OnEnterPass( EndlessBattleSegment segment, EndlessBattlePath path, int index )
     {
         return (Collider collider)=>{
             // Debug.Log("最新の通過パス！:" + segment.gameObject.name + ", " + path.gameObject.name);
@@ -417,6 +367,16 @@ public class EndlessBattleSubManager : StageSubManager
             if(path.ClearLook == ClearLook.look)
                 _clearLookPos = path.GetLookPos();
             _newPath = true;
+
+            if(index == 0)
+            {
+                if(JudgeUpdateSegment())
+                {
+                    _isWaitCreateNewSegment = true;
+                    // 後ろのセグメントを消す
+                    DeleteSegment();
+                }
+            }
         };
     }
 
