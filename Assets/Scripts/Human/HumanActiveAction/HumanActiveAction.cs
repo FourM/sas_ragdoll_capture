@@ -40,10 +40,15 @@ public abstract class HumanActiveAction : MonoBehaviour
     {
         UpdateActiveActionUnique();
     }
+    public void FixedUpdateActiveAction()
+    {
+        FixedUpdateActiveActionUnique();
+    }
 
     protected virtual void IniiializeUnique(){}
     protected virtual void StartActiveActionUnique(){}
     protected virtual void UpdateActiveActionUnique(){}
+    protected virtual void FixedUpdateActiveActionUnique(){}
     
     private Transform GetMoveTransform()
     {

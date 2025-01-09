@@ -87,6 +87,15 @@ public class EndlessBattleHuman : MonoBehaviour
                 break;
         }
     }
+    private void FixedUpdate() {
+         // ステータス別の行動
+        switch(_state)
+        {
+            case EndlessBattleHumanState.ActiveAction:
+                FixedUpdateActiveAction();
+                break;
+        }
+    }
     // ---------- Public関数 -------------------------
     // ---------- Private関数 ------------------------
     private void Initialize()
@@ -132,8 +141,8 @@ public class EndlessBattleHuman : MonoBehaviour
             _triggerPath.AddOnPassCallback(()=>{ ChangeState(EndlessBattleHumanState.ActiveAction); });
         }
 
-        _activeActionControllrer?.Iniiialize();
         _activeActionControllrer?.SetHuman(_activeHuman);
+        _activeActionControllrer?.Iniiialize();
 
 
         // シールドを持っているなら
@@ -221,5 +230,11 @@ public class EndlessBattleHuman : MonoBehaviour
     {
         if(IsCanAttack())
             _activeActionControllrer?.UpdateActiveAction();
+    }
+    // 能動的行動を開始
+    private void FixedUpdateActiveAction()
+    {
+        if(IsCanAttack())
+            _activeActionControllrer?.FixedUpdateActiveAction();
     }
 }

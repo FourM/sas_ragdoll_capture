@@ -199,7 +199,6 @@ public abstract class CatchableObj : MonoBehaviour
     // 削除準備
     public void DisableReady()
     {
-        // Debug.Log("わんたそ1");
         if(_isCatch)
         {
             _onDoReleaseCallback?.Invoke();
