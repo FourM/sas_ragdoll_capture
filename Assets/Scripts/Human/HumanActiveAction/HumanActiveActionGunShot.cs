@@ -9,6 +9,7 @@ public class HumanActiveActionGunShot : HumanActiveAction
 {
     [SerializeField, Tooltip("銃")] private EnemyGun _enemyGun = null;
     [SerializeField, Tooltip("発射開始ディレイ")] private float _shotDelay = 0.7f;
+    [SerializeField, Tooltip("対象の前を狙う補正")] private float _targetForward = 0f;
 
     private Transform _lookTarget = null;
     private Vector3 _targetPrePos = default;
@@ -18,8 +19,8 @@ public class HumanActiveActionGunShot : HumanActiveAction
 
     protected override void IniiializeUnique()
     {
-        _lookTarget = GameDataManager.GetPlayer().transform;
-        _targetPrePos = _lookTarget.position;
+        _lookTarget = GameDataManager.GetPlayer().GetBulletTargetTransform();
+        _targetPrePos = _lookTarget.position + _lookTarget.forward * _targetForward;
         _targetPrePos.y += addY;
         _shotWait = _shotDelay;
 
@@ -31,7 +32,7 @@ public class HumanActiveActionGunShot : HumanActiveAction
 
         _enemyGun.Initialize();
         _enemyGun.SetBurretParent(_human.transform.parent.parent);
-        _enemyGun.SetTarget(_lookTarget);
+        _enemyGun.SetTarget(_lookTarget, _targetForward);
 
         _human.AddOnInitialize(()=>
         {
@@ -65,7 +66,7 @@ public class HumanActiveActionGunShot : HumanActiveAction
     // プレイヤーに弾を撃ってくる
     protected override void FixedUpdateActiveActionUnique()
     {
-        Vector3 currnetLookPos = _lookTarget.position;
+        Vector3 currnetLookPos = _lookTarget.position + _lookTarget.forward * _targetForward;
         currnetLookPos.y += addY;
         // 射撃する位置を取得
         Vector3 lookPos = LinePrediction(_enemyGun.GetShotPos(), currnetLookPos, _targetPrePos, _enemyGun.GetShotSpd());

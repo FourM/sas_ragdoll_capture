@@ -23,6 +23,7 @@ public class EnemyGun : CatchableObj
     private Transform _burretParent = null;
     private Human _human = null;
     private Transform _target = null;
+    private float _targetForward = 0f;
     // ---------- クラス変数宣言 ----------
     // ---------- インスタンス変数宣言 ----------
     // ---------- Unity組込関数 ----------
@@ -52,7 +53,7 @@ public class EnemyGun : CatchableObj
         // 発射あ！！
         EnemyGunBurret burret = Instantiate(_bulletPrefab);
         burret.Initialize();
-        burret.SetUp(_shotPos.position, this.transform.forward * _shotSpd, _burretParent, this.transform.rotation, _bulletDuration, _target);
+        burret.SetUp(_shotPos.position, this.transform.forward * _shotSpd, _burretParent, this.transform.rotation, _bulletDuration, _target, _targetForward);
         _shotWait = _shotInterval;
         _effectShot?.Play();
 
@@ -126,7 +127,11 @@ public class EnemyGun : CatchableObj
     public Vector3 GetShotPos(){ return _shotPos.position; }
     public float GetShotSpd(){ return _shotSpd; }
     public void SetHuman(Human human){ _human = human; }
-    public void SetTarget(Transform target){ _target = target; }
+    public void SetTarget(Transform target, float targetForward = 0f)
+    { 
+        _target = target; 
+        _targetForward = targetForward;
+    }
 
     // ---------- Private関数 ----------
     // メイスを奪った時の処理

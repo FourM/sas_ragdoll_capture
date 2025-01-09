@@ -26,6 +26,7 @@ public class Player : MonoBehaviour
     [SerializeField, Tooltip("プレイヤー倒れるディレイ")] private float _downDelay = 0.3f;
     [SerializeField, Tooltip("おててのアニメーション")] private Animator _handAnimator = default;
     [SerializeField, Tooltip("おててのアニメーション")] private Animation _handAnimation = default;
+    [SerializeField, Tooltip("敵の弾の目標位置")] private Transform _bulletTargetPos = default;
     [SerializeField, Tooltip("カメラ振動")] private CinemachineImpulseSource _cinemachineImpulseSource = default;
     private string[] character_anim_parameter = {"Idle", "Down"};
     private Vector3 _initPos = default;
@@ -184,5 +185,7 @@ public class Player : MonoBehaviour
 
         // Debug.Log("いとお:" + _webNum);
     }
+
+    public Transform GetBulletTargetTransform(){ return _bulletTargetPos; }
     // ---------- Private関数 ------------------------
 }

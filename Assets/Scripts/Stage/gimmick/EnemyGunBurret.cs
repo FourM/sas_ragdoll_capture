@@ -17,6 +17,7 @@ public class EnemyGunBurret : CatchableObj
     Transform _target = null;
     private Vector3 _targetPrePos = default;
     private float _spd = 0;
+    private float _targetForward = 0f;
     // ---------- クラス変数宣言 -----------------------
     // ---------- インスタンス変数宣言 ------------------
     // ---------- Unity組込関数 -----------------------
@@ -43,24 +44,31 @@ public class EnemyGunBurret : CatchableObj
     public void FixedUpdate() {
         if(_target != null && GameDataManager.GameState != GameState.result)
         {
+            Vector3 currentTargetPos = _target.position + _target.forward * _targetForward;
             // ターゲットとの予測着弾位置
-            Vector3 targetPos = LinePrediction(transform.position, _target.position, _targetPrePos, _spd);
+            Vector3 targetPos = LinePrediction(transform.position, currentTargetPos, _targetPrePos, _spd);
             // 予測位置に向けたベクトル取得
-            Vector3 ang = (targetPos - this.transform.position).normalized;
-            
+            Vector3 posSub = (targetPos - this.transform.position);
+            Vector3 ang = posSub.normalized;
+
             GetRigidbody().velocity = ang * _spd;
 
-            _targetPrePos = _target.position;
+            _targetPrePos = currentTargetPos;
 
             // 移動している方を向く
             float rotationSpeed = 0.5f;
             Quaternion targetRotation = Quaternion.LookRotation(GetRigidbody().velocity);
             this.transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * rotationSpeed);
+
+            // 目標地点に近くなったら追従を止める
+            if(posSub.magnitude < 1.0f)
+                _target = null;
         }
     }
 
     // セットアップ　発射位置、弾速、親、寿命
-    public void SetUp(Vector3 pos, Vector3 spd, Transform parent, Quaternion ang, float duration = -1f, Transform target = null){
+    public void SetUp(Vector3 pos, Vector3 spd, Transform parent, Quaternion ang, float duration = -1f, Transform target = null, float targetForward = 0f)
+    {
         this.transform.position = pos;
         this.transform.parent = parent;
         this.transform.rotation = ang;
@@ -80,8 +88,9 @@ public class EnemyGunBurret : CatchableObj
         _target = target;
         if(_target != null)
         {
-            _targetPrePos = _target.position;
+            _targetPrePos = _target.position + _target.forward * _targetForward;
         }
+        _targetForward = targetForward;
     }
     // ---------- Public関数 -------------------------
     // ---------- Private関数 ------------------------
@@ -137,7 +146,13 @@ public class EnemyGunBurret : CatchableObj
         }
     }
 
-
+    protected override void OnCatchUnique()
+    {
+        _target = null;
+        GetRigidbody().useGravity = true;
+        GetRigidbody().constraints = RigidbodyConstraints.None;
+        GetRigidbody().velocity /= 2f;
+    }
 
     // 偏差射撃する振り向き方。　コードはネットからのコピペ。二次方程式の応用らしい。
     //線形予測射撃改良案
