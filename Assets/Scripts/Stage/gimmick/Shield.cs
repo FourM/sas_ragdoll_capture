@@ -81,7 +81,7 @@ public class Shield : CatchableObj
         _OnCompleteGuardEnd.AddListener(onCompleteGuardEnd);
     }
     // ---------- Private関数 ------------------------
-    // これが捕まった時の処理
+    // 盾が捕まった時の処理
     protected override void OnCatchUnique()
     {
         // 今のアニメーションを記憶
@@ -90,6 +90,7 @@ public class Shield : CatchableObj
         // Humanにガードアニメーションする
         _human.EnableAnimation();
         _human.SetAnimatorController(_guardAnim);
+        _human.SetIsCanChaneAction(false); 
 
         // Humanをプレイヤーの方に向ける
         Vector3 lookPos = GameDataManager.GetPlayer().transform.position;
@@ -107,10 +108,11 @@ public class Shield : CatchableObj
         this.transform.localEulerAngles += new Vector3(0, 180, 0); 
 
         // ガードアニメーション終了後の処理
-        _guardEndTween = DOVirtual.DelayedCall(0.5f, ()=>
+        _guardEndTween = DOVirtual.DelayedCall(1f, ()=>
         {
             // 直前のアニメーションに戻す
             _human.SetAnimatorController(_beforeAnimator);
+            _human.SetIsCanChaneAction(true); 
         }).SetLink(this.gameObject).OnComplete(()=>{_OnCompleteGuardEnd?.Invoke();});
 
         RereaseShield();

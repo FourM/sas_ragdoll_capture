@@ -140,14 +140,14 @@ public class EnemyGun : CatchableObj
         GameObject parent = this.transform.parent.gameObject;
 
         // 持ち主から切り離す
-        this.transform.parent = GameDataManager.GetStage().transform;
+        this.transform.parent = _human.transform.parent.parent;
         Rigidbody rigidbody = GetRigidbody(); 
         rigidbody.isKinematic = false;
         rigidbody.useGravity = true;
 
         HumanChild humanChild = null;
 
-        Human human = null;
+        _human.Flinch();
 
         _isShot = false;
     }

@@ -89,6 +89,7 @@ public class GameStage : MonoBehaviour
         }
 
         _onInitialize?.Invoke();
+        _onInitialize?.RemoveAllListeners();
 
         if(_isGimmickKill && PlayerPrefs.GetInt("Gimmick_Kill", 1) == 1)
             GameDataManager.SetGimmickKill(true);

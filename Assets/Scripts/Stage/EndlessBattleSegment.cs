@@ -106,6 +106,7 @@ public class EndlessBattleSegment : MonoBehaviour
         }
 
         _onInitialize?.Invoke();
+        _onInitialize?.RemoveAllListeners();
 
         if(_isGimmickKill && PlayerPrefs.GetInt("Gimmick_Kill", 1) == 1)
             GameDataManager.SetGimmickKill(true);
@@ -180,7 +181,8 @@ public class EndlessBattleSegment : MonoBehaviour
     // ---------- Private関数 ----------
     private int GetHumanHp(int segmentNo)
     {
-        return 1 + segmentNo / 10;
+        // return 1 + segmentNo / 10;
+        return 1;
     }
     private void DestroyThis()
     {

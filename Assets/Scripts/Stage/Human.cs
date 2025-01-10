@@ -4,6 +4,7 @@ using UnityEngine;
 using System;
 using UnityEngine.Events;
 using Cinemachine;
+using DG.Tweening;
 
 public enum HumanParts
 {
@@ -46,6 +47,8 @@ public class Human : CatchableObj
     private UnityEvent _onReleaseCallback = default;
     private UnityEvent _onDesableAnimationCallback = default;
     private UnityEvent _onChangePartsMassCallback = default;
+    private UnityEvent _onFlinchCallback = default; // 怯んだ時のコールバック
+    private UnityEvent _onFlinchEndCallback = default; // 怯み終了時のコールバック
     private UnityEvent<UnityAction<HumanChild>> _onPartsActiion = default;
     private Dictionary<HumanParts, HumanChild> _humanPartsDictionary = null;
     private UnityEvent<float> _onDamage = default;
@@ -67,6 +70,10 @@ public class Human : CatchableObj
     private int _mutekiTime = 0;
     private Shield _haveShield = null;
     private bool _isCanGuard = true;
+    private RuntimeAnimatorController _animFlinch = null;   // 怯みアニメーション
+    private UnityEvent _actionChangeWaitCallBack = null;    // 状態変更待機
+    private bool _isCanChaneAction = true;                  // 状態移行できるか
+    private int _actionChangePrim = 0;                  // 状態移行の優先度
     // ---------- クラス変数宣言 ----------
     // ---------- インスタンス変数宣言 ----------
     // ---------- Unity組込関数 ----------
@@ -153,6 +160,13 @@ public class Human : CatchableObj
             LookPos.y = _basePos.position.y;
             _basePos.LookAt(LookPos);
         }
+
+        // 待機アクションを実行するか　怯んでいる時やガードしている時などは次のアクションが待機状態になる
+        if(_isCanChaneAction)
+        {
+            _actionChangeWaitCallBack?.Invoke();
+            _actionChangeWaitCallBack?.RemoveAllListeners();
+        }
     }
 
     protected override void FixedUpdateUnique() {
@@ -176,6 +190,14 @@ public class Human : CatchableObj
     { 
         ChangePartsMass();
         _onReleaseCallback?.Invoke();
+    }
+
+    // 次のアクション待機
+    protected void AddActionChangeWaitCallBack( UnityAction callback )
+    {
+        if(_actionChangeWaitCallBack == null)
+            _actionChangeWaitCallBack = new UnityEvent();
+        _actionChangeWaitCallBack.AddListener(callback);
     }
 
     protected override void OnDamageUnique(int damage)
@@ -286,6 +308,25 @@ public class Human : CatchableObj
         if(_collider != null)
             _collider.enabled = false;
     }
+
+    // 怯む
+    public void Flinch()
+    {
+        // 今のアニメーションを記憶
+        RuntimeAnimatorController beforeAnimator = GetCurrentAnimatorController();
+        SetAnimatorController(_animFlinch);
+        _isCanChaneAction = false; 
+        // ガードアニメーション終了後の処理
+        DOVirtual.DelayedCall(1.5f, ()=>
+        {
+            // 直前のアニメーションに戻す
+            SetAnimatorController(beforeAnimator);
+            _isCanChaneAction = true;
+        }).SetLink(this.gameObject).OnComplete(()=>{_onFlinchEndCallback?.Invoke();});
+        _onFlinchCallback?.Invoke();
+    }
+    public void SetIsCanChaneAction(bool isCanChaneAction){ _isCanChaneAction = isCanChaneAction; }
+
     // アニメーションの再有効化
     public void EnableAnimation() {
 
@@ -378,6 +419,25 @@ public class Human : CatchableObj
         if(_onChangePartsMassCallback == null)
             _onChangePartsMassCallback = new UnityEvent();
         _onChangePartsMassCallback.AddListener(callback);
+    }
+
+    // 怯みアニメーション設定
+    public void SetFlinchAnim( RuntimeAnimatorController animFlinch )
+    {
+        _animFlinch = animFlinch;
+    }
+    // 怯んだ時のコールバック設定
+    public void AddCallbackOnFlinch( UnityAction callback )
+    {
+        if(_onFlinchCallback == null)
+            _onFlinchCallback = new UnityEvent();
+        _onFlinchCallback.AddListener(callback);
+    }
+    public void AddCallbackOnFlinchEnd( UnityAction callback )
+    {
+        if(_onFlinchEndCallback == null)
+            _onFlinchEndCallback = new UnityEvent();
+        _onFlinchEndCallback.AddListener(callback);
     }
 
     public void ChangePartsMass()

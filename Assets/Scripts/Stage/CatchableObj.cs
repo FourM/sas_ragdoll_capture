@@ -69,7 +69,10 @@ public abstract class CatchableObj : MonoBehaviour
         StartUnique();
 
         if(_onInitialize != null)
+        {
             _onInitialize?.Invoke();
+            _onInitialize?.RemoveAllListeners();
+        }
     }
     private void OnDisable(){
         // if(_isCatch)

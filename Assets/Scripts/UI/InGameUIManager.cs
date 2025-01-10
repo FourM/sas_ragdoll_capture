@@ -42,6 +42,7 @@ public class InGameUIManager : MonoBehaviour
         UpdateReticleActive();
 
         _onInitialize?.Invoke();
+        _onInitialize?.RemoveAllListeners();
 
         ChangeGameMode( GameDataManager.GameMode );
 

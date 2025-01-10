@@ -101,6 +101,7 @@ public class Mace : CatchableObj
             Vector3 pos = this.transform.position;
             pos.z = human.transform.position.z;
             this.transform.DOMove(pos, _moveDuration).SetEase(Ease.OutBack);
+            human.Flinch();
         }
 
         // 角度の補正

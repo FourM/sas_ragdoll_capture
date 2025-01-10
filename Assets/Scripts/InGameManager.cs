@@ -264,6 +264,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
 
         GameDataManager.AddOnStageStart(TryRequestReview);
         _onInitialize?.Invoke();
+        _onInitialize?.RemoveAllListeners();
 
         _playerInitPos = _player.transform.position;
     }
