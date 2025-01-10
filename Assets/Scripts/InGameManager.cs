@@ -358,9 +358,9 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
     }
     public void OnUndoInGame()
     {
-        UndoInGame();
+        // UndoInGame();
         // SceneManager.LoadScene(SceneManager.GetActiveScene().name);
-        // GameMainManager.instance.SceneReload();
+        GameMainManager.instance.SceneReload();
     }
     // 敵とお互いに見合う時の処理
     public void OnEnemyLook(Human human)
