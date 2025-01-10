@@ -32,8 +32,12 @@ public abstract class HumanActiveAction : MonoBehaviour
     public void SetHuman(Human human){ _human = human; }
     public void StartActiveAction()
     {
-        if(_activeActionAnimation != null && _isChangeAnimation)
+        if(_activeActionAnimation != null && _isChangeAnimation && !_human.IsDead())
+        {
             _human.SetAnimatorController(_activeActionAnimation, false);
+            if(_human.IsGround())
+                _human.EnableAnimation();
+        }
         StartActiveActionUnique();
     }
     public void UpdateActiveAction()

@@ -42,5 +42,9 @@ public interface InGameMainEventManager
     {
 
     }
+    public void ChangeGameMode(GameMode gameMode)
+    {   
+        
+    }
     // ---------- Private関数 ------------------------
 }

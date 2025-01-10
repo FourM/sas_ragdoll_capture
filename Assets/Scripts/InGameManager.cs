@@ -401,6 +401,8 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
         }
     }
 
+    public void ChangeGameMode(GameMode gameMode){ GameMode = gameMode; }
+
     // ---------- Private関数 ----------
     private void InGameMainUpdate()
     {

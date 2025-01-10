@@ -306,7 +306,7 @@ public class HumanChild : CatchableObj
             // 起き上がり処理中orアニメーション中
             if(_parentHuman.IsFollow() || _parentHuman.IsEnableAnimation()) 
             {
-                // 足元に床を検知できない
+                // 足元に床を検知できない & 足元に何もなかったら落ちるのが有効
                 if (!Physics.Raycast(this.transform.position, -Vector3.up, out hit, _rayDistance2 * scale, mask))
                 {
                     _parentHuman.SetIsPartsFollow(false);

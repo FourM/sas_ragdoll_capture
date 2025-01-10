@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "com.adjust.sdk": "https://github.com/adjust/unity_sdk.git?path=Assets/Adjust",
+    "com.unity.2d.sprite": "1.0.0",
     "com.unity.burst": "1.8.17",
     "com.unity.cinemachine": "2.10.1",
     "com.unity.collab-proxy": "2.5.2",

@@ -104,19 +104,21 @@ public class EndlessBattleHuman : MonoBehaviour
         // Debug.Log("初期設定！");
         _human = _humanHub.GetActiveHuman();
         _attackTrigger.AddCallbackOnTriggerEnter((Collider collider)=>{
-            // Debug.Log("あーあ");
-            // このHumanが攻撃できる状態にある
-            if(IsCanAttack() && GameDataManager.GameState == GameState.main)
-            {
-                // Debug.Log("攻撃！:" + collider.name + ", " + collider.gameObject.layer);
-                GameDataManager.InGameMainEvent.OnEnemyAttackStart(_human);
-                // InGameManager.instance.OnEnemyAttackStart()　と書くよりも、InGameManagerへの強い依存関係をなくせる
+            _human.AddActionChangeWaitCallBack(()=>{
+                // Debug.Log("あーあ");
+                // このHumanが攻撃できる状態にある
+                if(IsCanAttack() && GameDataManager.GameState == GameState.main)
+                {
+                    // Debug.Log("攻撃！:" + collider.name + ", " + collider.gameObject.layer);
+                    GameDataManager.InGameMainEvent.OnEnemyAttackStart(_human);
+                    // InGameManager.instance.OnEnemyAttackStart()　と書くよりも、InGameManagerへの強い依存関係をなくせる
 
-                _human.SetAnimatorController(_attackAnimation);
-                _human.EnableAnimation();
-                _human.SetIsCanGuard(false);
-                ChangeState(EndlessBattleHumanState.attack);
-            }
+                    _human.SetAnimatorController(_attackAnimation);
+                    _human.EnableAnimation();
+                    _human.SetIsCanGuard(false);
+                    ChangeState(EndlessBattleHumanState.attack);
+                }
+            });
         });      
         _lookTrigger.AddCallbackOnTriggerEnter((Collider collider)=>{
             // このHumanが攻撃できる状態にある
@@ -135,10 +137,15 @@ public class EndlessBattleHuman : MonoBehaviour
             }
         });
 
-        // プレイヤーが指定のパスを通過したら能動的行動を開始
+        // プレイヤーが指定のパスを通過したら能動的行動を始める（待機する）
         if(_triggerPath != null)
         {
-            _triggerPath.AddOnPassCallback(()=>{ ChangeState(EndlessBattleHumanState.ActiveAction); });
+            _triggerPath.AddOnPassCallback(()=>
+            { 
+                _human.AddActionChangeWaitCallBack(()=>{
+                    ChangeState(EndlessBattleHumanState.ActiveAction); 
+                });
+            });
         }
 
         _activeActionControllrer?.SetHuman(_human);

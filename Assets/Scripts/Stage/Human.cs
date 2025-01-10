@@ -192,14 +192,6 @@ public class Human : CatchableObj
         _onReleaseCallback?.Invoke();
     }
 
-    // 次のアクション待機
-    protected void AddActionChangeWaitCallBack( UnityAction callback )
-    {
-        if(_actionChangeWaitCallBack == null)
-            _actionChangeWaitCallBack = new UnityEvent();
-        _actionChangeWaitCallBack.AddListener(callback);
-    }
-
     protected override void OnDamageUnique(int damage)
     {
         if(_isBroken)
@@ -325,6 +317,15 @@ public class Human : CatchableObj
         }).SetLink(this.gameObject).OnComplete(()=>{_onFlinchEndCallback?.Invoke();});
         _onFlinchCallback?.Invoke();
     }
+
+    // 次のアクション待機
+    public void AddActionChangeWaitCallBack( UnityAction callback )
+    {
+        if(_actionChangeWaitCallBack == null)
+            _actionChangeWaitCallBack = new UnityEvent();
+        _actionChangeWaitCallBack.AddListener(callback);
+    }
+
     public void SetIsCanChaneAction(bool isCanChaneAction){ _isCanChaneAction = isCanChaneAction; }
 
     // アニメーションの再有効化
