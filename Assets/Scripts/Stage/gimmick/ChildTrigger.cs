@@ -12,6 +12,7 @@ public class ChildTrigger : MonoBehaviour
     [SerializeField, Tooltip("RigidBody")] private Rigidbody _rigidBody;
     private UnityEvent<Collider> _onTriggerEnter = null;
     private UnityEvent<Collider> _onTriggerStay = null;
+    private UnityEvent<Collider> _onTriggerExit = null;
     private UnityEvent<Collision> _onCollisionEnter = null;
     private UnityEvent<Collision> _onCollisionStay = null;
     private UnityEvent<Collision> _onCollisionExit = null;
@@ -68,6 +69,12 @@ public class ChildTrigger : MonoBehaviour
         if(_onTriggerStay == null)
             _onTriggerStay = new UnityEvent<Collider>();
         _onTriggerStay.AddListener(onTriggerStay); 
+    }
+    public void AddCallbackOnTriggerExit(UnityAction<Collider> onTriggerExit)
+    { 
+        if(_onTriggerExit == null)
+            _onTriggerExit = new UnityEvent<Collider>();
+        _onTriggerExit.AddListener(onTriggerExit); 
     }
     public void AddCallbackOnCollisionEnter(UnityAction<Collision> onCollisionEnter)
     { 

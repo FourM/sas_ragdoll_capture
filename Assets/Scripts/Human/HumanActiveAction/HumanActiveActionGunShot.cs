@@ -10,6 +10,7 @@ public class HumanActiveActionGunShot : HumanActiveAction
     [SerializeField, Tooltip("銃")] private EnemyGun _enemyGun = null;
     [SerializeField, Tooltip("発射開始ディレイ")] private float _shotDelay = 0.7f;
     [SerializeField, Tooltip("対象の前を狙う補正")] private float _targetForward = 0f;
+    [SerializeField, Tooltip("対象を狙ってくるか")] private bool _isAim = true;
 
     private Transform _lookTarget = null;
     private Vector3 _targetPrePos = default;
@@ -19,9 +20,16 @@ public class HumanActiveActionGunShot : HumanActiveAction
 
     protected override void IniiializeUnique()
     {
-        _lookTarget = GameDataManager.GetPlayer().GetBulletTargetTransform();
-        _targetPrePos = _lookTarget.position + _lookTarget.forward * _targetForward;
-        _targetPrePos.y += addY;
+        if(_isAim)
+        {
+            _lookTarget = GameDataManager.GetPlayer().GetBulletTargetTransform();
+            _targetPrePos = _lookTarget.position + _lookTarget.forward * _targetForward;
+            _targetPrePos.y += addY;
+        }
+        else
+        {
+            _lookTarget = null;
+        }
         _shotWait = _shotDelay;
 
         // 銃を取り上げられたら何もしなくなる
@@ -66,21 +74,26 @@ public class HumanActiveActionGunShot : HumanActiveAction
     // プレイヤーに弾を撃ってくる
     protected override void FixedUpdateActiveActionUnique()
     {
-        Vector3 currnetLookPos = _lookTarget.position + _lookTarget.forward * _targetForward;
-        currnetLookPos.y += addY;
-        // 射撃する位置を取得
-        Vector3 lookPos = LinePrediction(_enemyGun.GetShotPos(), currnetLookPos, _targetPrePos, _enemyGun.GetShotSpd());
-        
-        Vector3 HumanLookPos = lookPos;
-        HumanLookPos.y = MoveTransform.position.y;
-        // プレイヤーの方を見る
-        MoveTransform.LookAt(HumanLookPos);
-        _targetPrePos = currnetLookPos;
+        Vector3 lookPos = default;
+        if(_isAim)
+        {
+            Vector3 currnetLookPos = _lookTarget.position + _lookTarget.forward * _targetForward;
+            currnetLookPos.y += addY;
+            // 射撃する位置を取得
+            lookPos = LinePrediction(_enemyGun.GetShotPos(), currnetLookPos, _targetPrePos, _enemyGun.GetShotSpd());
+            
+            Vector3 HumanLookPos = lookPos;
+            HumanLookPos.y = MoveTransform.position.y;
+            // プレイヤーの方を見る
+            MoveTransform.LookAt(HumanLookPos);
+            _targetPrePos = currnetLookPos;
+        }
 
         // 銃をまだ持ってたら
         if(_isHaveGun)
         {
-            _enemyGun.transform.LookAt(lookPos);
+            if(_isAim)
+                _enemyGun.transform.LookAt(lookPos);
 
             // 時間計測
             _shotWait -= Time.deltaTime;

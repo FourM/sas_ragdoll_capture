@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using System;
 
-public class EndlessBattleSegment : MonoBehaviour
+public class EndlessBattleSegment : MonoBehaviour, IHumanGetter
 {
     // ---------- 定数宣言 ----------
     // ---------- ゲームオブジェクト参照変数宣言 ----------
@@ -126,6 +126,7 @@ public class EndlessBattleSegment : MonoBehaviour
             return _targethumanList[index]; 
         return null;
     }
+    public Transform GetHumanParent(){ return this.transform; }
     public int GetHumanNum(){ return _targethumanList.Count; }
     public void SetOnClearCallBack( Action onCliearCallback)
     {

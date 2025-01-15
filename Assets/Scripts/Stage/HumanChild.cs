@@ -42,8 +42,8 @@ public class HumanChild : CatchableObj
             return;
         if(collision.gameObject.layer == LayerMask.NameToLayer("catchableNotKill"))
             return;
-        // ギミックで倒す必要があるなら、床への激突では死なない
-        if(collision.gameObject.layer == LayerMask.NameToLayer("Floor") && GameDataManager.IsGimmickKill())
+        // ギミックで倒す必要があるなら、床への激突では死なない　＋　床で死ぬフラグがOFFなら床では死なない
+        if(collision.gameObject.layer == LayerMask.NameToLayer("Floor") && GameDataManager.IsGimmickKill() && !_parentHuman.IsFloorDead)
             return;
         // ギミックで倒す必要があるなら、他Humanの激突では死なない
         if(collision.gameObject.layer == LayerMask.NameToLayer("BreakableParts") && GameDataManager.IsGimmickKill())
@@ -307,7 +307,7 @@ public class HumanChild : CatchableObj
             if(_parentHuman.IsFollow() || _parentHuman.IsEnableAnimation()) 
             {
                 // 足元に床を検知できない & 足元に何もなかったら落ちるのが有効
-                if (!Physics.Raycast(this.transform.position, -Vector3.up, out hit, _rayDistance2 * scale, mask))
+                if (!Physics.Raycast(this.transform.position, -Vector3.up, out hit, _rayDistance2 * scale, mask) && _parentHuman.IsFallable)
                 {
                     _parentHuman.SetIsPartsFollow(false);
                     _parentHuman.DesableAnimation();
@@ -319,6 +319,9 @@ public class HumanChild : CatchableObj
                         velocity.y -= 2f;
                     GetRigidbody().velocity = velocity;
                     // Debug.Log("起き上がらない！" );
+
+                    // 床で死ぬのを有効化
+                    _parentHuman.IsFloorDead = true;
                 }
             }
         }

@@ -97,6 +97,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
     private GameMode _currentGameMode = GameMode.main;
     private float _endlessBattleLastScore = 0f;
     private bool _isEndlessBattleNewRecord = false;
+    private Transform _backupCatchWeb = null;
     public GameMode GameMode{
         get{ return _gameMode; }
         set{ 
@@ -267,6 +268,8 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
         _onInitialize?.RemoveAllListeners();
 
         _playerInitPos = _player.transform.position;
+
+        _backupCatchWeb = Instantiate(_catchWeb.gameObject).transform;
     }
 
     public void UpdateWebRopeMaterial(Material material)
@@ -800,6 +803,14 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
         {
             _currentCatchObj.OnRelease();
             _currentCatchObj = null;
+        }
+
+        // 「捕まえる糸」が不具合で消えた時のバックアップ復元
+        // そもそも「捕まえる糸」が消えることが無いように根本原因を確認するのが大事だとは思うけど応急処置として
+        if(_catchWeb == null)
+        {
+            _catchWeb = _backupCatchWeb;
+            _backupCatchWeb = Instantiate(_catchWeb.gameObject).transform;
         }
 
         _catchWeb.parent = this.transform;

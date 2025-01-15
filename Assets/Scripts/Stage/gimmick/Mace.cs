@@ -116,6 +116,8 @@ public class Mace : CatchableObj
                 rigidbody.constraints = RigidbodyConstraints.FreezePositionZ | RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationY;
             });
         }
+        else
+            rigidbody.constraints = RigidbodyConstraints.None;
     }
 
     protected override void OnReleaseUnique()

@@ -15,6 +15,8 @@ public class HumanHub : MonoBehaviour
     [SerializeField, Tooltip("アニメーションコントローラー")] private RuntimeAnimatorController _animeController = null;
     [SerializeField, Tooltip("怯みアニメーション")] private RuntimeAnimatorController _animFlinch = null;
     [SerializeField, Tooltip("盾")] private Shield _shield = null;
+    [SerializeField, Tooltip("この敵に触れてなくても落ちることがあるか(崩れる床の上にいるやつとかはONにする)")] private bool _isFallable = true;
+    [SerializeField, Tooltip("激しいアニメーションをするなどで床ダメで勝手に死なない(事故死)ロック。プレイヤーに捕まったり落下したりしたらOFFにする")] private bool _initIsFloorDead = true;
     // ---------- プロパティ ----------
     private Human _activeHuman = null;
     private bool _isInitialize = false;
@@ -64,6 +66,9 @@ public class HumanHub : MonoBehaviour
         _activeHuman.transform.localEulerAngles = Vector3.one;
         _activeHuman.SetChildLayer(_childLayer);
         _activeHuman.SetFlinchAnim(_animFlinch);
+        _activeHuman.IsFallable = _isFallable;
+        _activeHuman.InitIsFloorDead = _initIsFloorDead;
+
         if(_animeController != null)
             _activeHuman.SetAnimatorController(_animeController);
         else

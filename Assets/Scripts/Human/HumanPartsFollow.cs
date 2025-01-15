@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 
 /// <summary>
@@ -9,6 +10,7 @@ using UnityEngine;
 public class HumanPartsFollow : MonoBehaviour
 {
     // ---------- 定数宣言 ----------
+    private const float OnStandLine = 0.7f; // ある程度以上に起き上がったコールバック発生ライン
     // ---------- ゲームオブジェクト参照変数宣言 ----------
     // ---------- プレハブ ----------
     // ---------- プロパティ ----------
@@ -26,10 +28,12 @@ public class HumanPartsFollow : MonoBehaviour
     private bool _isFollow = false;
     private Vector3 _basePos = default;
     private float _followTime = 0f;
+    private float _beforeFollowTime = 0f;
     private float _beforeRealTime = 0f;
     private float _realTime = 0f;
     private float _followStartTime = 0f;
     private bool _isFollowBaseLock = false;
+    private UnityEvent _onStand = default;
     // ---------- クラス変数宣言 ----------
     // ---------- インスタンス変数宣言 ----------
     // ---------- Unity組込関数 ----------
@@ -60,6 +64,13 @@ public class HumanPartsFollow : MonoBehaviour
             _followStartTime = 0f;
         if(1f <= _followTime)
             _followTime = 1f;
+
+        if( _beforeFollowTime < OnStandLine && OnStandLine < _followTime )
+        {
+            _onStand?.Invoke();
+        }
+
+        _beforeFollowTime = _followTime;
 
         if(0f < _followStartTime )
             return;
@@ -227,5 +238,12 @@ public class HumanPartsFollow : MonoBehaviour
     }
     public bool IsFollow(){ return _isFollow; }
     public bool IsFollowBaseLock(){ return _isFollow && _isFollowBaseLock; }
+
+    public void AddOnStand( UnityAction callback )
+    { 
+        if(_onStand == null)
+            _onStand = new UnityEvent();
+        _onStand.AddListener(callback);
+    }
     // ---------- Private関数 ----------
 }

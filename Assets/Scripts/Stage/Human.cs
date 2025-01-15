@@ -74,6 +74,13 @@ public class Human : CatchableObj
     private UnityEvent _actionChangeWaitCallBack = null;    // 状態変更待機
     private bool _isCanChaneAction = true;                  // 状態移行できるか
     private int _actionChangePrim = 0;                  // 状態移行の優先度
+    private bool _isFallable = true;                    //　床がないと感じたら落ちるか
+    private bool _isFloorDead = true;                   // 床ダメで死ぬか(事故死で勝手に死ぬロック)
+    private bool _initIsFloorDead = true;               // _isFloorDeadの初期値。trueなら平時でも床で事故死する恐れがある。
+
+    public bool IsFallable{ get{ return _isFallable; } set{ _isFallable = value; } }
+    public bool IsFloorDead{ get{ return _isFloorDead; } set{ _isFloorDead = value; } }
+    public bool InitIsFloorDead{ get{ return _initIsFloorDead; } set{ _isFloorDead = value; _isFloorDead = value; } }
     // ---------- クラス変数宣言 ----------
     // ---------- インスタンス変数宣言 ----------
     // ---------- Unity組込関数 ----------
@@ -102,6 +109,12 @@ public class Human : CatchableObj
             });
         }
         _baseInitPos = _basePos.localPosition;
+
+        // ある程度起き上がった時のコールバック設定
+        _humanPartsFollow.AddOnStand(()=>
+        {
+            IsFloorDead = InitIsFloorDead;
+        });
     }
     protected override void UpdateUnique()
     {
@@ -184,6 +197,11 @@ public class Human : CatchableObj
         // ぐてっとさせる
         SetIsPartsFollow(false);
         ChangePartsMass();
+
+        // 落下を有効化
+        IsFallable = true;
+        // 床で死ぬのを有効化
+        IsFloorDead = true;
     }
 
     protected override void OnReleaseUnique()
@@ -325,6 +343,12 @@ public class Human : CatchableObj
             _actionChangeWaitCallBack = new UnityEvent();
         _actionChangeWaitCallBack.AddListener(callback);
     }
+    // 次のアクション待機を削除
+    public void RemoveActionChangeWaitCallBack( UnityAction callback )
+    {
+        _actionChangeWaitCallBack?.RemoveListener(callback);
+    }
+    
 
     public void SetIsCanChaneAction(bool isCanChaneAction){ _isCanChaneAction = isCanChaneAction; }
 

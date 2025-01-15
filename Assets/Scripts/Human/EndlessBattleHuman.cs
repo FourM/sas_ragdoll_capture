@@ -24,9 +24,6 @@ public class EndlessBattleHuman : MonoBehaviour
     [SerializeField, Tooltip("Hub")] private ChildTrigger _lookTrigger = default;
     [SerializeField, Tooltip("Hub")] private float _attackTime = 0.3f;
     [SerializeField, Tooltip("攻撃アニメーション")] private RuntimeAnimatorController _attackAnimation = default;
-    // [SerializeField, Tooltip("キャンバス")] private Canvas _canvas = default;
-    // [SerializeField, Tooltip("盾アイコンコンテナ")] private RectTransform _shieldContainer = default;
-    // [SerializeField, Tooltip("盾アイコンプレハブ")] private RectTransform _shieldIconPrefab = default;
     [SerializeField, Tooltip("プレイヤーが通過したらこれがアクションを起こすパス")] private EndlessBattlePath _triggerPath = default;
     [SerializeField, Tooltip("能動的アクション")] private HumanActiveAction _activeActionControllrer = null;
     [SerializeField, Tooltip("HP(シールド)の補正値")] private int _addShield = 0;
@@ -35,6 +32,7 @@ public class EndlessBattleHuman : MonoBehaviour
     private bool _isAttack = false;
     // private bool _isSetHpBar = false;
     private bool _isDead = false;
+    private bool _AttackWait = false;
     private float _attackCounter = 0f;
     private List<RectTransform> _shieldList = null;
     private EndlessBattleHumanState _state = EndlessBattleHumanState.idle;
@@ -64,6 +62,12 @@ public class EndlessBattleHuman : MonoBehaviour
                 _isAttack = false;
             }
         }
+        // 攻撃できなくなったら攻撃待機を解除する
+        if(_AttackWait && !IsCanAttack())
+        {
+            _human.RemoveActionChangeWaitCallBack(HumanAttack);
+            _AttackWait = false;
+        }
 
         // if(!_isSetHpBar)
         // {
@@ -80,15 +84,20 @@ public class EndlessBattleHuman : MonoBehaviour
         // _canvas.transform.rotation = Camera.main.transform.rotation;
 
 
-        // ステータス別の行動
-        switch(_state)
+        if(GameDataManager.GameState != GameState.result)
         {
-            case EndlessBattleHumanState.ActiveAction:
-                UpdateActiveAction();
-                break;
+            // ステータス別の行動
+            switch(_state)
+            {
+                case EndlessBattleHumanState.ActiveAction:
+                    UpdateActiveAction();
+                    break;
+            }
         }
     }
     private void FixedUpdate() {
+        if(GameDataManager.GameState == GameState.result)
+            return;
          // ステータス別の行動
         switch(_state)
         {
@@ -101,30 +110,21 @@ public class EndlessBattleHuman : MonoBehaviour
     // ---------- Private関数 ------------------------
     private void Initialize()
     {
-        // Debug.Log("初期設定！");
+        // プレイヤーが近接攻撃範囲内に入ったら攻撃待機
         _human = _humanHub.GetActiveHuman();
         _attackTrigger.AddCallbackOnTriggerEnter((Collider collider)=>{
-            _human.AddActionChangeWaitCallBack(()=>{
-                // Debug.Log("あーあ");
-                // このHumanが攻撃できる状態にある
-                if(IsCanAttack() && GameDataManager.GameState == GameState.main)
-                {
-                    // Debug.Log("攻撃！:" + collider.name + ", " + collider.gameObject.layer);
-                    GameDataManager.InGameMainEvent.OnEnemyAttackStart(_human);
-                    // InGameManager.instance.OnEnemyAttackStart()　と書くよりも、InGameManagerへの強い依存関係をなくせる
-
-                    _human.SetAnimatorController(_attackAnimation);
-                    _human.EnableAnimation();
-                    _human.SetIsCanGuard(false);
-                    ChangeState(EndlessBattleHumanState.attack);
-                }
-            });
-        });      
-        _lookTrigger.AddCallbackOnTriggerEnter((Collider collider)=>{
-            // このHumanが攻撃できる状態にある
-            if(IsCanAttack() && GameDataManager.GameState == GameState.main)
+            if(IsCanAttack())
             {
-                GameDataManager.InGameMainEvent.OnEnemyLook(_human);
+                _AttackWait = true;
+                _human.AddActionChangeWaitCallBack(HumanAttack);
+            }
+        });
+        // プレイヤーが近接攻撃範囲外に出たら攻撃待機を解除
+        _lookTrigger.AddCallbackOnTriggerExit((Collider collider)=>{
+            if(_AttackWait)
+            {
+                _human.RemoveActionChangeWaitCallBack(HumanAttack);
+                _AttackWait = false;
             }
         });      
 
@@ -260,4 +260,20 @@ public class EndlessBattleHuman : MonoBehaviour
         if(IsCanAttack())
             _activeActionControllrer?.FixedUpdateActiveAction();
     }
+    // 敵の近接攻撃
+    private void HumanAttack()
+    {
+        // このHumanが攻撃できる状態にある
+        if(IsCanAttack() && GameDataManager.GameState == GameState.main)
+        {
+            // Debug.Log("攻撃！:" + collider.name + ", " + collider.gameObject.layer);
+            GameDataManager.InGameMainEvent.OnEnemyAttackStart(_human);
+            // InGameManager.instance.OnEnemyAttackStart()　と書くよりも、InGameManagerへの強い依存関係をなくせる
+
+            _human.SetAnimatorController(_attackAnimation);
+            _human.EnableAnimation();
+            _human.SetIsCanGuard(false);
+            ChangeState(EndlessBattleHumanState.attack);
+        }
+    }   
 }
