@@ -9,7 +9,8 @@ using UnityEngine.Events;
 public class CustomButton : MonoBehaviour,  
     IPointerClickHandler,  
     IPointerDownHandler,  
-    IPointerUpHandler  
+    IPointerUpHandler,
+    IPointerEnterHandler
 {
     // ---------- 定数宣言 ----------------------------
     // ---------- ゲームオブジェクト参照変数宣言 ----------
@@ -22,15 +23,35 @@ public class CustomButton : MonoBehaviour,
     public UnityEvent onClick;  
     public UnityEvent onPointerUp;  
     public UnityEvent onPointerDown;  
+    public UnityEvent onPointerEnter;  
     public bool isCommonAnimation = true;
+    public bool IsEnable = true;
+
+    public void Awake() {
+        onClick = new UnityEvent();
+        onPointerUp = new UnityEvent();
+        onPointerDown = new UnityEvent();
+        onPointerEnter = new UnityEvent();
+    }
+
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        if(!IsEnable)
+            return;
+        onPointerEnter?.Invoke();
+    }
 
     public void OnPointerClick(PointerEventData eventData)  
     {
+        if(!IsEnable)
+            return;
         onClick?.Invoke();  
     }
 
     public void OnPointerDown(PointerEventData eventData)  
     {
+        if(!IsEnable)
+            return;
         if(isCommonAnimation)
             CommonPointerDownAnimation();  
         onPointerDown?.Invoke();
@@ -38,17 +59,23 @@ public class CustomButton : MonoBehaviour,
 
     public void OnPointerUp(PointerEventData eventData)  
     {
+        if(!IsEnable)
+            return;
         if(isCommonAnimation)
             CommonPointerUpAnimation();
         onPointerUp?.Invoke();
     }
     public void CommonPointerDownAnimation()
     {
-        transform.DOScale(0.95f, 0.2f).SetEase(Ease.OutBack);  
+        if(!IsEnable)
+            return;
+        transform.DOScale(0.95f, 0.2f).SetEase(Ease.OutBack).SetLink(this.gameObject);  
     }
     public void CommonPointerUpAnimation()
     {
-        transform.DOScale(1f, 0.2f).SetEase(Ease.OutBack);  
+        if(!IsEnable)
+            return;
+        transform.DOScale(1f, 0.2f).SetEase(Ease.OutBack).SetLink(this.gameObject);  
     }
     // ---------- Private関数 ------------------------
 }

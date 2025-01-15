@@ -105,9 +105,6 @@ public class EndlessBattleSegment : MonoBehaviour, IHumanGetter
             obj.transform.localEulerAngles = ang;
         }
 
-        _onInitialize?.Invoke();
-        _onInitialize?.RemoveAllListeners();
-
         if(_isGimmickKill && PlayerPrefs.GetInt("Gimmick_Kill", 1) == 1)
             GameDataManager.SetGimmickKill(true);
         else
@@ -119,6 +116,9 @@ public class EndlessBattleSegment : MonoBehaviour, IHumanGetter
         {
             _pathListTransform.Add(_pathList[i].transform);
         }
+
+        _onInitialize?.Invoke();
+        _onInitialize?.RemoveAllListeners();
     }
     public Human GetHuman(int index = 0)
     { 

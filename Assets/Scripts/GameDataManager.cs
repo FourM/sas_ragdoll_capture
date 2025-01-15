@@ -25,17 +25,29 @@ public static class GameDataManager
     private static bool _debugIsShowUi = true;
     private static bool _eventIsDefeat = false; // イベント用：画面から指を離した時、敵が死んていたか
     private static UnityEvent _onStageStart = null;
+    private static UnityEvent<GameMode> _onChangeGameMode = null;
+    private static UnityEvent<GameState> _onChangeGameState = null;
+    private static UnityEvent<Human> _onHumanDie = null;
+    private static UnityEvent _onUpdateEndlessLife = null;
     private static GameMode _gameMode = GameMode.main;
     private static GameState _gameState = GameState.main;
     private static InGameMainEventManager _inGameMainEventManager;
     public static InGameMainEventManager InGameMainEvent{ get{ return _inGameMainEventManager; } }
     private static Player _player;
     private static float _addPlayerMoveLength = 0f;    // プレイヤーが移動した距離の補正値
+    private static bool _endlessUnLimit = false;   // デバッグ用：エンドレスバトルの制限解放
+    // private static GameMode _backUpGameMode = GameMode.main;
+    public static bool DebugEndlessUnLimit{
+        get{ return _endlessUnLimit; } set{ _endlessUnLimit = value; _onUpdateEndlessLife?.Invoke();}
+    }
     
     public static GameMode GameMode{
         get{ return _gameMode; }
     }
-    public static void SetGameMode(GameMode gameMode){ _gameMode = gameMode; }
+    // public static GameMode BackUpGameMode{
+    //     get{ Debug.Log("_backUpGameMode:" + _backUpGameMode); return _backUpGameMode; }
+    // }
+    public static void SetGameMode(GameMode gameMode){ Debug.Log("SetGameMode ! :" + gameMode); _gameMode = gameMode;}
     public static GameState GameState{
         get{ return _gameState; }
     }
@@ -148,7 +160,44 @@ public static class GameDataManager
         if(_onStageStart == null)
             _onStageStart = new UnityEvent();
         _onStageStart.AddListener(onStageStart); 
-    }   
+    }
+    public static void AddOnHumanDie(UnityAction<Human> callback)
+    {
+        if(_onHumanDie == null)
+            _onHumanDie = new UnityEvent<Human>();
+        _onHumanDie.AddListener(callback); 
+    }
+    public static void OnHumanDie(Human human)
+    {
+        _onHumanDie?.Invoke(human);
+    }
+    public static void AddOnChangeGameMode(UnityAction<GameMode> callback)
+    {
+        if(_onChangeGameMode == null)
+            _onChangeGameMode = new UnityEvent<GameMode>();
+        _onChangeGameMode.AddListener(callback); 
+    }
+    public static void OnChangeGameMode(GameMode gameMode)
+    {
+        _onChangeGameMode?.Invoke(gameMode);
+    }
+    public static void AddOnChangeGameState(UnityAction<GameState> callback)
+    {
+        if(_onChangeGameState == null)
+            _onChangeGameState = new UnityEvent<GameState>();
+        _onChangeGameState.AddListener(callback); 
+    }
+    public static void OnChangeGameState(GameState gameState)
+    {
+        _onChangeGameState?.Invoke(gameState);
+    }
+
+    public static void AddOnUpdateEndlessLife(UnityAction callback)
+    {
+        if(_onUpdateEndlessLife == null)
+            _onUpdateEndlessLife = new UnityEvent();
+        _onUpdateEndlessLife.AddListener(callback); 
+    }
 
     public static void SetPlayer(Player player){ _player = player; }
     public static Player GetPlayer(){ return _player; }
@@ -160,5 +209,28 @@ public static class GameDataManager
     { 
         float length = (SaveDataManager.GetLevelStartPos() - 1) * 5f;
         return length + _addPlayerMoveLength;
+    }
+
+    // エンドレスバトルのライフゲージ更新
+    public static void AddEndlessLifeGuage(float addGuage)
+    {
+        float guage = SaveDataManager.GetEndlessLifeGuage();
+        guage += addGuage;
+        int addLife = Mathf.FloorToInt(guage);
+        guage -= addLife;
+        SaveDataManager.SetEndlessLifeGuage(guage);
+
+        AddEndlessLife(addLife);
+    }
+    // エンドレスバトルのライフ更新
+    public static void AddEndlessLife(int addLife)
+    {
+        int life = SaveDataManager.GetEndlessLife();
+        life += addLife;
+        if(life < 0)
+            life = 0;
+        SaveDataManager.SetEndlessLife(life);
+
+        _onUpdateEndlessLife?.Invoke();
     }
 }

@@ -46,5 +46,11 @@ public interface InGameMainEventManager
     {   
         
     }
+
+    // ステージクリア時
+    public void AddOnClear(UnityAction callback)
+    {   
+        
+    }
     // ---------- Private関数 ------------------------
 }

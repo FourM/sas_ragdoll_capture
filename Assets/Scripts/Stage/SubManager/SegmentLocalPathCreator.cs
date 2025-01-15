@@ -16,22 +16,30 @@ public class SegmentLocalPathCreator : MonoBehaviour
     [SerializeField, Tooltip("参考パス最大Index、0未満なら全て参照")] private int _refPathMax = -1;
     [SerializeField, Tooltip("移動パス")] private List<EndlessBattlePath> _pathList = null;
     [SerializeField, Tooltip("パスの反転をするか")] private bool _isReverth = false;
+    [SerializeField, Tooltip("Y座標の補正")] private float _shiftPosY = 0f;
 
     private List<CinemachineSmoothPath.Waypoint> _wayPointList = null;
+    private bool _isInit = false;
     // ---------- クラス変数宣言 -----------------------
     // ---------- インスタンス変数宣言 ------------------
     // ---------- Unity組込関数 -----------------------
-    private void Start(){
-        _wayPointList = new List<CinemachineSmoothPath.Waypoint>(_movePath.m_Waypoints);
-        // パスの追加
-        _wayPointList = CreateWaypointToTransform(GetPathListTransform());
-        _movePath.m_Waypoints = _wayPointList.ToArray();
-
-        this.transform.position = GetPathListTransform()[0].position;
+    private void Awake(){
+        _segment.AddOnInitialize(Initialize);
     }
 
-    private void Update(){
-        
+    private void Initialize(){
+        if(!_isInit)
+        {
+            _isInit = true;
+            _wayPointList = new List<CinemachineSmoothPath.Waypoint>(_movePath.m_Waypoints);
+            // パスの追加
+            _wayPointList = CreateWaypointToTransform(GetPathListTransform());
+            _movePath.m_Waypoints = _wayPointList.ToArray();
+
+            // this.transform.position = _segment.GetPathListTransform()[0].position;
+            this.transform.position = Vector3.zero;
+            this.transform.eulerAngles = Vector3.zero;
+        }
     }
     // ---------- Public関数 -------------------------
     // ---------- Private関数 ------------------------
@@ -50,6 +58,7 @@ public class SegmentLocalPathCreator : MonoBehaviour
     {
         CinemachineSmoothPath.Waypoint waypoint = new CinemachineSmoothPath.Waypoint();
         Vector3 pos = transforms.position;
+        pos.y += _shiftPosY;
         waypoint.position = pos;
         return waypoint;
     }
@@ -65,7 +74,7 @@ public class SegmentLocalPathCreator : MonoBehaviour
 
         // Debug.Log("ぎゃあああん:" + ret.Count + ", " + _refPathMin + ", " + _refPathMax + ", " + max + ", " + count);
 
-        ret = ret.GetRange(0, count);
+        ret = ret.GetRange(min, count);
 
         if( _isReverth )
             ret.Reverse();

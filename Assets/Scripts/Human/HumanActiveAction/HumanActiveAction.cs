@@ -40,6 +40,11 @@ public abstract class HumanActiveAction : MonoBehaviour
         }
         StartActiveActionUnique();
     }
+    // 能動的行動が一時停止した時の処理
+    public void Pause()
+    {
+        PauseUnique();
+    }
     public void UpdateActiveAction()
     {
         UpdateActiveActionUnique();
@@ -53,6 +58,7 @@ public abstract class HumanActiveAction : MonoBehaviour
     protected virtual void StartActiveActionUnique(){}
     protected virtual void UpdateActiveActionUnique(){}
     protected virtual void FixedUpdateActiveActionUnique(){}
+    protected virtual void PauseUnique(){}
     
     private Transform GetMoveTransform()
     {

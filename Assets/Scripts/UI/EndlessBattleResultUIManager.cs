@@ -148,9 +148,14 @@ public class EndlessBattleResultUIManager : MonoBehaviour
     }
     private void Continue()
     {
-        GameDataManager.InGameMainEvent.OnUndoInGame();
         _state = ResultState.hide;
         InitView();
         _continueButton.gameObject.SetActive(false);
+        // ライフがなければメインゲームモードに戻る
+        if( SaveDataManager.GetEndlessLife() <= 0 )
+        {
+            GameDataManager.InGameMainEvent.ChangeGameMode(GameMode.main);
+        }
+        GameDataManager.InGameMainEvent.OnUndoInGame();
     }
 }

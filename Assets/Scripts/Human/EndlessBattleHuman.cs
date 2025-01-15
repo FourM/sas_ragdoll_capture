@@ -224,6 +224,12 @@ public class EndlessBattleHuman : MonoBehaviour
     {
         if(_state == state)
             return;
+
+        if(_state == EndlessBattleHumanState.ActiveAction)
+        {
+            _activeActionControllrer?.Pause();
+        }
+
         _beforState = _state;
         _state = state;
 

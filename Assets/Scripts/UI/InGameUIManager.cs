@@ -57,8 +57,10 @@ public class InGameUIManager : MonoBehaviour
                 _score.gameObject.SetActive(false);
                 _storeBack.gameObject.SetActive(false);
                 _bestScore.gameObject.SetActive(false);
+                _buttonUndo.gameObject.SetActive(true);
                 break;
             case GameMode.endlessBattle:
+                _buttonUndo.gameObject.SetActive(false);
                 _score.gameObject.SetActive(true);
                 _storeBack.gameObject.SetActive(true);
                 _bestScore.gameObject.SetActive(true);

@@ -268,6 +268,7 @@ public class Human : CatchableObj
                 // バイブレーションさせる
                 VibrationManager.VibrateLong();
             }
+            GameDataManager.OnHumanDie(this);
         }
             
         _isBroken = true;

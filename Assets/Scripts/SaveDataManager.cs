@@ -23,4 +23,12 @@ public static class SaveDataManager
 
     public static float GetEndlessBattleBestScore(){ return PlayerPrefs.GetFloat("EndlessBattleBestScore", 0); }
     public static void SetEndlessBattleBestScore( float score ){ PlayerPrefs.SetFloat("EndlessBattleBestScore", score); }
+
+    // エンドレスステージを遊べるスタミナ
+    public static int GetEndlessLife(){ return PlayerPrefs.GetInt("endlessLife", 1); }
+    public static void SetEndlessLife( int value ){ PlayerPrefs.SetInt("endlessLife", value); }
+
+    // エンドレスステージを遊べるスタミナ
+    public static float GetEndlessLifeGuage(){ return PlayerPrefs.GetFloat("endlessLifeGuage", 0); }
+    public static void SetEndlessLifeGuage( float value ){ PlayerPrefs.SetFloat("endlessLifeGuage", value); }
 }

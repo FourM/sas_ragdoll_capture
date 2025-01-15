@@ -30,6 +30,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
 {
     // ---------- 定数宣言 ----------
     private const float CATCH_OBJ_MASS = 2.0f;
+    private const float HUMAN_KILL_ENDLESS_ADD_GUAGE = 0.04f;
     // ---------- ゲームオブジェクト参照変数宣言 ----------
     // ---------- プレハブ ----------
     // ---------- プロパティ ----------
@@ -60,6 +61,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
     [SerializeField, Tooltip("音リスト")] private ObiParticleAttachment _webStartAttachment = default;
     [SerializeField, Tooltip("ゲームモード")] private GameMode _gameMode = GameMode.main;
     [SerializeField, Tooltip("ゲームステート")] private GameState _gameState = GameState.main;
+    [SerializeField, Tooltip("壁")] private GameObject _wall;
     private UnityEvent _onInitialize = null;
     private UnityEvent _onInitializeMaterialManager = null;
     private bool _isCatch = false;
@@ -98,6 +100,8 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
     private float _endlessBattleLastScore = 0f;
     private bool _isEndlessBattleNewRecord = false;
     private Transform _backupCatchWeb = null;
+    private UnityEvent _onClear = null;
+    
     public GameMode GameMode{
         get{ return _gameMode; }
         set{ 
@@ -110,14 +114,17 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
             {
                 case GameMode.main:
                     GameState = GameState.main;
+                    _wall.SetActive(true);
                     break;
                 case GameMode.endlessBattle:
                     GameState = GameState.startWait;
                     _inGameUiManager.SetTextPlayerMoveLength(0);
                     _endlessBattleLastScore = 0;
                     _isEndlessBattleNewRecord = false;
+                    _wall.SetActive(false);
                     break; 
             }
+            GameDataManager.OnChangeGameMode(value);
         }
     }
     public GameState GameState{
@@ -200,7 +207,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
     private void OnValidate()
     {
         // プロパティを経由して値を設定
-        GameMode = _gameMode;
+        // GameMode = _gameMode;
     }
     // ---------- Public関数 ----------
     public void Initialize() {
@@ -213,11 +220,12 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
 
         GameDataManager.ResetGamePlayData();
         GameDataManager.SetInGameMainEventManager(this);
-        GameDataManager.SetGameMode(_gameMode);
+        // GameDataManager.SetGameMode(_gameMode);
         GameDataManager.SetPlayer(_player);
 
         // ゲームモード別の処理を初期化
-        GameMode = GameMode;
+        // GameMode = GameMode;
+        GameMode = GameDataManager.GameMode;
 
         // ステージ初期化
         _stageManager.Iniiialize();
@@ -270,6 +278,17 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
         _playerInitPos = _player.transform.position;
 
         _backupCatchWeb = Instantiate(_catchWeb.gameObject).transform;
+
+        // 敵が死んだ時のコールバック処理
+        GameDataManager.AddOnHumanDie((Human human)=>
+        {
+            if(GameMode == GameMode.main && 29 <= SaveDataManager.GetCurrentStage())
+            {
+                GameDataManager.AddEndlessLifeGuage(HUMAN_KILL_ENDLESS_ADD_GUAGE);
+            }
+        });
+
+        // GameMode = GameDataManager.GameMode;
     }
 
     public void UpdateWebRopeMaterial(Material material)
@@ -401,10 +420,18 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
                     ShowResult();
                 });
             });
+            GameDataManager.AddEndlessLife(-1);
         }
     }
 
     public void ChangeGameMode(GameMode gameMode){ GameMode = gameMode; }
+
+    public void AddOnClear(UnityAction callback)
+    {
+        if(_onClear == null )
+            _onClear = new UnityEvent();
+        _onClear.AddListener(callback);
+    }
 
     // ---------- Private関数 ----------
     private void InGameMainUpdate()
@@ -499,6 +526,10 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
             // RigidBodyがないなら無視
             if(hit.rigidbody == null)
                 return;
+
+            // 「捕まえる糸」が不具合で消えた時のバックアップ復元
+            // そもそも「捕まえる糸」が消えることが無いように根本原因を確認するのが大事だとは思うけど応急処置として
+            UpdateCatchWeb();
 
             Transform catchWebParent = null;
 
@@ -773,6 +804,10 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
         if(!_isCatch)   
             return;
 
+        // 「捕まえる糸」が不具合で消えた時のバックアップ復元
+        // そもそも「捕まえる糸」が消えることが無いように根本原因を確認するのが大事だとは思うけど応急処置として
+        UpdateCatchWeb();
+
         // スワイプ速度
         float swipeSpeed = (Input.mousePosition - _beforeMousePos).magnitude;
 
@@ -803,14 +838,6 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
         {
             _currentCatchObj.OnRelease();
             _currentCatchObj = null;
-        }
-
-        // 「捕まえる糸」が不具合で消えた時のバックアップ復元
-        // そもそも「捕まえる糸」が消えることが無いように根本原因を確認するのが大事だとは思うけど応急処置として
-        if(_catchWeb == null)
-        {
-            _catchWeb = _backupCatchWeb;
-            _backupCatchWeb = Instantiate(_catchWeb.gameObject).transform;
         }
 
         _catchWeb.parent = this.transform;
@@ -954,6 +981,8 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
             // 何もないとこを捕まえた時の挙動をキャンセル
             CanselNotCatchAction();
             // _isClear = false;
+
+            _onClear?.Invoke();
         });
     }
 
@@ -1046,6 +1075,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
                 }
                 break;
         }
+        GameDataManager.OnChangeGameState(GameState);
     }
     private void ShowResult()
     {
@@ -1063,5 +1093,14 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
     private float GetPlayerMoveLength()
     {
         return _player.GetMovePath().m_Position + GameDataManager.GetPlayerMoveLength();
+    }
+
+    private void UpdateCatchWeb()
+    {
+        if(_catchWeb == null)
+        {
+            _catchWeb = _backupCatchWeb;
+            _backupCatchWeb = Instantiate(_catchWeb.gameObject).transform;
+        }
     }
 }

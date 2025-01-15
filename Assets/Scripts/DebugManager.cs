@@ -165,6 +165,10 @@ public class DebugManager : MonoBehaviour
     {
         _inGameManager.SetDebugEnebleInste(enebleInste);
     }
+    public void ChangeDebugEndlessUnLimit(bool endlessUnLimit)
+    {
+        GameDataManager.DebugEndlessUnLimit = endlessUnLimit;
+    }
 
     public void OnClickPrevStage()
     {
