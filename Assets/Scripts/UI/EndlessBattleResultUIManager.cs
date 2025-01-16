@@ -24,6 +24,8 @@ public class EndlessBattleResultUIManager : MonoBehaviour
     [SerializeField, Tooltip("「続ける」文字")] private TextMeshProUGUI _textContinue = default;
     [SerializeField, Tooltip("続けるボタン")] private Button _continueButton = default;
     [SerializeField, Tooltip("新記録！")] private TextMeshProUGUI _textNewRecord = default;
+    [SerializeField, Tooltip("残りライフ")] private RectTransform _lifeView = default;
+    [SerializeField, Tooltip("ライフ文字")] private TextMeshProUGUI _textLife = default;
     private Sequence _resultSeq = null;
     private Sequence _continueWaitSeq = null;
     private ResultState _state = ResultState.hide;
@@ -72,6 +74,7 @@ public class EndlessBattleResultUIManager : MonoBehaviour
         _score.transform.localScale = Vector3.zero;
         _state = ResultState.animation;
         _textNewRecord.transform.localScale = Vector3.zero;
+        _textLife.text = SaveDataManager.GetEndlessLife() + "";
 
         float finishMoveY = Screen.height * 0.15f;
 
@@ -132,8 +135,9 @@ public class EndlessBattleResultUIManager : MonoBehaviour
         _continueWaitSeq.AppendCallback(()=>{
             _continueButton.gameObject.SetActive(true);
         });
-        _continueWaitSeq.Append(_textContinue.transform.DOScale(Vector3.one, 0.4f).SetEase(Ease.OutBack));
-        _continueWaitSeq.Append(_textContinue.transform.DOScale(Vector3.one * 0.95f, 1f).SetEase(Ease.InOutSine).SetLoops(-1, LoopType.Yoyo));
+        _continueWaitSeq.Append(_textContinue.transform.DOScale(Vector3.one, 0.4f).SetEase(Ease.OutBack).SetLink(_textContinue.gameObject));
+        _continueWaitSeq.Append(_textContinue.transform.DOScale(Vector3.one * 0.95f, 1f).SetEase(Ease.InOutSine).SetLoops(-1, LoopType.Yoyo).SetLink(_textContinue.gameObject));
+        _continueWaitSeq.Join(_lifeView.transform.DOScale(Vector3.one, 0.4f).SetEase(Ease.OutBack).SetLink(_lifeView.gameObject)); 
     }
     private void InitView()
     {
@@ -145,6 +149,7 @@ public class EndlessBattleResultUIManager : MonoBehaviour
         _continueButton.gameObject.SetActive(false);
         _continueButton.onClick.AddListener(Continue);
         _textNewRecord.transform.localScale = Vector3.zero;
+        _lifeView.transform.localScale = new Vector3(0, 1, 0);
     }
     private void Continue()
     {

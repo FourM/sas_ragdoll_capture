@@ -19,6 +19,9 @@ public class InGameUIManager : MonoBehaviour
     [SerializeField, Tooltip("プレイヤーの進んだ位置")] private TextMeshProUGUI _score = default;
     [SerializeField, Tooltip("スコア背景")] private GameObject _storeBack = default;
     [SerializeField, Tooltip("ベストスコア")] private TextMeshProUGUI _bestScore = default;
+    [SerializeField, Tooltip("「スタート」文字")] private TextMeshProUGUI _textContinue = default;
+    [SerializeField, Tooltip("残りライフ")] private GameObject _lifeView = default;
+    [SerializeField, Tooltip("ライフ文字")] private TextMeshProUGUI _textLife = default;
     [SerializeField, Tooltip("リザルトUI")] private EndlessBattleResultUIManager _endlessBattleResultUI = default;
     private bool _isInitialize = false;
     private UnityEvent _onInitialize = null;
@@ -47,6 +50,15 @@ public class InGameUIManager : MonoBehaviour
         ChangeGameMode( GameDataManager.GameMode );
 
         _endlessBattleResultUI.Initialize();
+
+        GameDataManager.AddOnChangeGameState((GameState state)=>{
+            if(state == GameState.main)
+            {
+                _textContinue.gameObject.SetActive(false);
+                _lifeView.gameObject.SetActive(false);
+            }
+        });
+        _textContinue.transform.DOScale(1.05f, 1f).SetEase(Ease.InOutSine).SetLoops(-1, LoopType.Yoyo).SetLink(_textContinue.gameObject);
     }
 
     public void ChangeGameMode(GameMode gameMode)
@@ -57,6 +69,8 @@ public class InGameUIManager : MonoBehaviour
                 _score.gameObject.SetActive(false);
                 _storeBack.gameObject.SetActive(false);
                 _bestScore.gameObject.SetActive(false);
+                _textContinue.gameObject.SetActive(false);
+                _lifeView.gameObject.SetActive(false);
                 _buttonUndo.gameObject.SetActive(true);
                 break;
             case GameMode.endlessBattle:
@@ -64,6 +78,9 @@ public class InGameUIManager : MonoBehaviour
                 _score.gameObject.SetActive(true);
                 _storeBack.gameObject.SetActive(true);
                 _bestScore.gameObject.SetActive(true);
+                _textContinue.gameObject.SetActive(true);
+                _lifeView.gameObject.SetActive(true);
+                _textLife.text = SaveDataManager.GetEndlessLife() + "";
                 _score.text = Mathf.Round(GameDataManager.GetPlayerMoveLength()) + "m";
                 _bestScore.text = "BEST:" + Mathf.Round(SaveDataManager.GetEndlessBattleBestScore()) + "m";
                 break; 

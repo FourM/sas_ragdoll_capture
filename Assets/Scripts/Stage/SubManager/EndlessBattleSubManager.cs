@@ -169,11 +169,6 @@ public class EndlessBattleSubManager : StageSubManager
         }
 
         _segmentList.Add(segment);
-        segment.AddCallbackOnTriggerEnter((Collider collider)=>
-        {
-            // Debug.Log("トリガーからセグメント更新:" + segment.gameObject.name);
-            SetCurrentSegment(segment);
-        });
 
         if(segment.GetLookAtTarget() != null)
         {

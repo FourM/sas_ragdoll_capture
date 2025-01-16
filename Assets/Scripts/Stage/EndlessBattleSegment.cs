@@ -18,7 +18,6 @@ public class EndlessBattleSegment : MonoBehaviour, IHumanGetter
     [SerializeField, Tooltip("プレイヤーの移動パス")] private List<EndlessBattlePath> _pathList = null;
     [SerializeField, Tooltip("次のセグメントの位置")] private Transform _nextSegmentPos = null;
     [SerializeField, Tooltip("プレイヤーが見る位置")] private Transform _lookAtTarget = null;
-    [SerializeField, Tooltip("トリガー")] private ChildTrigger _childTrigger = null;
     private List<Transform> _pathListTransform = null;
     private List<Human> _targethumanList = default;
     private Action _onCliearCallback = default;
@@ -171,14 +170,6 @@ public class EndlessBattleSegment : MonoBehaviour, IHumanGetter
     {
         _isDestroyWait = true;
     }
-
-    public void AddCallbackOnTriggerEnter(UnityAction<Collider> onTriggerEnter)
-    {
-        if(_childTrigger == null)
-            return;
-        // Debug.Log("トリガー設定:" + this.gameObject.name);
-        _childTrigger.AddCallbackOnTriggerEnter(onTriggerEnter);
-    }  
     // ---------- Private関数 ----------
     private int GetHumanHp(int segmentNo)
     {

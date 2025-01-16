@@ -62,6 +62,8 @@ public class ButtonGoEndlessMode : MonoBehaviour
                 Sequence seq = DOTween.Sequence();
                 seq.Append(thisTransform.DOScale(Vector3.one, 0.3f).SetEase(Ease.OutBack).SetLink(thisObject));
                 seq.SetLink(thisObject);
+                UpdateLifeView();
+                _isShow = true;
             }
         });
         if( SaveDataManager.GetCurrentStage() < 29)
@@ -138,9 +140,13 @@ public class ButtonGoEndlessMode : MonoBehaviour
         {
             this.transform.localScale = Vector3.one;
         }
-        else
+        else if( 29 <= SaveDataManager.GetCurrentStage())
         {
             this.transform.localScale = Vector3.one * 0.9f;
+        }
+        else
+        {
+            this.transform.localScale = Vector3.zero;
         }
         if(!_beforeIsActive && _isActive)
             PlayAnimationIsActiveButton();
@@ -171,7 +177,7 @@ public class ButtonGoEndlessMode : MonoBehaviour
     private bool IsActiveButton()
     {
         bool isActive = false;
-        if( 1 <= SaveDataManager.GetEndlessLife() 
+        if(( 1 <= SaveDataManager.GetEndlessLife() && 29 <= SaveDataManager.GetCurrentStage() )
         || GameDataManager.GameMode == GameMode.endlessBattle 
         || GameDataManager.DebugEndlessUnLimit )
             isActive = true;
