@@ -99,10 +99,12 @@ public class Human : CatchableObj
 
         if(_visibleEventTrigger != null)
         {
+            // 見えた
             _visibleEventTrigger.AddOnBecameVisible(()=>
             {
                 _isVisible = true;
             });
+            // 見えなくなった
             _visibleEventTrigger.AddOnBecameInVisible(()=>
             {
                 _isVisible = false;
