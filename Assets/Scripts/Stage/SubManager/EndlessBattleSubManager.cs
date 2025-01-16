@@ -63,11 +63,12 @@ public class EndlessBattleSubManager : StageSubManager
         // ステージ生成
         int _instanceSegmentIndex = 0;
         int j = 0;
-        while( (_playerMovePath.PathLength <= 100f || _playerMovePath.m_Waypoints.Length <= 8 ) && j < 15 )
+        while( (_playerMovePath.PathLength <= 70f || _playerMovePath.m_Waypoints.Length <= 8 ) && j < 10 )
         {
             EndlessBattleSegment segment = InstantiateSegment();
             j++;
         }
+        // Debug.Log( "_playerMovePath.PathLength:" + _playerMovePath.PathLength + ", _playerMovePath.m_Waypoints.Length:" + _playerMovePath.m_Waypoints.Length + ", j:" + j );
         // Debug.Log("DistanceCacheIsValid:" + _playerMovePath.DistanceCacheIsValid() + ", m_Waypoints.Length" + _playerMovePath.m_Waypoints.Length);
 
         _currentSegmentIndex = 0;

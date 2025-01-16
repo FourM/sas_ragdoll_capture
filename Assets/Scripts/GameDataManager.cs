@@ -47,7 +47,7 @@ public static class GameDataManager
     // public static GameMode BackUpGameMode{
     //     get{ Debug.Log("_backUpGameMode:" + _backUpGameMode); return _backUpGameMode; }
     // }
-    public static void SetGameMode(GameMode gameMode){ Debug.Log("SetGameMode ! :" + gameMode); _gameMode = gameMode;}
+    public static void SetGameMode(GameMode gameMode){ _gameMode = gameMode;}
     public static GameState GameState{
         get{ return _gameState; }
     }

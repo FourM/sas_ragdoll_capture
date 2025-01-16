@@ -108,6 +108,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
             // if( _gameMode ==
             _gameMode = value; 
             GameDataManager.SetGameMode(value);
+            _currentGameMode = value;
             if(_stageManager.IsInitialize)
                 UndoInGame();
             switch(_gameMode)
