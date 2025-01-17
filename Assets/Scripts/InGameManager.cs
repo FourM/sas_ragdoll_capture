@@ -101,6 +101,11 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
     private bool _isEndlessBattleNewRecord = false;
     private Transform _backupCatchWeb = null;
     private UnityEvent _onClear = null;
+
+
+    private int _stageStartKillHuman = 0;
+    private int _stageStartEndlessLife = 0;
+    private float _stageStartEndlessGuage = 0.0f;
     
     public GameMode GameMode{
         get{ return _gameMode; }
@@ -174,7 +179,18 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
                 if(GameMode == GameMode.main)
                     GameState = GameState.main;
                 if(!_isUITouch && Input.GetMouseButton(0) && _showUINum == 0)
+                {
                     GameState = GameState.main;
+                    // セーブデータ更新＆ステージスタートイベント発火
+                    if(GameMode == GameMode.endlessBattle)
+                    {
+                        int endlessCount = SaveDataManager.GetPlayEndlessCount();
+                        endlessCount++;
+                        SaveDataManager.SetPlayEndlessCount(endlessCount);
+                        FirebaseManager.instance.EventBonusStageStart();
+                        GameDataManager.AddEndlessLife(-1);
+                    }
+                }
                 break;
             case GameState.main:
             case GameState.endlessBattleEnemyAttack:
@@ -248,6 +264,8 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
         // ステージ再読み込みボタンの処理設定
         _inGameUiManager.SetOnClickButtonUndo(()=>
         {
+            LoadStageStartData();
+            GameDataManager.AddEndlessLife(0);  // エンドレスUI読み込み
             UndoInGame();
             // イベント呼び出し
             FirebaseManager.instance.EventReStart();
@@ -283,11 +301,14 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
         // 敵が死んだ時のコールバック処理
         GameDataManager.AddOnHumanDie((Human human)=>
         {
-            if(GameMode == GameMode.main && 29 <= SaveDataManager.GetCurrentStage())
+            if(GameMode == GameMode.main)
             {
-                GameDataManager.AddEndlessLifeGuage(HUMAN_KILL_ENDLESS_ADD_GUAGE);
+                // if(GameDataManager.ShowEndlessBattleButtonStage <= SaveDataManager.GetCurrentStage())
+                GameDataManager.CountUpEnemyKill(HUMAN_KILL_ENDLESS_ADD_GUAGE);
             }
         });
+
+        SaveStageStartData();
 
         // GameMode = GameDataManager.GameMode;
     }
@@ -421,7 +442,9 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
                     ShowResult();
                 });
             });
-            GameDataManager.AddEndlessLife(-1);
+            // GameDataManager.AddEndlessLife(-1);
+            // セーブデータ更新＆ステージ終了イベント発火
+            FirebaseManager.instance.EventBonusStageFinish( (int)Mathf.Round(_endlessBattleLastScore) );
         }
     }
 
@@ -983,6 +1006,8 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
             CanselNotCatchAction();
             // _isClear = false;
 
+            SaveStageStartData();
+
             _onClear?.Invoke();
         });
     }
@@ -1103,5 +1128,18 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
             _catchWeb = _backupCatchWeb;
             _backupCatchWeb = Instantiate(_catchWeb.gameObject).transform;
         }
+    }
+
+    private void SaveStageStartData()
+    {
+        _stageStartKillHuman = SaveDataManager.GetHumanKillNum();
+        _stageStartEndlessLife = SaveDataManager.GetEndlessLife();
+        _stageStartEndlessGuage = SaveDataManager.GetEndlessLifeGuage();
+    }
+    private void LoadStageStartData()
+    {
+        SaveDataManager.SetHumanKillNum(_stageStartKillHuman);
+        SaveDataManager.SetEndlessLife(_stageStartEndlessLife);
+        SaveDataManager.SetEndlessLifeGuage(_stageStartEndlessGuage);
     }
 }

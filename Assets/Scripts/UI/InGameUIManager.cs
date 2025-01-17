@@ -13,10 +13,12 @@ public class InGameUIManager : MonoBehaviour
     // ---------- プレハブ ----------
     // ---------- プロパティ ----------
     [SerializeField, Tooltip("キャンバス")] private Canvas _canvas = default;
+    [SerializeField, Tooltip("キャンバスグループ：メインモード")] private CanvasGroup _mainCanvasGroup = default;
     [SerializeField, Tooltip("キャンバススケーラー")] private CanvasScaler _canvasScaler = default;
-    [SerializeField, Tooltip("ステージマネージャー")] private Button _buttonUndo = default;
+    [SerializeField, Tooltip("やり直しボタン")] private Button _buttonUndo = default;
+    [SerializeField, Tooltip("敵を倒した数")] private TextMeshProUGUI _humanKillNum = default;
     [SerializeField, Tooltip("照準")] private UIReticle _uiReticle = default;
-    [SerializeField, Tooltip("プレイヤーの進んだ位置")] private TextMeshProUGUI _score = default;
+    [SerializeField, Tooltip("エンドレスバトル：プレイヤーの進んだ位置")] private TextMeshProUGUI _score = default;
     [SerializeField, Tooltip("スコア背景")] private GameObject _storeBack = default;
     [SerializeField, Tooltip("ベストスコア")] private TextMeshProUGUI _bestScore = default;
     [SerializeField, Tooltip("「スタート」文字")] private TextMeshProUGUI _textContinue = default;
@@ -29,6 +31,7 @@ public class InGameUIManager : MonoBehaviour
     private UnityEvent _onShowUI = null;
     private float _posFix = 1.0f;
     private Vector2 _reticlePosShiftFix = default;
+    private Sequence _humanKillNumSeq = null;
     // ---------- クラス変数宣言 ----------
     // ---------- インスタンス変数宣言 ----------
     // ---------- Unity組込関数 ----------
@@ -59,6 +62,11 @@ public class InGameUIManager : MonoBehaviour
             }
         });
         _textContinue.transform.DOScale(1.05f, 1f).SetEase(Ease.InOutSine).SetLoops(-1, LoopType.Yoyo).SetLink(_textContinue.gameObject);
+
+        // 敵を倒した表示更新
+        GameDataManager.AddOnUpdateEndlessLife(UpdateHumanKillView);
+
+        _humanKillNum.text = SaveDataManager.GetHumanKillNum().ToString("000");
     }
 
     public void ChangeGameMode(GameMode gameMode)
@@ -66,15 +74,15 @@ public class InGameUIManager : MonoBehaviour
         switch(gameMode)
         {
             case GameMode.main:
+                _mainCanvasGroup.alpha = 1;
                 _score.gameObject.SetActive(false);
                 _storeBack.gameObject.SetActive(false);
                 _bestScore.gameObject.SetActive(false);
                 _textContinue.gameObject.SetActive(false);
                 _lifeView.gameObject.SetActive(false);
-                _buttonUndo.gameObject.SetActive(true);
                 break;
             case GameMode.endlessBattle:
-                _buttonUndo.gameObject.SetActive(false);
+                _mainCanvasGroup.alpha = 0;
                 _score.gameObject.SetActive(true);
                 _storeBack.gameObject.SetActive(true);
                 _bestScore.gameObject.SetActive(true);
@@ -184,5 +192,21 @@ public class InGameUIManager : MonoBehaviour
         _buttonUndo.enabled = false;
         // _buttonUndo.transform.localScale = Vector3.zero;
         _buttonUndo.transform.DOScale(Vector3.zero, 0.07f).SetEase(Ease.InBack);
+    }
+
+    private void UpdateHumanKillView()
+    {
+        if(_humanKillNumSeq == null)
+        {
+            _humanKillNumSeq = DOTween.Sequence();
+            _humanKillNumSeq.Append(_humanKillNum.transform.DOScale(Vector3.one * 1.1f, 0.2f).SetEase(Ease.InOutBack).SetLink(_humanKillNum.gameObject));
+            _humanKillNumSeq.Append(_humanKillNum.transform.DOScale(Vector3.one, 0.2f).SetEase(Ease.OutBack).SetLink(_humanKillNum.gameObject));
+            _humanKillNumSeq
+                .Pause()
+                .SetAutoKill(false)
+                .SetLink(_humanKillNum.gameObject);
+        }
+        _humanKillNum.text = SaveDataManager.GetHumanKillNum().ToString("000");
+        _humanKillNumSeq.Restart();
     }
 }

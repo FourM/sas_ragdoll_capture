@@ -29,13 +29,13 @@ public class FirebaseManager : MonoBehaviour
     public void EventStageStart()
     {
         Firebase.Analytics.FirebaseAnalytics.LogEvent("Stage_Start",
-                            new Parameter("Stage", PlayerPrefs.GetInt("currentStage", 0) + 1));
+                            new Parameter("Stage", SaveDataManager.GetCurrentStage() + 1));
         // Debug.Log("Stage_Start");
     }
     public void EventStageClear()
     {
         Firebase.Analytics.FirebaseAnalytics.LogEvent("Stage_Clear",
-                            new Parameter("Stage", PlayerPrefs.GetInt("currentStage", 0) + 1));
+                            new Parameter("Stage", SaveDataManager.GetCurrentStage() + 1));
         // Debug.Log("Stage_Clear");
     }
 
@@ -48,7 +48,7 @@ public class FirebaseManager : MonoBehaviour
     /// <param name="Y_coordinate"> マウスタップの位置Y</param>
     public void EventTapCount(int location, int is_thread, float X_coordinate, float Y_coordinate)
     {
-        int stage = PlayerPrefs.GetInt("currentStage", 0) + 1;  // 現在のステージ
+        int stage = SaveDataManager.GetCurrentStage() + 1;  // 現在のステージ
         double X_coordinateDouble = (double)X_coordinate;
         double X_coordinateDouble2 = Math.Round(X_coordinateDouble, 3);
         double Y_coordinateDouble = (double)Y_coordinate;
@@ -72,7 +72,7 @@ public class FirebaseManager : MonoBehaviour
         double taptimeDouble = (double)taptime;
         double taptimeDouble2 = Math.Round(taptimeDouble, 1);
         // string taptimeString = taptime.ToString("F1");          // タップ時間をStringにする
-        int stage = PlayerPrefs.GetInt("currentStage", 0) + 1;  // 現在のステージ
+        int stage = SaveDataManager.GetCurrentStage() + 1;  // 現在のステージ
         int is_defeatInt = Convert.ToInt32(is_defeat);
 
         Firebase.Analytics.FirebaseAnalytics.LogEvent("Tap_Release",
@@ -92,7 +92,7 @@ public class FirebaseManager : MonoBehaviour
         }
 
         FirebaseAnalytics.LogEvent("Watch_Inste", 
-                            new Parameter("Stage", PlayerPrefs.GetInt("currentStage", 0) + 1),
+                            new Parameter("Stage", SaveDataManager.GetCurrentStage() + 1),
                             new Parameter("CanWatch", isWatch.ToString()),
                             new Parameter("WatchInsteCount", watchInsteCount));
         // Debug.Log("isWatch:" + isWatch + ", " + watchInsteCount);
@@ -111,7 +111,7 @@ public class FirebaseManager : MonoBehaviour
     //     }
 
     //     FirebaseAnalytics.LogEvent("Watch_Inste", 
-    //                         new Parameter("Stage", PlayerPrefs.GetInt("currentStage", 0) + 1),
+    //                         new Parameter("Stage", SaveDataManager.GetCurrentStage() + 1),
     //                         new Parameter("CanWatch", isWatch.ToString()),
     //                         new Parameter("Revenue", revenue),
     //                         new Parameter("WatchInsteCount", watchInsteCount));
@@ -125,13 +125,13 @@ public class FirebaseManager : MonoBehaviour
     public void EventWatchBanner(bool isWatch)
     {
         FirebaseAnalytics.LogEvent("Watch_Banner", 
-                            new Parameter("Stage", PlayerPrefs.GetInt("currentStage", 0) + 1),
+                            new Parameter("Stage", SaveDataManager.GetCurrentStage() + 1),
                             new Parameter("CanWatch", isWatch.ToString()));
     }
     // public void EventWatchBanner(bool isWatch, double revenue)
     // {
     //     FirebaseAnalytics.LogEvent("Watch_Banner", 
-    //                         new Parameter("Stage", PlayerPrefs.GetInt("currentStage", 0) + 1),
+    //                         new Parameter("Stage", SaveDataManager.GetCurrentStage() + 1),
     //                         new Parameter("Revenue", revenue),
     //                         new Parameter("CanWatch", isWatch.ToString()));
     //     // Debug.Log("Watch_Inste、Revenue:" + revenue);
@@ -139,7 +139,7 @@ public class FirebaseManager : MonoBehaviour
     public void EventReStart()
     {
         FirebaseAnalytics.LogEvent("Stage_Restart", 
-                            new Parameter("Stage", PlayerPrefs.GetInt("currentStage", 0) + 1));
+                            new Parameter("Stage", SaveDataManager.GetCurrentStage() + 1));
         // Debug.Log("Stage_Restart");
     }
     public void EventCrashed(float impact, bool death)
@@ -153,9 +153,45 @@ public class FirebaseManager : MonoBehaviour
         // Debug.Log("impact:" + impact.ToString("F1") + ", death:" + death);
 
         // FirebaseAnalytics.LogEvent("Crashed", 
-        //                     new Parameter("Stage", PlayerPrefs.GetInt("currentStage", 0) + 1),
+        //                     new Parameter("Stage", SaveDataManager.GetCurrentStage() + 1),
         //                     new Parameter("Impact", impact.ToString("F1")),
         //                     new Parameter("Death", deathInt));
+    }
+
+    /// <summary>
+    /// エンドレスモード開始
+    /// </summary>
+    /// <param name="stage"> 0:的をタップ、1:的外をタップ、2:手をタップ </param>
+    /// <param name="bonus_Stage"> 0:糸が出なかった、1:糸が出た</param>
+    /// <param name="life"> マウスタップの位置X</param>
+    public void EventBonusStageStart()
+    {
+        int stage = SaveDataManager.GetCurrentStage() + 1;          // 現在のステージ
+        int bonus_Stage = SaveDataManager.GetPlayEndlessCount();    // 何プレイ目のエンドレスステージか
+        int life = SaveDataManager.GetEndlessLife();                // 開始前のライフ
+
+        Firebase.Analytics.FirebaseAnalytics.LogEvent("Bonus_Stage_Start",
+                            new Parameter("Stage", stage),
+                            new Parameter("Bonus_Stage", bonus_Stage),
+                            new Parameter("Life", life));
+        // Debug.Log("Bonus_Stage_Start:" + stage + ", " + bonus_Stage + ", " + life);
+    }
+    /// <summary>
+    /// エンドレスモード終了
+    /// </summary>
+    /// <param name="stage"> 0:的をタップ、1:的外をタップ、2:手をタップ </param>
+    /// <param name="bonus_Stage"> 0:糸が出なかった、1:糸が出た</param>
+    /// <param name="record"> マウスタップの位置X</param>
+    public void EventBonusStageFinish(int record)
+    {
+        int stage = SaveDataManager.GetCurrentStage() + 1;          // 現在のステージ
+        int bonus_Stage = SaveDataManager.GetPlayEndlessCount();    // 何プレイ目のエンドレスステージか
+
+        Firebase.Analytics.FirebaseAnalytics.LogEvent("Bonus_Stage_Finish",
+                            new Parameter("Stage", stage),
+                            new Parameter("Bonus_Stage", bonus_Stage),
+                            new Parameter("Record", record));
+        // Debug.Log("Bonus_Stage_Start:" + stage + ", " + bonus_Stage + ", " + record);
     }
     // ---------- Private関数 ----------
     // ---------- Private関数 ----------

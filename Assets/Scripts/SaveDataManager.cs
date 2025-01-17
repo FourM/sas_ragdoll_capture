@@ -25,10 +25,20 @@ public static class SaveDataManager
     public static void SetEndlessBattleBestScore( float score ){ PlayerPrefs.SetFloat("EndlessBattleBestScore", score); }
 
     // エンドレスステージを遊べるスタミナ
-    public static int GetEndlessLife(){ return PlayerPrefs.GetInt("endlessLife", 1); }
+    public static int GetEndlessLife(){ return PlayerPrefs.GetInt("endlessLife", GameDataManager.InitEndlessBattleLife); }
     public static void SetEndlessLife( int value ){ PlayerPrefs.SetInt("endlessLife", value); }
 
     // エンドレスステージを遊べるスタミナ
     public static float GetEndlessLifeGuage(){ return PlayerPrefs.GetFloat("endlessLifeGuage", 0); }
     public static void SetEndlessLifeGuage( float value ){ PlayerPrefs.SetFloat("endlessLifeGuage", value); }
+
+    // エンドレスステージを遊べるスタミナ
+    public static int GetHumanKillNum(){ return PlayerPrefs.GetInt("humanKillNum", 0); }
+    public static void SetHumanKillNum( int value ){ PlayerPrefs.SetInt("humanKillNum", value); }
+    // エンドレスステージを遊んだ回数
+    public static int GetPlayEndlessCount(){ return PlayerPrefs.GetInt("playEndlessCount", 0); }
+    public static void SetPlayEndlessCount( int value ){ PlayerPrefs.SetInt("playEndlessCount", value); }
+    // スタミナが1以上になったことがあるか
+    // public static int GetIsFirstLife(){ return PlayerPrefs.GetInt("isFirstLife", 0); }
+    // public static void SetIsFirstLife( int value ){ PlayerPrefs.SetInt("isFirstLife", value); }
 }

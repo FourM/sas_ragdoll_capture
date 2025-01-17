@@ -13,6 +13,13 @@ public enum MenuType
 /// </summary>
 public static class GameDataManager
 {
+    // エンドレスバトルボタンの表示とライフゲージ獲得を始めるステージ数条件　このステージを上回っていても他の条件などを満たしてなければ表示されない
+    private const int SHOW_ENDLESS_BATTLE_BUTTON_STAGE = 10;
+    // エンドレスバトルの初期ライフ
+    private const int INIT_ENDLESS_BATTLE_LIFE = 0;
+    public static int ShowEndlessBattleButtonStage{ get{ return SHOW_ENDLESS_BATTLE_BUTTON_STAGE; } }
+    public static int InitEndlessBattleLife{ get{ return INIT_ENDLESS_BATTLE_LIFE; } }
+
     private static Dictionary<GameObject, CatchableObj> catchableObjDic = null;
     private static GameStage _stage = null;
     private static int _mutekiTime = 0;
@@ -211,6 +218,14 @@ public static class GameDataManager
         return length + _addPlayerMoveLength;
     }
 
+    public static void CountUpEnemyKill(float addGuage)
+    {
+        int killCount = SaveDataManager.GetHumanKillNum();
+        killCount++;
+        SaveDataManager.SetHumanKillNum(killCount);
+        AddEndlessLifeGuage(addGuage);
+    }
+
     // エンドレスバトルのライフゲージ更新
     public static void AddEndlessLifeGuage(float addGuage)
     {
@@ -230,6 +245,9 @@ public static class GameDataManager
         if(life < 0)
             life = 0;
         SaveDataManager.SetEndlessLife(life);
+        // 初めてライフを得たフラグをON
+        // if( 1 <= life )
+        //     SaveDataManager.SetIsFirstLife(1);
 
         _onUpdateEndlessLife?.Invoke();
     }
