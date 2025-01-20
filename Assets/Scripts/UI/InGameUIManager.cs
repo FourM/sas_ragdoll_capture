@@ -14,6 +14,7 @@ public class InGameUIManager : MonoBehaviour
     // ---------- プロパティ ----------
     [SerializeField, Tooltip("キャンバス")] private Canvas _canvas = default;
     [SerializeField, Tooltip("キャンバスグループ：メインモード")] private CanvasGroup _mainCanvasGroup = default;
+    [SerializeField, Tooltip("キャンバスグループ：敵を倒した数")] private CanvasGroup _canvasGroupHumanKill = default;
     [SerializeField, Tooltip("キャンバススケーラー")] private CanvasScaler _canvasScaler = default;
     [SerializeField, Tooltip("やり直しボタン")] private Button _buttonUndo = default;
     [SerializeField, Tooltip("敵を倒した数")] private TextMeshProUGUI _humanKillNum = default;
@@ -63,10 +64,18 @@ public class InGameUIManager : MonoBehaviour
         });
         _textContinue.transform.DOScale(1.05f, 1f).SetEase(Ease.InOutSine).SetLoops(-1, LoopType.Yoyo).SetLink(_textContinue.gameObject);
 
-        // 敵を倒した表示更新
         GameDataManager.AddOnUpdateEndlessLife(UpdateHumanKillView);
 
         _humanKillNum.text = SaveDataManager.GetHumanKillNum().ToString("000");
+
+        GameDataManager.AddOnDebugChangeUserSegment((string value)=>
+        {
+            if(value == "UnlimitedMode_ON")
+            {
+                _canvasGroupHumanKill.alpha = (float)PlayerPrefs.GetInt("UnlimitedMode_ON");
+            }
+        });
+        _canvasGroupHumanKill.alpha = (float)PlayerPrefs.GetInt("UnlimitedMode_ON");
     }
 
     public void ChangeGameMode(GameMode gameMode)

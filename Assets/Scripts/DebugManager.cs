@@ -112,6 +112,7 @@ public class DebugManager : MonoBehaviour
                     _inGameManager.UndoInGame();
                     GameDataManager.UpdatekillShockStrength();
                     UpdateText();
+                    GameDataManager.OnDebugChangeUserSegment(key);
                 });
             }
         }

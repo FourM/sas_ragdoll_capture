@@ -40,6 +40,14 @@ public class ButtonGoEndlessMode : MonoBehaviour
     }
     private void Initialize()
     {
+        GameDataManager.AddOnDebugChangeUserSegment((string value)=>
+        {
+            if(value == "UnlimitedMode_ON")
+            {
+                UpdateLifeView();
+            }
+        });
+
         ChangeIcon(GameDataManager.GameMode);
         _button.onClick.AddListener(()=>
         {
@@ -214,6 +222,17 @@ public class ButtonGoEndlessMode : MonoBehaviour
     // ボタンの表示非表示チェック
     private bool IsShowButton()
     {
+        // ABテストで無効化されているなら表示しない
+        if(PlayerPrefs.GetInt("UnlimitedMode_ON") == 0)
+        {   
+            _lifeEffectIconParent.gameObject.SetActive(false);
+            return false;
+        }
+        else
+        {
+            _lifeEffectIconParent.gameObject.SetActive(true);
+        }
+
         // デバッグ：エンドレスモード無制限
         if(GameDataManager.DebugEndlessUnLimit)
             return true;

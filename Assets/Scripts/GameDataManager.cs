@@ -43,6 +43,8 @@ public static class GameDataManager
     private static Player _player;
     private static float _addPlayerMoveLength = 0f;    // プレイヤーが移動した距離の補正値
     private static bool _endlessUnLimit = false;   // デバッグ用：エンドレスバトルの制限解放
+    
+    private static UnityEvent<string> _onDebugChangeUserSegment = null; // デバッグ用：ユーザープロパティ変更時のコールバック(変更があったユーザープロパティ名)
     // private static GameMode _backUpGameMode = GameMode.main;
     public static bool DebugEndlessUnLimit{
         get{ return _endlessUnLimit; } set{ _endlessUnLimit = value; _onUpdateEndlessLife?.Invoke();}
@@ -250,5 +252,16 @@ public static class GameDataManager
         //     SaveDataManager.SetIsFirstLife(1);
 
         _onUpdateEndlessLife?.Invoke();
+    }
+
+    public static void AddOnDebugChangeUserSegment(UnityAction<string> callback)
+    {
+        if(_onDebugChangeUserSegment == null)
+            _onDebugChangeUserSegment = new UnityEvent<string>();
+        _onDebugChangeUserSegment.AddListener(callback);
+    }
+    public static void OnDebugChangeUserSegment(string propatyName)
+    {
+        _onDebugChangeUserSegment?.Invoke(propatyName);
     }
 }
