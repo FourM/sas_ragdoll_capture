@@ -100,7 +100,9 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
     private float _endlessBattleLastScore = 0f;
     private bool _isEndlessBattleNewRecord = false;
     private Transform _backupCatchWeb = null;
+    private Transform _backupWebLineEndPos = null;
     private UnityEvent _onClear = null;
+    private Transform _springjointTransform = null; // 見えないバネのトランスフォームをキャッシュ
 
 
     private int _stageStartKillHuman = 0;
@@ -232,6 +234,9 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
         if(_isInitialize) return;
         _isInitialize = true;
 
+        // 一部情報をキャッシュ
+        _springjointTransform = _springjoint.transform;
+
         // マテリアルマネージャー初期化
         _onInitializeMaterialManager?.Invoke();
 
@@ -297,6 +302,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
         _playerInitPos = _player.transform.position;
 
         _backupCatchWeb = Instantiate(_catchWeb.gameObject).transform;
+        _backupWebLineEndPos = Instantiate(_webLineEndPos.gameObject).transform;
 
         // 敵が死んだ時のコールバック処理
         GameDataManager.AddOnHumanDie((Human human)=>
@@ -752,10 +758,10 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
         // ワールド座標に変換  
         Vector3 Pos = Camera.main.ScreenToWorldPoint(screenPos);  
         // ワールド座標を3Dオブジェクトの座標に適用  
-        _springjoint.transform.position = Pos;  
+        _springjointTransform.position = Pos;  
 
-        // 糸を表示
-        _handParent.LookAt(_springjoint.transform);
+        // 手を見えないバネの方に向ける
+        _handParent.LookAt(_springjointTransform);
         // // 糸終点の位置調整
         // _webLineEndPos.position = _springjoint.connectedBody.transform.position + _springjoint.connectedAnchor;
 
@@ -768,7 +774,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
             int numerator = i + 1;
 
             // 引っ張り元の位置と終点の位置の間の位置をとる。この経由点が始点に近いほど引っ張り元に、終点に近いほど終点に近い位置をとる。
-            Vector3 PosFactorA = _springjoint.transform.position * (denominator - numerator);
+            Vector3 PosFactorA = _springjointTransform.position * (denominator - numerator);
             Vector3 PosFactorB = _webLineEndPos.position * numerator;
             Vector3 PosFactorC = ( PosFactorA + PosFactorB ) / denominator;
 
@@ -1127,6 +1133,11 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
         {
             _catchWeb = _backupCatchWeb;
             _backupCatchWeb = Instantiate(_catchWeb.gameObject).transform;
+        }
+        if(_webLineEndPos == null)
+        {
+            _webLineEndPos = _backupWebLineEndPos;
+            _backupWebLineEndPos = Instantiate(_webLineEndPos.gameObject).transform;
         }
     }
 

@@ -155,15 +155,21 @@ public class EndlessBattleSegment : MonoBehaviour, IHumanGetter
     }
     public bool isAllKill()
     {
-        // Debug.Log("今の区画のクリア判定。人数：" + _targethumanList.Count);
-        for(int i = 0; i < _targethumanList.Count; i++)
+        try
         {
-            Human human = _targethumanList[i];
-            // 生きてる&カメラ内にいるヤツが一人でもいたらNo
-            if(human.IsVisible && !human.IsBroken())
-                return false;
+            // Debug.Log("今の区画のクリア判定。人数：" + _targethumanList.Count);
+            for(int i = 0; i < _targethumanList.Count; i++)
+            {
+                Human human = _targethumanList[i];
+                // 生きてる&カメラ内にいるヤツが一人でもいたらNo
+                if(human.IsVisible && !human.IsBroken())
+                    return false;
+            }
+            return true;
+        }catch(ArithmeticException e)
+        {
+            return true;
         }
-        return true;
     }
 
     public void DestroyWait()

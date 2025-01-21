@@ -23,7 +23,7 @@ public class HumanHub : MonoBehaviour
     private bool _isInitialize = false;
     private Vector3 _scale = default;
     private UnityEvent _onInitialize = null;
-    private bool _onVisibleCheckar = false;
+    private bool _isVisibleCheck = false;
     private Transform _cameraTransform = null;
     private Transform _showHumanCheckarTransform = null;
     // ---------- クラス変数宣言 ----------
@@ -31,8 +31,16 @@ public class HumanHub : MonoBehaviour
     // ---------- Unity組込関数 ----------
     private void Update()
     {
-        if(_onVisibleCheckar == true)
+        // if(this.gameObject.name == "HumanHub EndlessBattle Mob1")
+        // {
+        //     Debug.Log(this.gameObject.name + ",チェックだお:" + _isVisibleCheck);    
+        // }
+        if(_isVisibleCheck && GameDataManager.GameMode != GameMode.main)
         {
+            // if(this.gameObject.name == "HumanHub EndlessBattle Mob1")
+            // {
+            //     Debug.Log(this.gameObject.name + ",チェックするお:" + _isVisibleCheck);    
+            // }
             TryShowHuman();
         }
     }
@@ -100,29 +108,51 @@ public class HumanHub : MonoBehaviour
 
         this.enabled = false;
         
-        _cameraTransform = Camera.main.transform;
-        _showHumanCheckarTransform = _showHumanCheckar.transform;
-        _activeHuman.gameObject.SetActive(false);
-        _showHumanCheckar.AddOnWillRenderObject(()=>{
-            // Debug.Log("猫2");
-            _onVisibleCheckar = true;
-            this.enabled = true;
-            TryShowHuman();
-        });
-        _showHumanCheckar.AddOnBecameVisible(()=>{
-            // Debug.Log("猫１");
-            _onVisibleCheckar = true;
-            this.enabled = true;
-            TryShowHuman();
-        });
-        _showHumanCheckar.AddOnBecameInVisible(()=>{
-            _onVisibleCheckar = false;
-            this.enabled = false;
-        });
+        if(GameDataManager.GameMode != GameMode.main)
+        {   
+            _cameraTransform = Camera.main.transform;
+            _showHumanCheckarTransform = _showHumanCheckar.transform;
+            _activeHuman.gameObject.SetActive(false);
+            _showHumanCheckar.AddOnWillRenderObject(()=>{
+                // if(Camera.current.name != "Main Camera")
+                // {
+                //     if(Camera.current == null)
+                //         Debug.Log("Camera.current is NULL!!");
+                //     else
+                //         Debug.Log("Camera.current is " + Camera.current.name);
+                // }
+                if (Camera.current != null && Camera.current.name != "Main Camera") 
+                    return;
+
+                _isVisibleCheck = true;
+                this.enabled = true;
+                TryShowHuman();
+                // if(this.gameObject.name == "HumanHub EndlessBattle Mob1")
+                // {
+                //     Debug.Log(this.gameObject.name + ",視覚内に入ったお:" + this.enabled + ", " + _isVisibleCheck);    
+                // }
+            });
+            _showHumanCheckar.AddOnBecameInVisible(()=>{
+                _isVisibleCheck = false;
+                this.enabled = false;
+                // if(this.gameObject.name == "HumanHub EndlessBattle Mob1")
+                // {
+                //     Debug.Log(this.gameObject.name + ",見えないお:" + this.enabled + ", " + _isVisibleCheck);    
+                // }
+            });
+        }
+        else
+        {
+            _showHumanCheckar.gameObject.SetActive(false);
+        }
     }
 
     private void TryShowHuman()
     {
+        // if(this.gameObject.name == "HumanHub EndlessBattle Mob1")
+        // {
+        //     Debug.Log(this.gameObject.name + ",チェックを始めるお:" + _isVisibleCheck);    
+        // }
         Vector3 dir = _showHumanCheckarTransform.position - _cameraTransform.position;
         LayerMask mask = LayerMask.GetMask("ShowHumanChecker", "Floor", "Default");
         if (Physics.Raycast(_cameraTransform.position, dir, out RaycastHit hit, dir.magnitude, mask, QueryTriggerInteraction.Ignore))
@@ -133,11 +163,11 @@ public class HumanHub : MonoBehaviour
                 // Debug.Log($"{gameObject.name} はカメラに本当に見えている！");
                 _activeHuman.gameObject.SetActive(true);
                 _showHumanCheckar.gameObject.SetActive(false);
-                _onVisibleCheckar = false;
+                _isVisibleCheck = false;
             }
             else
             {
-                Debug.Log($"{gameObject.name} は視野内だけど遮蔽物に隠れている！:" + hit.transform.gameObject.name );
+                // Debug.Log($"{gameObject.name} は視野内だけど遮蔽物に隠れている！:" + hit.transform.gameObject.name );
 
                 _activeHuman.gameObject.SetActive(false);
                 _showHumanCheckar.gameObject.SetActive(true);
