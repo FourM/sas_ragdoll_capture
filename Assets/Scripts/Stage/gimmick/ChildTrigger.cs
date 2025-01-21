@@ -19,6 +19,8 @@ public class ChildTrigger : MonoBehaviour
     private UnityEvent<float> _onJointBreak = null;
     private UnityEvent _onBecameVisible = null;
     private UnityEvent _onBecameInvisible = null;
+    private UnityEvent _onWillRenderObject = null;
+    
     // ---------- クラス変数宣言 ----------
     // ---------- インスタンス変数宣言 ----------
     // ---------- Unity組込関数 ----------
@@ -44,6 +46,10 @@ public class ChildTrigger : MonoBehaviour
     private void OnBecameInvisible()
     { 
         _onBecameInvisible?.Invoke();
+    }
+    private void OnWillRenderObject()
+    { 
+        _onWillRenderObject?.Invoke();
     }
     
 
@@ -113,6 +119,13 @@ public class ChildTrigger : MonoBehaviour
             _onBecameInvisible = new UnityEvent();
         _onBecameInvisible.AddListener(onBecameInVisible); 
         // Debug.Log("みえんごなった");
+    }
+    public void AddOnWillRenderObject(UnityAction callBack)
+    {
+        if(_onWillRenderObject == null)
+            _onWillRenderObject = new UnityEvent();
+        _onWillRenderObject.AddListener(callBack); 
+        // Debug.Log("見えたぁメメタァ");
     }
     // ---------- Private関数 ----------
 }

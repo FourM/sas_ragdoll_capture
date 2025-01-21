@@ -263,8 +263,8 @@ public class HumanChild : CatchableObj
         {
             Debug.DrawRay(this.transform.position, -Vector3.up * _rayDistance * scale, Color.red, 0.1f, false);
             RaycastHit hit;
-            LayerMask mask = LayerMask.GetMask("Deafult", "catchable", "Floor", "ThroughWall", "catchableNotKill",
-            "catchableThroughFloor", "catchableNoMutualConflicts", "catchableThroughWall", "NotKillFloor");
+            LayerMask mask = LayerMask.GetMask("Deafult", "catchable", "Floor", "ThroughWall",
+            "catchableNotKill", "catchableNoMutualConflicts", "catchableThroughWall", "NotKillFloor");
 
             // 起き上がり処理中でない & アニメーション中でない
             // if(!_parentHuman.IsFollow() && !_parentHuman.IsEnableAnimation())
@@ -280,8 +280,6 @@ public class HumanChild : CatchableObj
                         // if(hit.transform.gameObject.layer == LayerMask.NameToLayer("catchable"))
                         //     isMove = true;
                         // if(hit.transform.gameObject.layer == LayerMask.NameToLayer("catchableNotKill"))
-                        //     isMove = true;
-                        // if(hit.transform.gameObject.layer == LayerMask.NameToLayer("catchableThroughFloor"))
                         //     isMove = true;
                         // if(hit.transform.gameObject.layer == LayerMask.NameToLayer("catchableNoMutualConflicts"))
                         //     isMove = true;

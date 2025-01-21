@@ -17,14 +17,25 @@ public class HumanHub : MonoBehaviour
     [SerializeField, Tooltip("盾")] private Shield _shield = null;
     [SerializeField, Tooltip("この敵に触れてなくても落ちることがあるか(崩れる床の上にいるやつとかはONにする)")] private bool _isFallable = true;
     [SerializeField, Tooltip("激しいアニメーションをするなどで床ダメで勝手に死なない(事故死)ロック。プレイヤーに捕まったり落下したりしたらOFFにする")] private bool _initIsFloorDead = true;
+    [SerializeField, Tooltip("Humanリスト")] private ChildTrigger _showHumanCheckar;
     // ---------- プロパティ ----------
     private Human _activeHuman = null;
     private bool _isInitialize = false;
     private Vector3 _scale = default;
     private UnityEvent _onInitialize = null;
+    private bool _onVisibleCheckar = false;
+    private Transform _cameraTransform = null;
+    private Transform _showHumanCheckarTransform = null;
     // ---------- クラス変数宣言 ----------
     // ---------- インスタンス変数宣言 ----------
     // ---------- Unity組込関数 ----------
+    private void Update()
+    {
+        if(_onVisibleCheckar == true)
+        {
+            TryShowHuman();
+        }
+    }
     // ---------- Public関数 ----------
     public void Initialize(int layer = 0)
     { 
@@ -86,7 +97,55 @@ public class HumanHub : MonoBehaviour
 
         if(_shield != null)
             _activeHuman.AddOnInitialize(HaveShield);
+
+        this.enabled = false;
+        
+        _cameraTransform = Camera.main.transform;
+        _showHumanCheckarTransform = _showHumanCheckar.transform;
+        _activeHuman.gameObject.SetActive(false);
+        _showHumanCheckar.AddOnWillRenderObject(()=>{
+            // Debug.Log("猫2");
+            _onVisibleCheckar = true;
+            this.enabled = true;
+            TryShowHuman();
+        });
+        _showHumanCheckar.AddOnBecameVisible(()=>{
+            // Debug.Log("猫１");
+            _onVisibleCheckar = true;
+            this.enabled = true;
+            TryShowHuman();
+        });
+        _showHumanCheckar.AddOnBecameInVisible(()=>{
+            _onVisibleCheckar = false;
+            this.enabled = false;
+        });
     }
+
+    private void TryShowHuman()
+    {
+        Vector3 dir = _showHumanCheckarTransform.position - _cameraTransform.position;
+        LayerMask mask = LayerMask.GetMask("ShowHumanChecker", "Floor", "Default");
+        if (Physics.Raycast(_cameraTransform.position, dir, out RaycastHit hit, dir.magnitude, mask, QueryTriggerInteraction.Ignore))
+        {
+            
+            if (hit.transform == _showHumanCheckarTransform.transform)
+            {
+                // Debug.Log($"{gameObject.name} はカメラに本当に見えている！");
+                _activeHuman.gameObject.SetActive(true);
+                _showHumanCheckar.gameObject.SetActive(false);
+                _onVisibleCheckar = false;
+            }
+            else
+            {
+                Debug.Log($"{gameObject.name} は視野内だけど遮蔽物に隠れている！:" + hit.transform.gameObject.name );
+
+                _activeHuman.gameObject.SetActive(false);
+                _showHumanCheckar.gameObject.SetActive(true);
+            }
+        }
+    }
+
+
     public Human GetActiveHuman(){ return _activeHuman; }
 
     public void AddOnInitialize( UnityAction onInitialize)

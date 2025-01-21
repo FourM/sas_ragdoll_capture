@@ -538,7 +538,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
         Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
         Debug.DrawRay(ray.origin, ray.direction * 15.0f, Color.green, 5, false);
         RaycastHit hit;
-        LayerMask mask = LayerMask.GetMask("catchable", "catchableChild","catchableThroughFloor", 
+        LayerMask mask = LayerMask.GetMask("catchable", "catchableChild", 
          "catchableNoMutualConflicts", "catchableThroughWall", "catchableNotKill",
          "Human1", "Human2", "Human3", "Human4", "Human5", "Human6", "Human7", "Human8", "Human9", "Human10");
 

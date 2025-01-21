@@ -89,6 +89,6 @@ public class StageManager : MonoBehaviour
     // ---------- Private関数 ----------
     private void OnClearCallback()
     {
-        _onCliearCallback();
+        _onCliearCallback?.Invoke();
     }
 }
