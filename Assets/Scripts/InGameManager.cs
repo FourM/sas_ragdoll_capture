@@ -100,9 +100,9 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
     private float _endlessBattleLastScore = 0f;
     private bool _isEndlessBattleNewRecord = false;
     private Transform _backupCatchWeb = null;
-    private Transform _backupWebLineEndPos = null;
     private UnityEvent _onClear = null;
     private Transform _springjointTransform = null; // 見えないバネのトランスフォームをキャッシュ
+    private Transform _prayerTransform = null; // プレイヤーのトランスフォームをキャッシュ
 
 
     private int _stageStartKillHuman = 0;
@@ -133,6 +133,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
                     break; 
             }
             GameDataManager.OnChangeGameMode(value);
+            InitHumanLook();
         }
     }
     public GameState GameState{
@@ -236,6 +237,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
 
         // 一部情報をキャッシュ
         _springjointTransform = _springjoint.transform;
+        _prayerTransform = _player.transform;
 
         // マテリアルマネージャー初期化
         _onInitializeMaterialManager?.Invoke();
@@ -274,16 +276,19 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
             UndoInGame();
             // イベント呼び出し
             FirebaseManager.instance.EventReStart();
-            GameDataManager.SetIsCatchSomething(false);
+            InitHumanLook();
         });
-
-        _catchWeb.gameObject.SetActive(false);
 
         FirebaseManager.instance.EventStageStart();
 
         GameDataManager.UpdatekillShockStrength();
 
         EffectManager.instance.Initialize();
+
+        // 消えがちなオブジェクトを消えないようにする
+        DontDestroyOnLoad(_catchWeb.gameObject);
+        DontDestroyOnLoad(_webLineEndPos.gameObject);
+        _catchWeb.gameObject.SetActive(false);
 
 
         // 「高速スワイプした！」判定の速度の補正。ABテストの死ぬ閾値に比例させる
@@ -299,10 +304,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
         _onInitialize?.Invoke();
         _onInitialize?.RemoveAllListeners();
 
-        _playerInitPos = _player.transform.position;
-
-        _backupCatchWeb = Instantiate(_catchWeb.gameObject).transform;
-        _backupWebLineEndPos = Instantiate(_webLineEndPos.gameObject).transform;
+        _playerInitPos = _prayerTransform.position;
 
         // 敵が死んだ時のコールバック処理
         GameDataManager.AddOnHumanDie((Human human)=>
@@ -355,13 +357,16 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
     {
         if(!_isInitialize)
             return;
-        _player.transform.position = _playerInitPos;
+
+        // 仕様上たまによく消えがちな大事なゲームオブジェクトが不具合で消えた時のバックアップ復元
+        // そもそも消えることが無いように根本原因を確認するのが大事だとは思うけど応急処置として
+        UpdateCatchWeb();
+
+        _prayerTransform.position = _playerInitPos;
         _player.GetMovePath().m_Position = 0f;
-        _player.transform.localEulerAngles = Vector3.zero;
+        _prayerTransform.localEulerAngles = Vector3.zero;
         _player.SetLookAtTarget(null);
         _player.Reset();
-        if(GameMode == GameMode.endlessBattle)
-            GameState = GameState.startWait;
         _webLineEndPos.parent = this.transform;
         _stageManager.DeleteStage();
         _stageManager.StageLoad();
@@ -403,13 +408,18 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
             GameState = GameState.endlessBattleEnemyAttack;
             Transform lookAt = human.GetParts(HumanParts.head).transform;
             _player.SetLookAtTarget(lookAt, true);
-            human.ActiveLookPlayer(_player.transform);
+            human.ActiveLookPlayer(_prayerTransform);
         }
     }
     public void OnUndoInGame()
     {
         // UndoInGame();
         // SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+
+        // 消えないようにしたオブジェクトを明示的に消す
+        Destroy(_catchWeb.gameObject);
+        Destroy(_webLineEndPos.gameObject);
+        // シーン再読み込み
         GameMainManager.instance.SceneReload();
     }
     // 敵とお互いに見合う時の処理
@@ -417,7 +427,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
     {
         Transform lookAt = human.GetParts(HumanParts.head).transform;
         _player.SetLookAtTarget(lookAt, true);
-        human.ActiveLookPlayer(_player.transform);
+        human.ActiveLookPlayer(_prayerTransform);
     }
     // 敵の攻撃をキャンセルさせた時の演出
     public void OnEnemyAttackCansel()
@@ -557,8 +567,8 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
             if(hit.rigidbody == null)
                 return;
 
-            // 「捕まえる糸」が不具合で消えた時のバックアップ復元
-            // そもそも「捕まえる糸」が消えることが無いように根本原因を確認するのが大事だとは思うけど応急処置として
+            // 仕様上たまによく消えがちな大事なゲームオブジェクトが不具合で消えた時のバックアップ復元
+            // そもそも消えることが無いように根本原因を確認するのが大事だとは思うけど応急処置として
             UpdateCatchWeb();
 
             Transform catchWebParent = null;
@@ -603,6 +613,13 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
                 {
                     _isTaphuman = true; // イベント用：人をタップした
                     isOtherCatchHuman = human.IsOtherCatch();
+
+                    // 人を捕まえたら、その人の頭を見ることを試行
+                    HumanChild humanHead = human.GetParts(HumanParts.head);
+                    if(humanHead != null)
+                    {
+                        GameDataManager.SetLookAtTransform(humanHead.transform);
+                    }
                 }
             }
 
@@ -638,6 +655,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
                 // Debug.Log("えっへへい");
             }
 
+            // 見る位置の調整(見るもののローカル位置)
             GameDataManager.SetLookAtShift(_springjoint.connectedAnchor);
             if(_tweenFalseLootAt != null)
             {
@@ -752,6 +770,10 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
     // 掴み中の動作
     private void HoldUpdate()
     {
+        // 仕様上たまによく消えがちな大事なゲームオブジェクトが不具合で消えた時のバックアップ復元
+        // そもそも消えることが無いように根本原因を確認するのが大事だとは思うけど応急処置として
+        UpdateCatchWeb();
+
         Vector2 mousePos = Input.mousePosition;  
         // スクリーン座標のZ値を5に変更  
         Vector3 screenPos = new Vector3(mousePos.x, mousePos.y, _springPosZ);  
@@ -782,6 +804,12 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
             Vector3 PosFactorD = _webLineStartPos.position * (denominator - numerator);
             Vector3 PosFactorE = PosFactorC * numerator;
             Vector3 pos = ( PosFactorD + PosFactorE ) / denominator;
+
+            // 万が一の例外処理。消えてたら再生成する
+            if(_webLineWayPosList[i] == null)
+            {
+                _webLineWayPosList[i] = new GameObject("webWayPoint").transform;
+            }
 
             // 直前に取得した位置に設定する
             _webLineWayPosList[i].position = pos;
@@ -834,8 +862,8 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
         if(!_isCatch)   
             return;
 
-        // 「捕まえる糸」が不具合で消えた時のバックアップ復元
-        // そもそも「捕まえる糸」が消えることが無いように根本原因を確認するのが大事だとは思うけど応急処置として
+        // 仕様上たまによく消えがちな大事なゲームオブジェクトが不具合で消えた時のバックアップ復元
+        // そもそも消えることが無いように根本原因を確認するのが大事だとは思うけど応急処置として
         UpdateCatchWeb();
 
         // スワイプ速度
@@ -845,11 +873,11 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
         Rigidbody catchedRigidBody = _springjoint.connectedBody;
         _springjoint.connectedBody = null;
 
-        // 奥側へ弾き飛ばす
-        if(catchedRigidBody != null)
-        {
-            // catchedRigidBody.mass = _catchObjMass;
-        }
+        // // 奥側へ弾き飛ばす
+        // if(catchedRigidBody != null)
+        // {
+        //     // catchedRigidBody.mass = _catchObjMass;
+        // }
 
         _hand.ChangeAction(HandAction.idle);
 
@@ -878,11 +906,11 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
         // 手を元の位置に戻す
         _handMoneTween = _handParent.DOLocalRotate(Vector3.zero, 0.2f).SetEase(Ease.InOutQuad);
 
-        // 一定時間後、何も捕まえてなければ、「振り向くフラグ」を下す
+        // 一定時間後、何も捕まえてなければ
         _tweenFalseLootAt = DOVirtual.DelayedCall(1f, ()=>{
             if( !_isCatch )
             {
-                GameDataManager.SetIsCatchSomething(false);
+                InitHumanLook();
             }
         });
 
@@ -960,7 +988,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
         _tweenFalseLootAt = DOVirtual.DelayedCall(1f, ()=>{
             if( !_isCatch )
             {
-                GameDataManager.SetIsCatchSomething(false);
+                InitHumanLook();
             }
         });
     }
@@ -1007,7 +1035,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
             ReleaseCatchObj();
             TapUp();
             _isStageFirstTap = false;
-            GameDataManager.SetIsCatchSomething(false);
+            InitHumanLook();
             // 何もないとこを捕まえた時の挙動をキャンセル
             CanselNotCatchAction();
             // _isClear = false;
@@ -1127,17 +1155,20 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
         return _player.GetMovePath().m_Position + GameDataManager.GetPlayerMoveLength();
     }
 
+    // 消えがちな大事なゲームオブジェクトがまだあるかチェックし、なくなっていたら再生成
     private void UpdateCatchWeb()
     {
         if(_catchWeb == null)
         {
             _catchWeb = _backupCatchWeb;
             _backupCatchWeb = Instantiate(_catchWeb.gameObject).transform;
+            _catchWeb.parent = this.transform;
+            _catchWeb.localScale = Vector3.zero;
         }
         if(_webLineEndPos == null)
         {
-            _webLineEndPos = _backupWebLineEndPos;
-            _backupWebLineEndPos = Instantiate(_webLineEndPos.gameObject).transform;
+            Debug.Log("再生成したよ：_webLineEndPos");
+            _webLineEndPos = new GameObject("webLineEndPos").transform;
         }
     }
 
@@ -1152,5 +1183,23 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
         SaveDataManager.SetHumanKillNum(_stageStartKillHuman);
         SaveDataManager.SetEndlessLife(_stageStartEndlessLife);
         SaveDataManager.SetEndlessLifeGuage(_stageStartEndlessGuage);
+    }
+
+    // 「敵が見ているもの」を初期状態に戻す
+    private void InitHumanLook()
+    {
+        // // エンドレスモードならプレイヤーをみる
+        // if(GameMode == GameMode.endlessBattle)
+        // {
+        //     GameDataManager.SetLookAtTransform(_prayerTransform);
+        //     GameDataManager.SetIsCatchSomething(true);
+        // }
+        // // その他なら敵が何かを見るフラグをおろす
+        // else
+        {   
+            GameDataManager.SetLookAtTransform(null);
+            GameDataManager.SetIsCatchSomething(false);
+        }
+        GameDataManager.SetLookAtShift(Vector3.zero);
     }
 }

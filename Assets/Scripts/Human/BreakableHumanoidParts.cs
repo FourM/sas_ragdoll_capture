@@ -168,7 +168,8 @@ public class BreakableHumanoidParts : MonoBehaviour
 
     public void SetMaterial( Material material )
     {
-        _meshRenderer.material = material;
+        if(_meshRenderer != null)
+            _meshRenderer.material = material;
     }
     // ---------- Private関数 ----------
     // 壊れた時の共通処理
@@ -176,8 +177,11 @@ public class BreakableHumanoidParts : MonoBehaviour
     {
         _isBreak = true;
         _onBreakCallback?.Invoke();
-        _skinnedMeshRenderer.enabled = false;
-        _meshRenderer.enabled = true;
-        this.gameObject.layer = LayerMask.NameToLayer("Ignore Raycast");
+        if(_skinnedMeshRenderer != null)
+            _skinnedMeshRenderer.enabled = false;
+        if(_meshRenderer != null)
+            _meshRenderer.enabled = true;
+        if(this.gameObject != null)
+            this.gameObject.layer = LayerMask.NameToLayer("Ignore Raycast");
     }
 }

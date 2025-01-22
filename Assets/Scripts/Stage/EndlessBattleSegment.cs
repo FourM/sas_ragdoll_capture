@@ -175,6 +175,14 @@ public class EndlessBattleSegment : MonoBehaviour, IHumanGetter
     public void DestroyWait()
     {
         _isDestroyWait = true;
+        for(int i = 0; i < _targethumanList.Count; i++)
+        {
+            Human human = _targethumanList[i];
+            if(human != null)
+                human.DisableReady();
+
+            // Debug.Log("わんたそ2");
+        }
     }
     // ---------- Private関数 ----------
     private int GetHumanHp(int segmentNo)
@@ -184,14 +192,6 @@ public class EndlessBattleSegment : MonoBehaviour, IHumanGetter
     }
     private void DestroyThis()
     {
-        for(int i = 0; i < _targethumanList.Count; i++)
-        {
-            Human human = _targethumanList[i];
-            if(human != null)
-                human.DisableReady();
-
-            // Debug.Log("わんたそ2");
-        }
         Destroy(this.gameObject);
     }
 }

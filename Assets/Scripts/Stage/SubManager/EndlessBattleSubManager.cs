@@ -63,7 +63,7 @@ public class EndlessBattleSubManager : StageSubManager
         // ステージ生成
         int _instanceSegmentIndex = 0;
         int j = 0;
-        while( (_playerMovePath.PathLength <= 60f || _playerMovePath.m_Waypoints.Length <= 8 ) && j < 10 )
+        while( (_playerMovePath.PathLength <= 60f || _playerMovePath.m_Waypoints.Length <= 8 || j < 3) && j < 10 )
         {
             EndlessBattleSegment segment = InstantiateSegment();
             j++;
