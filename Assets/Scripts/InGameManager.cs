@@ -42,12 +42,12 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
     [SerializeField, Tooltip("見えないSpringJoint")] private SpringJoint _springjoint;
     [SerializeField, Tooltip("糸始点")] private Transform _webLineStartPos;
     [SerializeField, Tooltip("糸始点")] private Transform _missWebLineStartPos;
-    [SerializeField, Tooltip("糸終点")] private Transform _webLineEndPos;
+    [SerializeField, Tooltip("糸終点")] private CloneSpawner _webLineEndPos;
     [SerializeField, Tooltip("糸中間点")] private List<Transform> _webLineWayPosList;
     [SerializeField, Tooltip("糸のレンダラー")] private ObiRopeExtrudedRenderer _webRope;
     [SerializeField, Tooltip("糸のレンダラー")] private List<ObiRopeExtrudedRenderer> _listCatchRpllWebRope;
     [SerializeField, Tooltip("インゲームのUIマネージャー")] private InGameUIManager _inGameUiManager = default;
-    [SerializeField, Tooltip("捕まえた糸")] private Transform _catchWeb = default;
+    [SerializeField, Tooltip("捕まえた糸")] private CloneSpawner _catchWeb = default;
     [SerializeField, Tooltip("「高速スワイプした！」判定の速度")] private float _fastSwipeSpeed = 20f;
     [SerializeField, Tooltip("「高速スワイプした！」判定の距離")] private float _fastSwipeAway = 500f;
     [SerializeField, Tooltip("「掴んでるやつが高速移動してる！」判定の速度")] private float _fastCatchObjSpd = 10f;
@@ -101,8 +101,11 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
     private bool _isEndlessBattleNewRecord = false;
     private Transform _backupCatchWeb = null;
     private UnityEvent _onClear = null;
+    private Transform _webLineEndPosTransform = null; // 糸終点のトランスフォームをキャッシュ
+    private Transform _catchWebTransform = null; // 捕まえ糸のトランスフォームをキャッシュ
     private Transform _springjointTransform = null; // 見えないバネのトランスフォームをキャッシュ
     private Transform _prayerTransform = null; // プレイヤーのトランスフォームをキャッシュ
+    private ObiParticleAttachment _webEndAttachment = null; // 糸のアタッチメントの終点
 
 
     private int _stageStartKillHuman = 0;
@@ -229,6 +232,11 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
         // プロパティを経由して値を設定
         // GameMode = _gameMode;
     }
+    private void OnDestroy()
+    {
+        _webLineEndPos.SetIsCloneSpawn(false);
+        _catchWeb.SetIsCloneSpawn(false);
+    }
     // ---------- Public関数 ----------
     public void Initialize() {
         
@@ -238,6 +246,9 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
         // 一部情報をキャッシュ
         _springjointTransform = _springjoint.transform;
         _prayerTransform = _player.transform;
+        _webLineEndPosTransform = _webLineEndPos.transform;
+        _catchWebTransform = _catchWeb.transform;
+
 
         // マテリアルマネージャー初期化
         _onInitializeMaterialManager?.Invoke();
@@ -285,11 +296,50 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
 
         EffectManager.instance.Initialize();
 
-        // 消えがちなオブジェクトを消えないようにする
-        DontDestroyOnLoad(_catchWeb.gameObject);
-        DontDestroyOnLoad(_webLineEndPos.gameObject);
         _catchWeb.gameObject.SetActive(false);
 
+        // 糸終点のアタッチメント取得
+        ObiParticleAttachment[] attachments = _webRope.GetComponents<ObiParticleAttachment>();
+        for(int i = 0; i < attachments.Length; i++)
+        {
+            if(attachments[i].target == _webLineEndPosTransform)
+                _webEndAttachment = attachments[i];
+        }
+        // 消えがちな大事なオブジェクトが消えた時のリカバリコールバック設定：糸の終点
+        _webLineEndPos.Initialize();
+        _webLineEndPos.AddOnDestroy((CloneSpawner clone)=>
+        {
+            if(this == null || this.transform == null)
+            {
+                _webLineEndPos.SetIsCloneSpawn(false);
+                return;
+            }
+            Transform cloneTransform = clone.transform;
+            cloneTransform.position = _webLineEndPosTransform.position;
+            cloneTransform.parent = this.transform;
+
+            _webLineEndPosTransform = cloneTransform;
+            
+            _webEndAttachment.target = _webLineEndPosTransform;
+            _webLineEndPos = clone;
+        });
+        // 消えがちな大事なオブジェクトが消えた時のリカバリコールバック設定：ぐるぐる巻きの糸
+        _catchWeb.Initialize();
+        _catchWeb.AddOnDestroy((CloneSpawner clone)=>
+        {
+            if(this == null || this.transform == null)
+            {
+                _catchWeb.SetIsCloneSpawn(false);
+                return;
+            }
+            Transform cloneTransform = clone.transform;
+            cloneTransform.position = _catchWebTransform.position;
+            cloneTransform.parent = this.transform;
+            cloneTransform.localScale = Vector3.one;
+
+            _catchWebTransform = cloneTransform;
+            _catchWeb = clone;
+        });
 
         // 「高速スワイプした！」判定の速度の補正。ABテストの死ぬ閾値に比例させる
         _fastSwipeSpeed *= GameDataManager.GetKillShockStrength() / 30f;
@@ -367,7 +417,8 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
         _prayerTransform.localEulerAngles = Vector3.zero;
         _player.SetLookAtTarget(null);
         _player.Reset();
-        _webLineEndPos.parent = this.transform;
+        
+        _webLineEndPosTransform.parent = this.transform;
         _stageManager.DeleteStage();
         _stageManager.StageLoad();
         _inGameUiManager.SetTextPlayerMoveLength(0);
@@ -415,10 +466,6 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
     {
         // UndoInGame();
         // SceneManager.LoadScene(SceneManager.GetActiveScene().name);
-
-        // 消えないようにしたオブジェクトを明示的に消す
-        Destroy(_catchWeb.gameObject);
-        Destroy(_webLineEndPos.gameObject);
         // シーン再読み込み
         GameMainManager.instance.SceneReload();
     }
@@ -471,6 +518,41 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
         if(_onClear == null )
             _onClear = new UnityEvent();
         _onClear.AddListener(callback);
+    }
+
+    // 消えちゃいけないオブジェクトの退避を試行
+    public void BeforeObjDestroy(Transform destroyObj, string tag)
+    {
+        // Debug.Log("退避試行！開始:" + destroyObj.gameObject.name + ", " + tag);
+        Transform current = _catchWebTransform.parent;
+        while (current != null)
+        {
+            // Debug.Log("退避試行！親確認：" + current.gameObject.name + ", " + current.gameObject.tag);
+            if (destroyObj == current)
+            {
+                // Debug.Log("退避試行！退避:" + destroyObj.gameObject.name + ", " + current.gameObject.tag);
+                _catchWebTransform.parent = this.transform;
+                break;
+            }
+            if(tag == current.gameObject.tag)
+            {
+                // Debug.Log("退避試行！退避の必要なし:" + destroyObj.gameObject.name + ", " + current.gameObject.name);
+                break;
+            }
+            current = current.parent;
+        }
+        current = _webLineEndPosTransform.parent;
+        while (current != null)
+        {
+            if (destroyObj == current)
+            {
+                _webLineEndPosTransform.parent = this.transform;
+                break;
+            }
+            if(tag == current.gameObject.tag)
+                break;
+            current = current.parent;
+        }
     }
 
     // ---------- Private関数 ----------
@@ -594,7 +676,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
             // 捕まえた時の糸表示
             Vector3 catchWebTargetScale = Vector3.one;
             _catchWeb.gameObject.SetActive(true);
-            _catchWeb.localScale = Vector3.zero;
+            _catchWebTransform.localScale = Vector3.zero;
 
             // 取った対象のCatchableObj取得を試行
             CatchableObj catchableObj = GameDataManager.GetCatchableObj(hit.transform.gameObject);
@@ -634,24 +716,24 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
                 _springjoint.connectedBody = catchableObj.GetRigidbody();
                 // 取った対象からの相対位置を設定。
                 _springjoint.connectedAnchor = Vector3.zero;
-                _webLineEndPos.parent = catchableObj.transform;
-                _webLineEndPos.localPosition = Vector3.zero;
+                _webLineEndPosTransform.parent = catchableObj.transform;
+                _webLineEndPosTransform.localPosition = Vector3.zero;
                 if(catchableObj.FixConnectedAnchor())
                 {
                     _springjoint.connectedAnchor = catchableObj.GetConnectedAnchor();
-                    _webLineEndPos.localPosition = catchableObj.GetConnectedAnchor();
+                    _webLineEndPosTransform.localPosition = catchableObj.GetConnectedAnchor();
                 }
-                _catchWeb.parent = catchableObj.GetCatchWebParent();
+                _catchWebTransform.parent = catchableObj.GetCatchWebParent();
                 // Debug.Log("おっほほう");
             }
             // ギミックなどは基本的にこちらを通る
             else
             {
-                _webLineEndPos.position = hit.point;
-                _webLineEndPos.parent = hit.transform;
+                _webLineEndPosTransform.position = hit.point;
+                _webLineEndPosTransform.parent = hit.transform;
                 _springjoint.connectedBody = hit.rigidbody;
-                _springjoint.connectedAnchor = _webLineEndPos.localPosition;
-                _catchWeb.parent = hit.transform;
+                _springjoint.connectedAnchor = _webLineEndPosTransform.localPosition;
+                _catchWebTransform.parent = hit.transform;
                 // Debug.Log("えっへへい");
             }
 
@@ -691,15 +773,15 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
             if(catchableObj != null )
             {
                 catchWebTargetScale = catchableObj.GetWebScale();
-                _catchWeb.localPosition = catchableObj.GetWebPosition();
-                _catchWeb.localEulerAngles = catchableObj.GetWebRotate();
+                _catchWebTransform.localPosition = catchableObj.GetWebPosition();
+                _catchWebTransform.localEulerAngles = catchableObj.GetWebRotate();
             }
             else
             {
-                _catchWeb.localPosition = Vector3.zero;
+                _catchWebTransform.localPosition = Vector3.zero;
             }
             catchWebTargetScale *= 0.055f;
-            _catchWeb.DOScale(catchWebTargetScale, 0.3f).SetEase(Ease.OutBack);
+            _catchWebTransform.DOScale(catchWebTargetScale, 0.3f).SetEase(Ease.OutBack);
 
             //-------------
 
@@ -797,7 +879,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
 
             // 引っ張り元の位置と終点の位置の間の位置をとる。この経由点が始点に近いほど引っ張り元に、終点に近いほど終点に近い位置をとる。
             Vector3 PosFactorA = _springjointTransform.position * (denominator - numerator);
-            Vector3 PosFactorB = _webLineEndPos.position * numerator;
+            Vector3 PosFactorB = _webLineEndPosTransform.position * numerator;
             Vector3 PosFactorC = ( PosFactorA + PosFactorB ) / denominator;
 
             // 直前に取得した位置と始点の間の位置をとる。この経由点が始点に近いほど始点に、終点に近いほど直前に取得した値に近い位置をとる。
@@ -885,7 +967,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
         SetEnableWebRope(false);
 
         // 糸の経由点などの位置を初期化（演出用）
-        _webLineEndPos.position = _webLineStartPos.position;
+        _webLineEndPosTransform.position = _webLineStartPos.position;
         for(int i = 0; i < _webLineWayPosList.Count; i++)
         {
             _webLineWayPosList[i].position = _webLineStartPos.position;
@@ -898,10 +980,10 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
             _currentCatchObj = null;
         }
 
-        _catchWeb.parent = this.transform;
+        _catchWebTransform.parent = this.transform;
         _catchWeb.gameObject.SetActive(false);
         // Debug.Log("わんたそ");
-        _webLineEndPos.parent = this.transform;
+        _webLineEndPosTransform.parent = this.transform;
 
         // 手を元の位置に戻す
         _handMoneTween = _handParent.DOLocalRotate(Vector3.zero, 0.2f).SetEase(Ease.InOutQuad);
@@ -1020,8 +1102,8 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
         DOVirtual.DelayedCall(2f, ()=>
         {
             GameDataManager.ResetGamePlayData();
-            _webLineEndPos.parent = this.transform;
-            _catchWeb.parent = this.transform;
+            _webLineEndPosTransform.parent = this.transform;
+            _catchWebTransform.parent = this.transform;
             _catchWeb.gameObject.SetActive(false);
             _stageManager.DeleteStage();
             _stageManager.StageLoad();
@@ -1158,18 +1240,18 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
     // 消えがちな大事なゲームオブジェクトがまだあるかチェックし、なくなっていたら再生成
     private void UpdateCatchWeb()
     {
-        if(_catchWeb == null)
-        {
-            _catchWeb = _backupCatchWeb;
-            _backupCatchWeb = Instantiate(_catchWeb.gameObject).transform;
-            _catchWeb.parent = this.transform;
-            _catchWeb.localScale = Vector3.zero;
-        }
-        if(_webLineEndPos == null)
-        {
-            Debug.Log("再生成したよ：_webLineEndPos");
-            _webLineEndPos = new GameObject("webLineEndPos").transform;
-        }
+        // if(_catchWeb == null)
+        // {
+        //     _catchWebTransform = _backupCatchWeb;
+        //     _backupCatchWeb = Instantiate(_catchWeb.gameObject).transform;
+        //     _catchWebTransform.parent = this.transform;
+        //     _catchWebTransform.localScale = Vector3.zero;
+        // }
+        // if(_webLineEndPos == null)
+        // {
+        //     Debug.Log("再生成したよ：_webLineEndPos");
+        //     _webLineEndPos = new GameObject("webLineEndPos").transform;
+        // }
     }
 
     private void SaveStageStartData()

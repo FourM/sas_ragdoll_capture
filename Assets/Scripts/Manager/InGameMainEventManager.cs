@@ -52,5 +52,9 @@ public interface InGameMainEventManager
     {   
         
     }
+    public void BeforeObjDestroy(Transform destroyObj, string tag)
+    {
+        
+    }
     // ---------- Private関数 ------------------------
 }

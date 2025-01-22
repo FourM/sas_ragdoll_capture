@@ -68,7 +68,10 @@ public class StageManager : MonoBehaviour
     public void DeleteStage()
     {
         if(_currentStage != null)
+        {
+            GameDataManager.InGameMainEvent.BeforeObjDestroy(_currentStage.transform, _currentStage.gameObject.tag);
             Destroy(_currentStage.gameObject);
+        }
         EffectManager.instance.StopAllEffect();
     }
     public void SetOnClearCallBack( Action onCliearCallback)

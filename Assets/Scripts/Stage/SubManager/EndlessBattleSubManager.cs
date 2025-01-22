@@ -265,6 +265,7 @@ public class EndlessBattleSubManager : StageSubManager
         GameDataManager.AddPlayerMoveLength(-length);
 
         // Debug.Log("わんたそ3");
+        GameDataManager.InGameMainEvent.BeforeObjDestroy(segment.transform, segment.gameObject.tag);
         segment.DestroyWait();
         _segmentList.RemoveAt(0);
 
