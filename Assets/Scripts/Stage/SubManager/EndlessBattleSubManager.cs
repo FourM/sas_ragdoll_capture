@@ -89,6 +89,12 @@ public class EndlessBattleSubManager : StageSubManager
 
         if(_currentSegment != null )
         {
+            if(!_currentSegment.IsInitialize)
+            {
+                // なぜがセグメントが初期化されてないなら今初期化する
+                // Debug.Log("Segment:_currentSegment is Not Initialize, " + this.gameObject.name + ", " + _currentSegment.gameObject.name);
+                _currentSegment.Initialize();
+            }
             if(GameDataManager.GameState == GameState.main)
             {
                 if(_currentSegment.isAllKill() && _newPath)
@@ -143,6 +149,7 @@ public class EndlessBattleSubManager : StageSubManager
         segment.transform.parent = this.transform;
         segment.transform.position = _segmentCreateHead.position;
         segment.transform.eulerAngles = _segmentCreateHead.eulerAngles;
+        // Debug.Log("Segment:Create and Initialize, " + this.gameObject.name + ", " + _newSegmentNo);
         segment.Initialize(_newSegmentNo);
         IndexNext();
 

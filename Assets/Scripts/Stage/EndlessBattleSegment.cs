@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 using System;
+using Firebase.Crashlytics;
 
 public class EndlessBattleSegment : MonoBehaviour, IHumanGetter
 {
@@ -19,10 +20,11 @@ public class EndlessBattleSegment : MonoBehaviour, IHumanGetter
     [SerializeField, Tooltip("次のセグメントの位置")] private Transform _nextSegmentPos = null;
     [SerializeField, Tooltip("プレイヤーが見る位置")] private Transform _lookAtTarget = null;
     private List<Transform> _pathListTransform = null;
-    private List<Human> _targethumanList = default;
+    private List<Human> _targethumanList = null;
     private Action _onCliearCallback = default;
     private UnityEvent _onInitialize = null;
     private bool _isInitialize = false;
+    public bool IsInitialize { get{ return _isInitialize; } }
     private bool _isClear = false;
     private float _pathLength = -1f;
     private bool _isDestroyWait = false;
@@ -35,7 +37,8 @@ public class EndlessBattleSegment : MonoBehaviour, IHumanGetter
     // ---------- インスタンス変数宣言 ----------
     // ---------- Unity組込関数 ----------
     private void Update(){
-            
+
+        if(!_isInitialize) return;
         // 自己破壊待機中なら破棄する
         if(_isDestroyWait)
         {
@@ -49,9 +52,11 @@ public class EndlessBattleSegment : MonoBehaviour, IHumanGetter
         }
     }
     // ---------- Public関数 ----------
-    public void Initialize(int segmentNo){
+    public void Initialize(int segmentNo = -1){
+        // Debug.Log("Segment: TryInitialize:" + _isInitialize);
         if(_isInitialize) return;
         _isInitialize = true;
+        // Debug.Log("Segment: do Initialize:" + _isInitialize);
 
         _targethumanList = new List<Human>();
 
@@ -157,17 +162,39 @@ public class EndlessBattleSegment : MonoBehaviour, IHumanGetter
     {
         try
         {
+            // if(_targethumanList == null)
+            // {
+            //     Debug.Log("isAllKill : _targethumanList is NULL, _isInitialize:" + _isInitialize );
+            //     return true;
+            // }
             // Debug.Log("今の区画のクリア判定。人数：" + _targethumanList.Count);
             for(int i = 0; i < _targethumanList.Count; i++)
             {
                 Human human = _targethumanList[i];
+                // if(human == null)
+                // {
+                //     if( this == null || this.gameObject == null)
+                //         Debug.Log("isAllKill : human is NULL:" + i + ", and segment broken" );
+                //     else
+                //         Debug.Log("isAllKill : human is NULL:" + i + ", " + this.gameObject.name );
+                //     continue;
+                // }
                 // 生きてる&カメラ内にいるヤツが一人でもいたらNo
-                if(human.IsVisible && !human.IsBroken())
+                if( human.IsVisible && !human.IsBroken())
+                {
+                    // Debug.Log("Segment: isAllKill is completed");
                     return false;
+                }
             }
+            // Debug.Log("Segment: isAllKill is completed");
             return true;
-        }catch(ArithmeticException e)
+        }catch(Exception ex)
+        // }catch(ArithmeticException ex)
         {
+            Firebase.Crashlytics.Crashlytics.LogException(ex);
+            // Debug.Log("Segment: isAllKill Exception, " + this.gameObject.name + ", " + ex);
+            // スタックトレース(どこから呼ばれたかを辿れる)付きでログを出力
+            // Debug.LogException(ex);
             return true;
         }
     }

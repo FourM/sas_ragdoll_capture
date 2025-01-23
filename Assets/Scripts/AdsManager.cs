@@ -9,7 +9,7 @@ using AdjustSdk;
 public class AdsManager : MonoBehaviour
 {
     string adUnitId;
-    int retryAttempt;
+    int retryAttempt = 0;
     public int buffer;
     public MaxSdkBase.AdInfo _adInfo = null;
     private UnityEvent _onLoaded = default;
@@ -151,32 +151,41 @@ public class AdsManager : MonoBehaviour
     }
     public void ShowAd()
     {
-        if (MaxSdk.IsInterstitialReady(adUnitId))
+        try
         {
-            // try
-            // {
-            //     double revenue = 0;
-            //     if(_adInfo != null)
-            //     {
-            //         revenue = _adInfo.Revenue * 1000;
-            //         FirebaseManager.instance.EventWatchInste(true, revenue);
-            //     }
-            //     else
-            //         FirebaseManager.instance.EventWatchInste(true, -1);
-            // }
-            // catch
-            // {
-            //     FirebaseManager.instance.EventWatchInste(true, -1);
-            // }
-            FirebaseManager.instance.EventWatchInste(true);
-            MaxSdk.ShowInterstitial(adUnitId);
+            if (MaxSdk.IsInterstitialReady(adUnitId))
+            {
+                // try
+                // {
+                //     double revenue = 0;
+                //     if(_adInfo != null)
+                //     {
+                //         revenue = _adInfo.Revenue * 1000;
+                //         FirebaseManager.instance.EventWatchInste(true, revenue);
+                //     }
+                //     else
+                //         FirebaseManager.instance.EventWatchInste(true, -1);
+                // }
+                // catch
+                // {
+                //     FirebaseManager.instance.EventWatchInste(true, -1);
+                // }
+                FirebaseManager.instance.EventWatchInste(true);
+                MaxSdk.ShowInterstitial(adUnitId);
+            }
+            else
+            {
+                // FirebaseManager.instance.EventWatchInste(false, 0);
+                FirebaseManager.instance.EventWatchInste(false);
+                // ステージスタートイベントの発火を試行
+                GameDataManager.TryEventStageStart();
+            }
         }
-        else
+        catch (Exception ex)
         {
-            // FirebaseManager.instance.EventWatchInste(false, 0);
-            FirebaseManager.instance.EventWatchInste(false);
-            // ステージスタートイベントの発火を試行
-            GameDataManager.TryEventStageStart();
+            // エラーログを記録
+            Firebase.Crashlytics.Crashlytics.LogException(ex);
+            Debug.LogError("Show Inste Error Catch: " + ex.Message);
         }
     }
 

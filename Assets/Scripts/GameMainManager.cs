@@ -2,11 +2,15 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Firebase;
+using Firebase.Extensions;
 
 /// <summary>
 /// ゲーム全体のマネージャー
 /// 　ステージ管理、
 /// </summary>
+/// 
+// [DefaultExecutionOrder(-1)]
 public class GameMainManager : MonoBehaviour
 {
     // ---------- 定数宣言 ----------
@@ -43,6 +47,18 @@ public class GameMainManager : MonoBehaviour
         if(_isInitialize) return;
         _isInitialize = true;
 
+        // FirebaseApp.CheckAndFixDependenciesAsync().ContinueWithOnMainThread(task => {
+        //     if (task.Result == DependencyStatus.Available)
+        //     {
+        //         FirebaseApp app = FirebaseApp.DefaultInstance;
+        //         Debug.Log("Firebase Initialized Successfully!");
+        //     }
+        //     else
+        //     {
+        //         Debug.LogError("Firebase initialization failed: " + task.Result);
+        //     }
+        // });
+
         // ユーザーのAbフラグ設定(初回起動時のみ処理される)
         _userSegment.Initialize();
         // ゲームロード
@@ -66,6 +82,7 @@ public class GameMainManager : MonoBehaviour
     }
     private void ShowAd()
     {
+        // 広告表示関連のコード
         _adManager.ShowAd();
     }
     public void GameReset()

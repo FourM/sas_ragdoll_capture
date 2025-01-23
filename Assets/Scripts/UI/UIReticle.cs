@@ -26,6 +26,7 @@ public class UIReticle : MonoBehaviour
     private List<Tween> _colorTweens = null;
     private bool _isCatch = false;
     private bool _isCompReleaseAnimation = false;
+    private bool _isInitialize = false;
     // ---------- クラス変数宣言 -----------------------
     // ---------- インスタンス変数宣言 ------------------
     // ---------- Unity組込関数 -----------------------
@@ -44,13 +45,19 @@ public class UIReticle : MonoBehaviour
         OnClick(new Vector2(posX, posY));
         tween = DOVirtual.DelayedCall(0.5f, ()=>{ SetIsCatch(false); });
         _colorTweens.Add(tween);
+
+        _isInitialize = true;
     }
     public void SetPos(Vector2 pos)
     {
+        if(!_isInitialize)
+            return;
         _reticleRect.anchoredPosition = pos;
     }
     public void OnClick(Vector2 pos)
     {
+        if(!_isInitialize)
+            return;
         ResetReleaseSeuence();
         ResetTapSeuence();
         _releaseSequence = DOTween.Sequence();
@@ -84,6 +91,8 @@ public class UIReticle : MonoBehaviour
     }
     public void SetIsCatch(bool isCatch)
     {
+        if(!_isInitialize)
+            return;
         float duration = 0.28f;
         if(isCatch == _isCatch)
             return;
@@ -116,6 +125,8 @@ public class UIReticle : MonoBehaviour
     }
     public void OnMouseUp()
     {
+        if(!_isInitialize)
+            return;
         if(_isCompReleaseAnimation)
             return;
         _isCompReleaseAnimation = true;
