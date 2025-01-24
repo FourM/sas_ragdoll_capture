@@ -33,6 +33,7 @@ public class DebugManager : MonoBehaviour
     [SerializeField, Tooltip("バナー")] private StageBanner _banner = default;
     [SerializeField, Tooltip("広告マネージャー")] private AdsManager _adsManager = default;
     [SerializeField, Tooltip("バナー")] private List<int> _showDebugKeyList = default;
+    [SerializeField, Tooltip("エンドレスライフ")] private TextMeshProUGUI _textEndlessLife = default;
     private List<int> _inputShowDebugKeyList = default;
     // private List<int> _showDebugKeyList = default;
     private SerializedDictionary<List<int>> _userPropertyDic;
@@ -130,6 +131,7 @@ public class DebugManager : MonoBehaviour
 
         UpdateText();
         ResetStageSelectButtons();
+        UpdateEndlessLifeText();
     }
 
     private void OnEnable(){
@@ -191,6 +193,17 @@ public class DebugManager : MonoBehaviour
         SaveDataManager.SetCurrentStage(currentStageNum);
         _inGameManager.UndoInGame();
     }
+
+    public void OnClickAddEndlessLife(int addLife)
+    {
+        int life = SaveDataManager.GetEndlessLife();
+        life += addLife;
+        if(life < 0)
+            life = 10;
+        SaveDataManager.SetEndlessLife(life);
+        UpdateEndlessLifeText();
+
+    }
     // ---------- Private関数 ----------
     private void UpdateText()
     {
@@ -204,6 +217,10 @@ public class DebugManager : MonoBehaviour
         // _TextAdsManagerRevenue.text = "Ads revenue:" + revenue;
         // revenue = _banner.GetAdRevenue();
         // _TextBannerRevenue.text = "Banner revenue:" + revenue;
+    }
+    private void UpdateEndlessLifeText()
+    {
+        _textEndlessLife.text = "EndlessLife:" + SaveDataManager.GetEndlessLife();
     }
 
     private void ResetStageSelectButtons()

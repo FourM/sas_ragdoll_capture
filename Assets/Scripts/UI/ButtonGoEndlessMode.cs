@@ -193,6 +193,8 @@ public class ButtonGoEndlessMode : MonoBehaviour
             _lifeUpSequence.AppendCallback(()=>{ 
                 SetViewLife(viewLife);
                 _lifeEffectIconParent.localScale = Vector3.zero;
+                // _lifeUpSequence.AppendCallback(PlayAnimationIsActiveButton);
+                PlayAnimationIsActiveButton();
             });
             // seq.AppendInterval(0.1f);
             _lifeUpSequence.Append(_lifeIcon.DOScale(initScale * 1.8f, 0.2f).SetEase(Ease.OutBack).SetLink(_lifeIcon.gameObject));

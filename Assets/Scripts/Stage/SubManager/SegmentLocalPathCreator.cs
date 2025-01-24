@@ -15,7 +15,9 @@ public class SegmentLocalPathCreator : MonoBehaviour
     [SerializeField, Tooltip("参照パス最小Index")] private int _refPathMin = 0;
     [SerializeField, Tooltip("参考パス最大Index、0未満なら全て参照")] private int _refPathMax = -1;
     [SerializeField, Tooltip("移動パス")] private List<EndlessBattlePath> _pathList = null;
+    [SerializeField, Tooltip("移動パス")] private List<Transform> _pathListTrransform = null;
     [SerializeField, Tooltip("パスの反転をするか")] private bool _isReverth = false;
+    [SerializeField, Tooltip("セグメントのパスを使用するか")] private bool _useSegmentPath = true;
     [SerializeField, Tooltip("Y座標の補正")] private float _shiftPosY = 0f;
 
     private List<CinemachineSmoothPath.Waypoint> _wayPointList = null;
@@ -65,6 +67,9 @@ public class SegmentLocalPathCreator : MonoBehaviour
 
     private List<Transform> GetPathListTransform()
     {
+        if( !_useSegmentPath )
+            return _pathListTrransform;
+
         List<Transform> ret = _segment.GetPathListTransform();
         int min = _refPathMin;
         int max = _refPathMax;

@@ -9,7 +9,9 @@ public enum PlayerState{
     stop,
     move,
     battle,
-    down
+    down,
+    dash,
+    battleStop,
 }
 public class Player : MonoBehaviour
 {
@@ -39,6 +41,8 @@ public class Player : MonoBehaviour
     private UnityEvent _onWebNumEmplty = null;
     private bool _isEnemyLook = false;
     public bool IsEnemyLook{ get{ return _isEnemyLook; } }
+    private bool _isDash = false;
+    private float _dashSpd = 1f;
     // ---------- クラス変数宣言 -----------------------
     // ---------- インスタンス変数宣言 ------------------
     // ---------- Unity組込関数 -----------------------
@@ -55,6 +59,15 @@ public class Player : MonoBehaviour
     // private void Update(){
 
     // }
+    private void FixedUpdate(){
+        if(_state == PlayerState.dash)
+        {
+            _dashSpd += 0.05f;
+            if(2.3f < _dashSpd)
+                _dashSpd = 2.5f;
+            _cinemachineDollyCart.m_Speed = _baseSpeed * _dashSpd; 
+        }
+    }
     // ---------- Public関数 ------------------------- 
     public void Reset()
     {
@@ -68,9 +81,17 @@ public class Player : MonoBehaviour
     }
     public CinemachineDollyCart GetMovePath(){ return _cinemachineDollyCart; }
     public void StopPathMove(){ _cinemachineDollyCart.m_Speed = 0f; }
-    public void ContinuePathMove()
+    public void ContinuePathMove(bool isDash = false)
     { 
-        _cinemachineDollyCart.m_Speed = _baseSpeed; 
+        _isDash = isDash;
+        if(!isDash)
+        {
+            _cinemachineDollyCart.m_Speed = _baseSpeed; 
+        }
+        else
+        {
+            _cinemachineDollyCart.m_Speed = _baseSpeed * _dashSpd; 
+        }   
     }
     public void InitPos(){ this.transform.position = _initPos; }
     public Vector3 GetInitPos(){ return _initPos; }
@@ -88,14 +109,21 @@ public class Player : MonoBehaviour
                 StopPathMove();
                 break;
             case PlayerState.battle:
-                _cinemachineDollyCart.m_Speed = _baseSpeed / 4f; 
+                _cinemachineDollyCart.m_Speed = _baseSpeed / 4.5f; 
+                break;
+            case PlayerState.battleStop:
+                _cinemachineDollyCart.m_Speed = 0f; 
                 break;
             case PlayerState.move:
                 ContinuePathMove();
                 break;
+            case PlayerState.dash:
+                ContinuePathMove(true);
+                break;
             case PlayerState.down:
                 break;
         }
+        _dashSpd = 1.05f;
         ChangeAction();
     }
     public void SetBeforeState(){

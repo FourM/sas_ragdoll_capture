@@ -33,6 +33,7 @@ public class EndlessBattleSubManager : StageSubManager
     private bool _newPath = true;
     Transform _clearLookPos = null;
     private bool _isWaitCreateNewSegment = true;
+    private EndlessBattlePath _lastThroughPath = null;
     // ---------- クラス変数宣言 -----------------------
     // ---------- インスタンス変数宣言 ------------------
     // ---------- Unity組込関数 -----------------------
@@ -97,9 +98,23 @@ public class EndlessBattleSubManager : StageSubManager
             }
             if(GameDataManager.GameState == GameState.main)
             {
-                if(_currentSegment.isAllKill() && _newPath)
+                // クリア判定
+                if(IsClear() && _newPath)
                 {
-                    _player.SetState(PlayerState.move);
+                    if(_lastThroughPath == null || !_lastThroughPath.IsClearDash)
+                    {
+                        _player.SetState(PlayerState.move);
+                        if(_lastThroughPath == null )
+                            Debug.Log("_lastThroughPath is NULL:");
+                        else
+                            Debug.Log("_lastThroughPath.IsClearDash:" + _lastThroughPath.IsClearDash);
+                    }
+                    else
+                    {
+                        _player.SetState(PlayerState.dash);
+                        Debug.Log("_lastThroughPath.IsClearDash:" + _lastThroughPath.IsClearDash);
+                    }
+
                     switch(_carrentClearLook)
                     {
                         case ClearLook.front:
@@ -137,6 +152,16 @@ public class EndlessBattleSubManager : StageSubManager
             EndlessBattleSegment newSegment = InstantiateSegment();
             _isWaitCreateNewSegment = false;
         }
+    }
+    // そのパスまたはセグメントをクリアしたかの判定
+    private bool IsClear()
+    {
+        // パスのクリア判定を用いるならそうする
+        if(_lastThroughPath != null && _lastThroughPath.IsRefPathClear())
+            return _lastThroughPath.IsPathClear();
+
+        // セグメントのクリア判定を用いる
+        return _currentSegment.isAllKill();
     }
     // ---------- Public関数 -------------------------
     // ---------- Private関数 ------------------------
@@ -335,6 +360,10 @@ public class EndlessBattleSubManager : StageSubManager
                         if(!_currentSegment.isAllKill())
                             _player.SetState(PlayerState.battle);
                         break;
+                    case EnterPlayerState.battleStop:
+                        if(!_currentSegment.isAllKill())
+                            _player.SetState(PlayerState.battleStop);
+                        break;
                     case EnterPlayerState.move:
                         _player.SetState(PlayerState.move);
                         break;
@@ -381,6 +410,9 @@ public class EndlessBattleSubManager : StageSubManager
                     DeleteSegment();
                 }
             }
+
+            // 最後に通過したパスをこれに設定
+            _lastThroughPath = path;
         };
     }
 
