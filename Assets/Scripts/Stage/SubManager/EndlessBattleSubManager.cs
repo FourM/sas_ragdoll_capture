@@ -149,7 +149,9 @@ public class EndlessBattleSubManager : StageSubManager
 
         if(_isWaitCreateNewSegment)
         {
-            EndlessBattleSegment newSegment = InstantiateSegment();
+            // EndlessBattleSegment newSegment = InstantiateSegment();
+            // 非同期的にセグメントを追加生成
+            StartCoroutine(InstantiateSegmentCoriutine());
             _isWaitCreateNewSegment = false;
         }
     }
@@ -431,5 +433,16 @@ public class EndlessBattleSubManager : StageSubManager
             _player.SetLookAtTarget(null);
 
         return ret;
+    }
+
+    // 非同期的にセグメント追加生成
+    IEnumerator InstantiateSegmentCoriutine()
+    {
+        //　セグメント追加生成
+        InstantiateSegment();
+        //1フレーム停止
+        yield return null;
+
+        //ここに再開後の処理を書く
     }
 }

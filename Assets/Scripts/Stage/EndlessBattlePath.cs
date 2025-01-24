@@ -44,6 +44,7 @@ public class EndlessBattlePath : MonoBehaviour
     [SerializeField, Tooltip("クリア判定に用いる敵 空ならそのセグメントの敵全てが対象になる")] private List<HumanHub> _refHumanList = default;
     [SerializeField, Tooltip("クリア判定に用いるオブジェクト")] private List<CatchableObj> _refCatchableObjList = default;
     [SerializeField, Tooltip("クリアしたら走るか")] private bool _isClearDash = false;
+    [SerializeField, Tooltip("その場て立ち止まり続ける最大時間")] private float _battleEndLimitTimer = 5f;
     private bool _isPath = false;
     private UnityEvent _onPass = null;
 
@@ -54,10 +55,19 @@ public class EndlessBattlePath : MonoBehaviour
     // ---------- クラス変数宣言 -----------------------
     // ---------- インスタンス変数宣言 ------------------
     // ---------- Unity組込関数 -----------------------
+    public void Update()
+    {
+        if(_isPath)
+        {
+            _battleEndLimitTimer -= Time.deltaTime;
+            if(_battleEndLimitTimer <= 0f)
+                _battleEndLimitTimer = 0f;
+        }
+    }
     // ---------- Public関数 -------------------------
     public void Initialize()
     {
-
+        // enabled = false;
     }
     public void AddCallbackOnTriggerEnter(UnityAction<Collider> onTriggerEnter)
     {
@@ -67,6 +77,7 @@ public class EndlessBattlePath : MonoBehaviour
             {
                 onTriggerEnter(collider);
                 _isPath = true;
+                // enabled = true;
 
                 _onPass?.Invoke();
             }
@@ -77,6 +88,11 @@ public class EndlessBattlePath : MonoBehaviour
     public bool IsRefPathClear(){ return 0 < _refCatchableObjList.Count || 0 < _refHumanList.Count; }
     public bool IsPathClear()
     { 
+        // 何かしらの不具合で、カメラ内に敵がいなくなったのに進んでくれないとなったときに指定の時間経過でクリア判定する
+        if(_enterPlayerState == EnterPlayerState.battleStop && _battleEndLimitTimer <= 0f )
+        {
+            return true;
+        }
         for(int i = 0; i < _refCatchableObjList.Count; i++)
         {
             if(_refCatchableObjList[i] != null && !_refCatchableObjList[i].IsBroken())
@@ -85,7 +101,7 @@ public class EndlessBattlePath : MonoBehaviour
         for(int i = 0; i < _refHumanList.Count; i++)
         {
             Human human = _refHumanList[i].GetActiveHuman();
-            if( human != null && !human.IsBroken() )
+            if( human != null && !human.IsBroken() && human.IsVisible)
                 return false;
         }
         return true;

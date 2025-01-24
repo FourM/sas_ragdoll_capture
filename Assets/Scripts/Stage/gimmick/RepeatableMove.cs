@@ -95,7 +95,7 @@ public class RepeatableMove : MonoBehaviour
     {
        human.transform.parent = _moveFloor;
        human.transform.localEulerAngles = new Vector3(0, 180, 0);
-       human.transform.localPosition = new Vector3(0, 0.1f, -0.5f);
+       human.transform.localPosition = new Vector3(0, 0.1f, -1f);
 
        human.AddCallbackOnCatch(()=>
        {

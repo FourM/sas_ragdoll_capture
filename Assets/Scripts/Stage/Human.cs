@@ -533,8 +533,6 @@ public class Human : CatchableObj
     // 他の何かに捕まっているか
     public void SetIsOtherCatch( bool isOtherCatch ){ _isOtherCatch = isOtherCatch; }
     public bool IsOtherCatch(){ return _isOtherCatch; }
-    // カメラに写っているか
-    public void SetIsVisible(bool isVisible){ _isVisible = isVisible; }
     public void SetImpactPos(Vector3 pos ){ _impactPos = pos; }
 
     public void ActiveLookPlayer( Transform player ){ _LookPlayer = player; }

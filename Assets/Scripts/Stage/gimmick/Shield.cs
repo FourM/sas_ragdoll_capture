@@ -19,6 +19,7 @@ public class Shield : CatchableObj
     private Tween _guardEndTween = null;
     private UnityEvent _OnCompleteGuardEnd;
     private RuntimeAnimatorController _beforeAnimator = null;
+    private bool _isHaveHuman = true;
     // ---------- クラス変数宣言 -----------------------
     // ---------- インスタンス変数宣言 ------------------
     // ---------- Unity組込関数 -----------------------
@@ -68,6 +69,8 @@ public class Shield : CatchableObj
         this.transform.localEulerAngles = ang;
 
         this.gameObject.layer = _human.GetChildLayer();
+
+        _isHaveHuman = true;
     }
     public void CanselGuardEndTween()
     { 
@@ -84,6 +87,8 @@ public class Shield : CatchableObj
     // 盾が捕まった時の処理
     protected override void OnCatchUnique()
     {
+        if(!_isHaveHuman)
+            return;
         // 今のアニメーションを記憶
         _beforeAnimator = _human.GetCurrentAnimatorController();
 
@@ -125,5 +130,6 @@ public class Shield : CatchableObj
         GetRigidbody().isKinematic = false;
         GetRigidbody().useGravity = true;
         this.transform.parent = _human.transform.parent;
+        _isHaveHuman = false;
     }
 }

@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using System;
 
-public class GameStage : MonoBehaviour
+public class GameStage : MonoBehaviour, IInitializer
 {
     // ---------- 定数宣言 ----------
     // ---------- ゲームオブジェクト参照変数宣言 ----------
@@ -17,14 +17,24 @@ public class GameStage : MonoBehaviour
     [SerializeField, Tooltip("Humanの捕まる前の参考constraints")] private Rigidbody _rafConstraints = null;
     [SerializeField, Tooltip("背景色")] private Color32 _backGroundColor = default;
     [SerializeField, Tooltip("メイン環境光を用いるか")] private bool _isMainLight = true;
+
+    [field: SerializeField] public InitializerBase Initializer { get; set; }
+    // [field: SerializeField] public FugaBase Fuga { get; set; }
     private List<Human> _targethumanList = default;
     private Action _onCliearCallback = default;
-    private UnityEvent _onInitialize = null;
+    // private UnityEvent _onInitialize = null;
     private bool _isInitialize = false;
     private bool _isClear = false;
     // ---------- クラス変数宣言 ----------
     // ---------- インスタンス変数宣言 ----------
     // ---------- Unity組込関数 ----------
+    private void Awake()
+    {
+        this.Initializer.Init(this, this);
+        // this.Fuga.Init(this, this);
+                    
+        // this.Hoge.EnemyID = 30;
+    }
     private void Update(){
         // クリア
         if(_targethumanList.Count <= 0 && !_isClear)
@@ -88,8 +98,8 @@ public class GameStage : MonoBehaviour
             obj.transform.localEulerAngles = ang;
         }
 
-        _onInitialize?.Invoke();
-        _onInitialize?.RemoveAllListeners();
+        Initializer.OnInitialize?.Invoke();
+        Initializer.OnInitialize?.RemoveAllListeners();
 
         if(_isGimmickKill && PlayerPrefs.GetInt("Gimmick_Kill", 1) == 1)
             GameDataManager.SetGimmickKill(true);
@@ -112,9 +122,7 @@ public class GameStage : MonoBehaviour
     }
     public void AddOnInitialize( UnityAction onInitialize)
     {
-        if(_onInitialize == null)
-            _onInitialize = new UnityEvent();
-        _onInitialize.AddListener(onInitialize);
+        Initializer.AddOnInitialize(onInitialize);
     }
     public string GetStageId(){ return _stageId; }
     public bool IsGimmickKill(){ return _isGimmickKill; }
