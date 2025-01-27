@@ -30,7 +30,8 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
 {
     // ---------- 定数宣言 ----------
     private const float CATCH_OBJ_MASS = 2.0f;
-    private const float HUMAN_KILL_ENDLESS_ADD_GUAGE = 0.04f;
+    private const float HUMAN_KILL_ENDLESS_ADD_GUAGE = 0.040001f;
+    // private const float HUMAN_KILL_ENDLESS_ADD_GUAGE = 0.04f;
     // ---------- ゲームオブジェクト参照変数宣言 ----------
     // ---------- プレハブ ----------
     // ---------- プロパティ ----------

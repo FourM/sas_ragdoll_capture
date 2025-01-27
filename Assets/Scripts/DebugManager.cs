@@ -196,11 +196,16 @@ public class DebugManager : MonoBehaviour
 
     public void OnClickAddEndlessLife(int addLife)
     {
-        int life = SaveDataManager.GetEndlessLife();
-        life += addLife;
-        if(life < 0)
+        int life = SaveDataManager.GetEndlessLife();    // 表示更新
+        if(life <= 0 && addLife < 0)
+        {
             life = 10;
-        SaveDataManager.SetEndlessLife(life);
+            SaveDataManager.SetEndlessLife(life);
+            GameDataManager.AddEndlessLifeGuage(0);     // 表示更新
+        }
+        else
+            GameDataManager.AddEndlessLifeGuage(addLife);
+
         UpdateEndlessLifeText();
 
     }

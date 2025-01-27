@@ -38,7 +38,9 @@ public static class SaveDataManager
     // エンドレスステージを遊んだ回数
     public static int GetPlayEndlessCount(){ return PlayerPrefs.GetInt("playEndlessCount", 0); }
     public static void SetPlayEndlessCount( int value ){ PlayerPrefs.SetInt("playEndlessCount", value); }
-    // スタミナが1以上になったことがあるか
-    // public static int GetIsFirstLife(){ return PlayerPrefs.GetInt("isFirstLife", 0); }
-    // public static void SetIsFirstLife( int value ){ PlayerPrefs.SetInt("isFirstLife", value); }
+    // エンドレスバトル開放の演出をしたことがあるか
+    public static int GetIsDirectFirstOpenEndlessBattle(){ return PlayerPrefs.GetInt("isDirectFirstOpenEndlessBattle", 0); }
+    public static void SetIsDirectFirstOpenEndlessBattle( int value ){ PlayerPrefs.SetInt("isDirectFirstOpenEndlessBattle", value); }
+
+    public static int GetEndlessStart(){ return PlayerPrefs.GetInt("Endless_Start_Stage", 0); }
 }

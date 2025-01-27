@@ -17,7 +17,25 @@ public static class GameDataManager
     private const int SHOW_ENDLESS_BATTLE_BUTTON_STAGE = 10;
     // エンドレスバトルの初期ライフ
     private const int INIT_ENDLESS_BATTLE_LIFE = 0;
-    public static int ShowEndlessBattleButtonStage{ get{ return SHOW_ENDLESS_BATTLE_BUTTON_STAGE; } }
+    public static int ShowEndlessBattleButtonStage{ get{ 
+        int segment = SaveDataManager.GetEndlessStart();
+        int ret = 0;
+        switch(segment)
+        {
+            case 0:
+                ret = 10;
+                break;
+            case 1:
+                ret = 30;
+                break;
+            case 2:
+            default:
+                ret = 40;
+                break;
+        }
+        // Debug.Log("segment:" + segment + ", ret" + ret);
+        return ret;
+    } }
     public static int InitEndlessBattleLife{ get{ return INIT_ENDLESS_BATTLE_LIFE; } }
 
     private static Dictionary<GameObject, CatchableObj> catchableObjDic = null;
