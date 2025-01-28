@@ -104,15 +104,15 @@ public class EndlessBattleSubManager : StageSubManager
                     if(_lastThroughPath == null || !_lastThroughPath.IsClearDash)
                     {
                         _player.SetState(PlayerState.move);
-                        if(_lastThroughPath == null )
-                            Debug.Log("_lastThroughPath is NULL:");
-                        else
-                            Debug.Log("_lastThroughPath.IsClearDash:" + _lastThroughPath.IsClearDash);
+                        // if(_lastThroughPath == null )
+                        //     Debug.Log("_lastThroughPath is NULL:");
+                        // else
+                        //     Debug.Log("_lastThroughPath.IsClearDash:" + _lastThroughPath.IsClearDash);
                     }
                     else
                     {
                         _player.SetState(PlayerState.dash);
-                        Debug.Log("_lastThroughPath.IsClearDash:" + _lastThroughPath.IsClearDash);
+                        // Debug.Log("_lastThroughPath.IsClearDash:" + _lastThroughPath.IsClearDash);
                     }
 
                     switch(_carrentClearLook)

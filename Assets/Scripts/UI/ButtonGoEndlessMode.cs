@@ -22,15 +22,17 @@ public class ButtonGoEndlessMode : MonoBehaviour
     [SerializeField, Tooltip("ボタン活性時のゲームオブジェクト")] private List<GameObject> _activeObjects = default;
     [SerializeField, Tooltip("ボタン非活性時のゲームオブジェクト")] private List<GameObject> _unActiveObjects = default;
     [SerializeField, Tooltip("ライフ演出アイコン")] private Transform _lifeEffectIconParent = default;
-    [SerializeField, Tooltip("ライフ演出アイコン黄")] private Transform _lifeEffectIcon1 = default;
-    [SerializeField, Tooltip("ライフ演出アイコン紫")] private Transform _lifeEffectIcon2 = default;
+    [SerializeField, Tooltip("ライフ演出アイコン紫")] private Transform _lifeEffectIcon = default;
     [SerializeField, Tooltip("ライフ演出開始位置")] private Transform _lifeStartPos = default;
     [SerializeField, Tooltip("ライフ演出目的位置")] private Transform _lifeEndPos = default;
+    [SerializeField, Tooltip("ライフアイコン")] private CanvasGroup _lifeView = default;
+    [SerializeField, Tooltip("インステ")] private CanvasGroup _watchInsteView = default;
+
+    private bool _isInitialize = false;
     private bool _isShow = true;
     private bool _beforeisShow = false;
     private bool _beforeIsActive = false;
     private bool _isActive = true;
-    private bool _isLifeUpAnimationLock = false;
     private bool _isGuageAnimationLock = false;
     private int _currentViewLife = 0;
     private int _waitViewLife = 0;
@@ -56,13 +58,29 @@ public class ButtonGoEndlessMode : MonoBehaviour
         {
             if( GameDataManager.GameMode != GameMode.endlessBattle)
             {
-                GameDataManager.InGameMainEvent.ChangeGameMode(GameMode.endlessBattle);
-                _lifeUpSequence.Complete();
+                if( 0 < SaveDataManager.GetEndlessLife() )
+                {
+                    GoEndlessBattle();
+                }
+                else
+                {
+                    // AdsGameEventManager.OnShowRewardAd(
+                    //     ()=>{Debug.Log("リワード受け取った！"); GoEndlessBattle();},
+                    //     ()=>{Debug.Log("リワード受け取れなかった！");});
+                    AdsGameEventManager.OnShowRewardAd(
+                        ()=>{ 
+                            GameDataManager.AddEndlessLife(1);
+                            UpdateLifeView(false, -1, -1f, false);
+                            GoEndlessBattle(); 
+                        }, null);
+                }
+                
                 // ChangeIcon(GameMode.endlessBattle);
             }
             else
             {
                 GameDataManager.InGameMainEvent.ChangeGameMode(GameMode.main);
+                UpdateLifeView(false, -1, -1f, false);
                 // ChangeIcon(GameMode.main);
             }
         });
@@ -72,6 +90,7 @@ public class ButtonGoEndlessMode : MonoBehaviour
         GameObject thisObject = this.gameObject;
         Transform thisTransform = this.transform;
         GameDataManager.AddOnStageStart(()=>{ UpdateLifeView(false); });
+        GameDataManager.AddOnMainGameStart((bool value)=>{ UpdateLifeView(false); });
 
         _isActive = IsActiveButton();
         _beforeisShow = IsShowButton();
@@ -85,19 +104,25 @@ public class ButtonGoEndlessMode : MonoBehaviour
             SetViewLife(0);
         else
             SetViewLife(SaveDataManager.GetEndlessLife());
+        _isInitialize = true;
         UpdateLifeView(true);
 
-        _lifeEffectIcon1.localScale = Vector3.zero;
-        _lifeEffectIcon2.localScale = Vector3.zero;
+        // _lifeEffectIcon.localScale = Vector3.zero;
         _lifeUpSequence = null;
 
         if( SaveDataManager.GetIsDirectFirstOpenEndlessBattle() == 0)
         {
             _endlessLifeGuage.gameObject.SetActive(false);
         }
+        InitLifeEffect();
     }
     // ---------- Public関数 -------------------------
     // ---------- Private関数 ------------------------
+    private void GoEndlessBattle()
+    {
+        GameDataManager.InGameMainEvent.ChangeGameMode(GameMode.endlessBattle);
+        _lifeUpSequence.Complete();
+    }
     // ゲームモードに応じて表示更新
     private void ChangeIcon(GameMode gameMode)
     {
@@ -126,8 +151,10 @@ public class ButtonGoEndlessMode : MonoBehaviour
         // _inGameUIManager.AddOnHideUI(()=>{ this.gameObject.SetActive(false); });
     }
     // ライフやゲージの更新時に表示更新
-    private void UpdateLifeView(bool isInitialize = false, int fromlife = -1, float fromGuage = -1f)
+    private void UpdateLifeView(bool isInitialize = false, int fromlife = -1, float fromGuage = -1f, bool isAnimation = true)
     {
+        if(!_isInitialize)
+            return;
         int life = fromlife;
         float guage = fromGuage;
 
@@ -147,28 +174,32 @@ public class ButtonGoEndlessMode : MonoBehaviour
         // ボタンの表示チェック
         _isShow = IsShowButton();
         // ボタンの有効チェック
-        _isActive = IsActiveButton();
+        _isActive = IsActiveButton(isInitialize);
+
+        if(_lifeUpSequence == null || !_lifeUpSequence.IsPlaying())
+        {
+            _isGuageAnimationLock = false;
+        }
+
         if(_isShow)
         {
             // ライフが増えた演出
-            if( _waitViewLife < life)
+            if( _waitViewLife < life && isAnimation)
             {
-                // Debug.Log("アニメーションロック：" + _isLifeUpAnimationLock + ", " + _isGuageAnimationLock);
-                if(!_isLifeUpAnimationLock && !_isGuageAnimationLock)
+                // Debug.Log("アニメーションロック：" + _lifeUpSequence.IsPlaying() + ", " + _isGuageAnimationLock);
+                if(_lifeUpSequence == null || !_lifeUpSequence.IsPlaying())
                 {
-                    _isLifeUpAnimationLock = true;
                     _isGuageAnimationLock = true;
                     PlayAnimationAddLife(_currentViewLife, life);
-                    // Debug.Log("_isLifeUpAnimationLock更新：" + _isLifeUpAnimationLock);
                     _waitViewLife = life;
                 }
             }
             // ゲージだけ更新
-            else if(_waitViewLife == life)
+            else if(_waitViewLife == life && isAnimation)
             {
                 if(!_isGuageAnimationLock)
                 {
-                    _lifeUpSequence.Complete();
+                    // _lifeUpSequence.Complete();
                     float value = SaveDataManager.GetEndlessLifeGuage();
                     float duration = value - _endlessLifeGuage.value;
                     TweenUpdateViewLife(_endlessLifeGuage.value, value, duration);
@@ -176,9 +207,9 @@ public class ButtonGoEndlessMode : MonoBehaviour
                     UpdateActiveButton(_isActive);
                 }
             }
-            else if(_waitViewLife != life)
+            else if(_waitViewLife != life || !isAnimation)
             {
-                _lifeUpSequence.Complete();
+                // _lifeUpSequence.Complete();
                 SetViewLife(life);
                 SetViewGuage(SaveDataManager.GetEndlessLifeGuage());
                 _waitViewLife = life;
@@ -189,6 +220,18 @@ public class ButtonGoEndlessMode : MonoBehaviour
         }
         else
         {
+            if(_lifeUpSequence != null && _lifeUpSequence.IsPlaying())
+                _lifeUpSequence.Complete();
+
+            float value = 0f;
+            if( _waitViewLife < life )
+                value = 1f;
+            if(_waitViewLife == life)
+                value = SaveDataManager.GetEndlessLifeGuage();
+            float duration = value - _endlessLifeGuage.value;
+            duration = Mathf.Abs(duration);
+            TweenUpdateViewLife(_endlessLifeGuage.value, value, duration);
+
             this.transform.localScale = Vector3.zero;
         }
         if(!_beforeIsActive && _isActive)
@@ -275,9 +318,8 @@ public class ButtonGoEndlessMode : MonoBehaviour
                 }
                 else
                 {
-                    _lifeEffectIcon1.localScale = Vector3.zero;
-                    _lifeEffectIcon2.localScale = Vector3.one;
-                    _lifeEffectIcon2.eulerAngles = Vector3.zero;
+                    // _lifeEffectIcon.localScale = Vector3.one;
+                    // _lifeEffectIcon.eulerAngles = Vector3.zero;
                 }
                 listLifeIcon.Add(lifeIcon);
                 lifeIcon.position = _lifeStartPos.position;
@@ -319,7 +361,7 @@ public class ButtonGoEndlessMode : MonoBehaviour
                 lifeIcon.DOScale(Vector3.one * 0.45f, 0.6f).SetEase(Ease.InQuad).SetLink(lifeIcon.gameObject);
                 lifeIcon.DOMove(_lifeEndPos.position, 0.6f).SetEase(Ease.InBack).SetLink(lifeIcon.gameObject)
                 .OnComplete(()=>{
-                    SetViewLife(fromLife + index + 1);
+                    SetViewLife(toLife);
                     if(index == 0)
                         lifeIcon.localScale = Vector3.zero;
                     else
@@ -332,53 +374,33 @@ public class ButtonGoEndlessMode : MonoBehaviour
                     // 初登場演出完了
                     if(index == listLifeIcon.Count - 1)
                     {
-                        _isLifeUpAnimationLock = false;
                         _isGuageAnimationLock = false;
-                        // Debug.Log("_isLifeUpAnimationLock更新：" + _isLifeUpAnimationLock);
+                        UpdateLifeView(false, toLife, _endlessLifeGuage.value);
                         SaveDataManager.SetIsDirectFirstOpenEndlessBattle(1);
                     }
                 });
             });
             _lifeUpSequence.AppendInterval(0.1f);
+            _lifeUpSequence.OnKill(()=>{
+                // SetViewLife(toLife);
+                // _lifeEffectIconParent.localScale = Vector3.zero;
+                // for(int i = 1; i < listLifeIcon.Count; i++)
+                // {
+                //     Transform lifeIcon = listLifeIcon[index];
+                //     listLifeIcon.Remove(lifeIcon);
+                //     Destroy(lifeIcon.gameObject);
+                // }
+                _isGuageAnimationLock = false;
+            });
         }
     }
 
-    // ライフが増えた演出　今までのバックアップ
-    private void PlayAnimationAddLifeStandard(int fromLife, int toLife)
-    {
-        _lifeUpSequence = DOTween.Sequence();
-        Vector3 initScale = _lifeIcon.localScale;
-
-        for(int i = fromLife + 1; i <= toLife; i++)
-        {
-            int viewLife = i;
-
-            _lifeUpSequence.AppendCallback(()=>
-            {
-                InitLifeEffect();
-            });
-            _lifeUpSequence.Append(_lifeEffectIcon2.DORotate(Vector3.zero, 0.3f).SetEase(Ease.OutBack));
-            _lifeUpSequence.Join(_lifeEffectIcon2.DOScale(1f * 1.3f, 0.3f).SetEase(Ease.OutBack));
-            _lifeUpSequence.AppendInterval(0.2f);
-            _lifeUpSequence.Append(_lifeEffectIconParent.DOMove(_lifeEndPos.position, 0.9f).SetEase(Ease.InBack));
-            _lifeUpSequence.Join(_lifeEffectIconParent.DOScale(Vector3.one * 0.45f, 0.9f).SetEase(Ease.InQuad));
-            _lifeUpSequence.AppendCallback(()=>{ 
-                SetViewLife(viewLife);
-                _lifeEffectIconParent.localScale = Vector3.zero;
-                PlayAnimationIsActiveButton();
-            });
-            _lifeUpSequence.Append(_lifeIcon.DOScale(initScale * 1.8f, 0.2f).SetEase(Ease.OutBack).SetLink(_lifeIcon.gameObject));
-            _lifeUpSequence.Append(_lifeIcon.DOScale(initScale, 0.2f).SetEase(Ease.OutBack).SetLink(_lifeIcon.gameObject));
-        }
-        _lifeUpSequence.SetLink(_lifeStartPos.gameObject, LinkBehaviour.CompleteAndKillOnDisable);
-    }
     private void InitLifeEffect()
     {
         _lifeEffectIconParent.position = _lifeStartPos.position;
-        _lifeEffectIcon2.eulerAngles = new Vector3(0, 0, 45);
-        _lifeEffectIconParent.localScale = Vector3.one;
-        _lifeEffectIcon1.localScale = Vector3.zero;
-        _lifeEffectIcon2.localScale = Vector3.zero;
+        // _lifeEffectIcon.eulerAngles = new Vector3(0, 0, 45);
+        _lifeEffectIconParent.localScale = Vector3.zero;
+        // _lifeEffectIcon.localScale = Vector3.zero;
     }
     // ボタンが有効化された演出
     private void PlayAnimationIsActiveButton()
@@ -416,6 +438,18 @@ public class ButtonGoEndlessMode : MonoBehaviour
             else
                 return false;
         }
+        // メインモードなら、何かを掴んだタイミングで非表示になる
+        if(GameDataManager.GameMode == GameMode.main)
+        {
+            if( GameDataManager.IsMainGameStart )
+            {
+                _lifeUpSequence.Complete();
+                // SetViewLife(SaveDataManager.GetEndlessLife());
+                _lifeEffectIconParent.localScale = Vector3.zero;
+                return false;
+            }
+        }
+        
         // Debug.Log("エンドレス開始：" + GameDataManager.ShowEndlessBattleButtonStage + ", " + SaveDataManager.GetCurrentStage());
         // 表示するステージまで来てないなら表示しない
         if(SaveDataManager.GetCurrentStage() < GameDataManager.ShowEndlessBattleButtonStage)
@@ -427,11 +461,15 @@ public class ButtonGoEndlessMode : MonoBehaviour
     }
 
     // ボタンの有効化チェック　
-    private bool IsActiveButton()
+    private bool IsActiveButton(bool isInitialize = false)
     {
         // デバッグ：エンドレスモード無制限
         if(GameDataManager.DebugEndlessUnLimit)
+        {
+            _lifeView.alpha = 1;
+            _watchInsteView.alpha = 0;
             return true;
+        }
         
         // 非表示なら無効化
         if(!_isShow)
@@ -440,9 +478,21 @@ public class ButtonGoEndlessMode : MonoBehaviour
         // エンドレスモードなら無条件で有効化
         if(GameDataManager.GameMode == GameMode.endlessBattle )
             return true;
-        // ライフが1もないなら無効化
+        // ライフが1もないなら
         if( _currentViewLife <= 0 )
-            return false;
+        {
+            // 初登場演出開始時なら無効化
+            if(isInitialize && SaveDataManager.GetIsDirectFirstOpenEndlessBattle() == 0)
+                return false;
+            // if(SaveDataManager.GetIsRewarded() == 0)
+            //     return false;
+            // それ以外ならリワードでの有効化
+            _lifeView.alpha = 0;
+            _watchInsteView.alpha = 1;
+            return true;
+        }
+        _lifeView.alpha = 1;
+        _watchInsteView.alpha = 0;
         return true;
     }
 

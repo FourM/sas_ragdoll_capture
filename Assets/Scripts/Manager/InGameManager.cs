@@ -107,6 +107,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
     private Transform _springjointTransform = null; // 見えないバネのトランスフォームをキャッシュ
     private Transform _prayerTransform = null; // プレイヤーのトランスフォームをキャッシュ
     private ObiParticleAttachment _webEndAttachment = null; // 糸のアタッチメントの終点
+    private Tween _stageContinueWait = null;
 
 
     private int _stageStartKillHuman = 0;
@@ -125,8 +126,10 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
             switch(_gameMode)
             {
                 case GameMode.main:
-                    GameState = GameState.main;
+                    // GameState = GameState.main;
+                    GameState = GameState.startWait;
                     _wall.SetActive(true);
+                    GameDataManager.SetIsMainGameStart(false);
                     break;
                 case GameMode.endlessBattle:
                     GameState = GameState.startWait;
@@ -134,6 +137,8 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
                     _endlessBattleLastScore = 0;
                     _isEndlessBattleNewRecord = false;
                     _wall.SetActive(false);
+                    if(_stageContinueWait != null)
+                        _stageContinueWait.Kill();
                     break; 
             }
             GameDataManager.OnChangeGameMode(value);
@@ -428,6 +433,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
         CanselNotCatchAction();
         _inGameUiManager.ChangeGameMode(_gameMode);
         GameDataManager.ResetPlayerMoveLength();
+        GameDataManager.SetIsMainGameStart(false);
     }
 
     public void SetDebugStageLoop(bool isStageLoop)
@@ -649,6 +655,8 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
             // RigidBodyがないなら無視
             if(hit.rigidbody == null)
                 return;
+
+            GameDataManager.SetIsMainGameStart(true);
 
             // 仕様上たまによく消えがちな大事なゲームオブジェクトが不具合で消えた時のバックアップ復元
             // そもそも消えることが無いように根本原因を確認するのが大事だとは思うけど応急処置として
@@ -1100,7 +1108,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
         SaveDataManager.SetCurrentStage(currentStageNum);
         _inGameUiManager.HideInGameUI();
         // ステージ進める
-        DOVirtual.DelayedCall(2f, ()=>
+        _stageContinueWait = DOVirtual.DelayedCall(2f, ()=>
         {
             GameDataManager.ResetGamePlayData();
             _webLineEndPosTransform.parent = this.transform;
@@ -1126,6 +1134,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
             SaveStageStartData();
 
             _onClear?.Invoke();
+            GameDataManager.SetIsMainGameStart(false);
         });
     }
 
@@ -1174,7 +1183,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
             if((PlayerPrefs.GetInt("currentStage", 0) + 1) % 30 == 0)
             {
                 StartCoroutine(InAppReviewManager.RequestReview());
-                Debug.Log("Show InAppReview!!!");
+                // Debug.Log("Show InAppReview!!!");
             }
         }
     }

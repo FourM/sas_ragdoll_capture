@@ -31,7 +31,7 @@ public class DebugManager : MonoBehaviour
     [SerializeField, Tooltip("インステ広告費")] private TextMeshProUGUI _TextAdsManagerRevenue = default;
     [SerializeField, Tooltip("バナー広告費")] private TextMeshProUGUI _TextBannerRevenue = default;
     [SerializeField, Tooltip("バナー")] private StageBanner _banner = default;
-    [SerializeField, Tooltip("広告マネージャー")] private AdsManager _adsManager = default;
+    [SerializeField, Tooltip("広告マネージャー")] private InterstitialAdManager _adsManager = default;
     [SerializeField, Tooltip("バナー")] private List<int> _showDebugKeyList = default;
     [SerializeField, Tooltip("エンドレスライフ")] private TextMeshProUGUI _textEndlessLife = default;
     private List<int> _inputShowDebugKeyList = default;

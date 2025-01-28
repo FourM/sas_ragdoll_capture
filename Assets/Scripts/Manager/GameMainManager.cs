@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using Firebase;
 using Firebase.Extensions;
+using UnityEngine.Events;
 
 /// <summary>
 /// ゲーム全体のマネージャー
@@ -18,12 +19,13 @@ public class GameMainManager : MonoBehaviour
     // ---------- プレハブ ----------
     // ---------- プロパティ ----------
     [SerializeField, Tooltip("インゲームマネージャー")] private InGameManager _inGameManager = default;
-    [SerializeField, Tooltip("広告マネージャー")] private AdsManager _adManager = default;
+    [SerializeField, Tooltip("広告マネージャー")] private InterstitialAdManager _adManager = default;
+    [SerializeField, Tooltip("リワード広告マネージャー")] private RewardedAdManager _rewardAdManager = default;
     [SerializeField, Tooltip("ABテストフラグ設定クラス")] private UserSegment _userSegment = default;
     private bool _isInitialize = false;
     // ---------- クラス変数宣言 ----------
     // ---------- インスタンス変数宣言 ----------
-    public static GameMainManager instance = null;
+    public static GameMainManager instance { get; private set; }
     // ---------- Unity組込関数 ----------
     private void Awake()
     {
@@ -31,6 +33,8 @@ public class GameMainManager : MonoBehaviour
             instance = this;
         else
             Destroy(this.gameObject);
+
+        // GlobalExceptionHandler.Init();
     }
     private void Start() {
         Initialize();
@@ -63,6 +67,10 @@ public class GameMainManager : MonoBehaviour
         _userSegment.Initialize();
         // ゲームロード
         SaveDataManager.LoadData();
+        // 広告イベント設定
+        AdsGameEventManager.AddOnShowRewardAd(OnShowRewardAd);
+
+        _rewardAdManager.AddOnLoadedCallback(AdsGameEventManager.OnRewardLoaded);
 
         GameReset();
     }
@@ -90,5 +98,18 @@ public class GameMainManager : MonoBehaviour
         // インゲーム初期化
         _inGameManager.Initialize();
         _inGameManager.SetTryShowInterstitialAdAction(TryShowInterstitialAd);
+
+        // _rewardAdManager
     }
+
+    /// <summary>
+    /// リワード広告表示
+    /// </summary>
+    /// <param name="onSuccess">成功時の処理</param>
+    /// <param name="onfailure">失敗時の処理</param>
+    private void OnShowRewardAd(UnityAction onSuccess, UnityAction onfailure)
+    {
+        _rewardAdManager.ShowReward(onSuccess, onfailure);
+    }
+
 }

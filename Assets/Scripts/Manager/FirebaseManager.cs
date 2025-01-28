@@ -136,6 +136,30 @@ public class FirebaseManager : MonoBehaviour
     //                         new Parameter("CanWatch", isWatch.ToString()));
     //     // Debug.Log("Watch_Inste、Revenue:" + revenue);
     // }
+    
+    /// <summary>
+    /// リワード視聴
+    /// </summary>
+    /// <param name="isWatch"></param>
+    public void EventWatchReward(bool isWatch)
+    {
+        int watchRewardCount = -1;
+        if(isWatch)
+        {
+            watchRewardCount = PlayerPrefs.GetInt("WatchRewardCount", 1);
+        }
+
+        FirebaseAnalytics.LogEvent("Watch_Reward", 
+                            new Parameter("Stage", SaveDataManager.GetCurrentStage() + 1),
+                            new Parameter("CanWatch", isWatch.ToString()),
+                            new Parameter("WatchRewardCount", watchRewardCount));
+        // Debug.Log("isWatchReward:" + isWatch + ", " + watchRewardCount);
+        if(isWatch)
+        {
+            watchRewardCount++;
+            PlayerPrefs.SetInt("WatchRewardCount", watchRewardCount);
+        }
+    }
     public void EventReStart()
     {
         FirebaseAnalytics.LogEvent("Stage_Restart", 

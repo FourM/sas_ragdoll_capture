@@ -54,6 +54,7 @@ public static class GameDataManager
     private static UnityEvent<GameState> _onChangeGameState = null;
     private static UnityEvent<Human> _onHumanDie = null;
     private static UnityEvent _onUpdateEndlessLife = null;
+    private static UnityEvent<bool> _onMainGameStart = null;
     private static GameMode _gameMode = GameMode.main;
     private static GameState _gameState = GameState.main;
     private static InGameMainEventManager _inGameMainEventManager;
@@ -61,6 +62,7 @@ public static class GameDataManager
     private static Player _player;
     private static float _addPlayerMoveLength = 0f;    // プレイヤーが移動した距離の補正値
     private static bool _endlessUnLimit = false;   // デバッグ用：エンドレスバトルの制限解放
+    private static bool _isMainGameStart = false;
     
     private static UnityEvent<string> _onDebugChangeUserSegment = null; // デバッグ用：ユーザープロパティ変更時のコールバック(変更があったユーザープロパティ名)
     // private static GameMode _backUpGameMode = GameMode.main;
@@ -71,6 +73,29 @@ public static class GameDataManager
     public static GameMode GameMode{
         get{ return _gameMode; }
     }
+    public static bool IsMainGameStart{
+        get{ return _isMainGameStart; }
+    }
+    // メインゲームスタート！
+    public static void SetIsMainGameStart(bool isMainGameStart)
+    { 
+        if(_gameMode != GameMode.main)
+            isMainGameStart = false;
+            
+        if(_isMainGameStart == isMainGameStart)
+            return;
+        
+        _isMainGameStart = isMainGameStart;
+        _onMainGameStart?.Invoke(_isMainGameStart);
+    }
+    public static void AddOnMainGameStart(UnityAction<bool> callback)
+    {
+        if(_onMainGameStart == null)
+            _onMainGameStart = new UnityEvent<bool>();
+        _onMainGameStart.AddListener(callback);
+    }
+
+
     // public static GameMode BackUpGameMode{
     //     get{ Debug.Log("_backUpGameMode:" + _backUpGameMode); return _backUpGameMode; }
     // }
