@@ -34,7 +34,7 @@ public class GameMainManager : MonoBehaviour
         else
             Destroy(this.gameObject);
 
-        // GlobalExceptionHandler.Init();
+        GlobalExceptionHandler.Init();
     }
     private void Start() {
         Initialize();

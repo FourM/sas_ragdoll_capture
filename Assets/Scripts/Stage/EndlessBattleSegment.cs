@@ -5,7 +5,7 @@ using UnityEngine.Events;
 using System;
 using Firebase.Crashlytics;
 
-public class EndlessBattleSegment : MonoBehaviour, IHumanGetter
+public class EndlessBattleSegment : MonoBehaviour, IHumanGetter, IInitializer
 {
     // ---------- 定数宣言 ----------
     // ---------- ゲームオブジェクト参照変数宣言 ----------
@@ -33,9 +33,14 @@ public class EndlessBattleSegment : MonoBehaviour, IHumanGetter
         get{ return _pathLength; }
         set{ if(_pathLength == -1f) _pathLength = value; } 
     }
+    [field: SerializeField] public InitializerBase Initializer { get; set; }
     // ---------- クラス変数宣言 ----------
     // ---------- インスタンス変数宣言 ----------
     // ---------- Unity組込関数 ----------
+    private void Awake()
+    {
+        this.Initializer.Init(this, this);
+    }
     private void Update(){
 
         if(!_isInitialize) return;
@@ -123,6 +128,9 @@ public class EndlessBattleSegment : MonoBehaviour, IHumanGetter
 
         _onInitialize?.Invoke();
         _onInitialize?.RemoveAllListeners();
+
+        Initializer.OnInitialize?.Invoke();
+        Initializer.OnInitialize?.RemoveAllListeners();
     }
     public Human GetHuman(int index = 0)
     { 

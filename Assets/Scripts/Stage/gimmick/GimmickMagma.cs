@@ -12,22 +12,18 @@ public class GimmickMagma : MonoBehaviour
     // ---------- ゲームオブジェクト参照変数宣言 ----------
     // ---------- プレハブ ----------
     // ---------- プロパティ ----------
-    // [SerializeField, Tooltip("ステージ")] private GameStage _stage;
-    [SerializeField] private GameObject _initObj;
+    [SerializeField] private InterfaceReference<IInitializer> _iInitializer;
     [SerializeField, Tooltip("トリガー")] private ChildTrigger _childTrigger;
     [SerializeField, Tooltip("煙エフェクト")] private List<ParticleSystem> _effectSmokeList;
     private bool _isInitialize = false;
     private bool _isLavaKill = false;
     private int _showSmokeNum = 0;
-    private IInitializer _iInitializer = null;
     private List<Human> _humanList = null;
     // ---------- クラス変数宣言 ----------
     // ---------- インスタンス変数宣言 ----------
     // ---------- Unity組込関数 ----------
     private void Awake(){
-        // _stage.AddOnInitialize(Initialize);
-        _iInitializer = _initObj.GetComponent<IInitializer>();
-        _iInitializer.AddOnInitialize(Initialize);
+        _iInitializer.Value.AddOnInitialize(Initialize);
         _humanList = new List<Human>(); 
     }
     private void Initialize()

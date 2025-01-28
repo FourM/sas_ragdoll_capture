@@ -1,5 +1,8 @@
 using System;
 
+/// <summary>
+/// 言うなればゲーム全体のTryCatchクラス
+/// </summary>
 public class GlobalExceptionHandler
 {
     public static void Init()

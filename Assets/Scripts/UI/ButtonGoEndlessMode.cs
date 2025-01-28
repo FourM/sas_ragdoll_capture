@@ -26,7 +26,7 @@ public class ButtonGoEndlessMode : MonoBehaviour
     [SerializeField, Tooltip("ライフ演出開始位置")] private Transform _lifeStartPos = default;
     [SerializeField, Tooltip("ライフ演出目的位置")] private Transform _lifeEndPos = default;
     [SerializeField, Tooltip("ライフアイコン")] private CanvasGroup _lifeView = default;
-    [SerializeField, Tooltip("インステ")] private CanvasGroup _watchInsteView = default;
+    [SerializeField, Tooltip("リワード")] private CanvasGroup _watchRewardView = default;
 
     private bool _isInitialize = false;
     private bool _isShow = true;
@@ -467,7 +467,7 @@ public class ButtonGoEndlessMode : MonoBehaviour
         if(GameDataManager.DebugEndlessUnLimit)
         {
             _lifeView.alpha = 1;
-            _watchInsteView.alpha = 0;
+            _watchRewardView.alpha = 0;
             return true;
         }
         
@@ -484,15 +484,19 @@ public class ButtonGoEndlessMode : MonoBehaviour
             // 初登場演出開始時なら無効化
             if(isInitialize && SaveDataManager.GetIsDirectFirstOpenEndlessBattle() == 0)
                 return false;
-            // if(SaveDataManager.GetIsRewarded() == 0)
-            //     return false;
+            if(SaveDataManager.GetIsRewarded() == 0)
+            {
+                _lifeView.alpha = 1;
+                _watchRewardView.alpha = 0;
+                return false;
+            }
             // それ以外ならリワードでの有効化
             _lifeView.alpha = 0;
-            _watchInsteView.alpha = 1;
+            _watchRewardView.alpha = 1;
             return true;
         }
         _lifeView.alpha = 1;
-        _watchInsteView.alpha = 0;
+        _watchRewardView.alpha = 0;
         return true;
     }
 
