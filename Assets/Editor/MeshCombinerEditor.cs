@@ -4,31 +4,32 @@ using System.Collections.Generic;
 
 public class MeshCombinerEditor : EditorWindow
 {
+    private bool keepSubMeshesSeparate = true;
+    private bool keepRelativeTransform = true;
+    private bool removeOriginalMeshes = false;
+
     [MenuItem("Tools/Combine Meshes")]
-    static void CombineMeshes()
+    public static void ShowWindow()
     {
-        // ユーザーに統合オプションを選択させる
-        bool keepMaterials = EditorUtility.DisplayDialog(
-            "Combine Meshes",
-            "マテリアルを保持しますか？\n\n- 「はい」: マテリアルを維持\n- 「いいえ」: すべて統合",
-            "はい (維持する)",
-            "いいえ (統合する)"
-        );
+        GetWindow<MeshCombinerEditor>("Mesh Combiner");
+    }
 
-        bool keepRelativeTransform = EditorUtility.DisplayDialog(
-            "Transform Handling",
-            "選択オブジェクトの相対位置を保持しますか？\n\n- 「はい」: 選択オブジェクトを基準に統合（通常）\n- 「いいえ」: ワールド座標を適用",
-            "はい (基準オブジェクトを維持)",
-            "いいえ (ワールド座標適用)"
-        );
+    private void OnGUI()
+    {
+        GUILayout.Label("Mesh Combiner Settings", EditorStyles.boldLabel);
 
-        bool removeOriginalMeshes = EditorUtility.DisplayDialog(
-            "Remove Original Meshes",
-            "元のオブジェクトの Mesh と Renderer を削除しますか？\n\n- 「はい」: 削除（統合後に不要になる）\n- 「いいえ」: 残す",
-            "はい (削除)",
-            "いいえ (残す)"
-        );
+        keepSubMeshesSeparate = EditorGUILayout.Toggle("マテリアルの保持/マテリアル毎にサブメッシュを統合", keepSubMeshesSeparate);
+        keepRelativeTransform = EditorGUILayout.Toggle("選択オブジェクトの相対位置を保持", keepRelativeTransform);
+        removeOriginalMeshes = EditorGUILayout.Toggle("元のメッシュを削除", removeOriginalMeshes);
+        EditorGUILayout.Toggle("ダミーわんわん", true);
 
+        if (GUILayout.Button("Combine Meshes"))
+        {
+            CombineMeshes();
+        }
+    }
+    private void CombineMeshes()
+    {
         // 1. 選択されているオブジェクトを取得
         GameObject targetObject = Selection.activeGameObject;
         if (targetObject == null)
@@ -39,16 +40,14 @@ public class MeshCombinerEditor : EditorWindow
 
         Transform targetTransform = targetObject.transform;
         List<MeshFilter> meshFilterList = new List<MeshFilter>();
-        MeshFilter targetMeshFilter = targetObject.GetComponent<MeshFilter>();
-        if (targetMeshFilter != null && targetMeshFilter.sharedMesh != null)
-        {
-            meshFilterList.Add(targetMeshFilter);
-        }
+        
         meshFilterList.AddRange(targetObject.GetComponentsInChildren<MeshFilter>());
 
         MeshFilter[] meshFilters = meshFilterList.ToArray();
-        CombineInstance[] combine = new CombineInstance[meshFilters.Length];
-        Material[] materials = new Material[meshFilters.Length];
+        List<CombineInstance> combines = new List<CombineInstance>();
+        List<Material> materials = new List<Material>();    // マテリアルのリスト。マテリアル毎にサブメッシュを統合する設定なら一意にする
+        Dictionary<Material, List<int>> materialToSubmeshIndices = new Dictionary<Material, List<int>>();   // マテリアル毎のサブメッシュ統合用　マテリアルごとに紐づくサブメッシュのリスト
+
 
         // 2. メッシュを収集し、座標変換
         for (int i = 0; i < meshFilters.Length; i++)
@@ -56,42 +55,109 @@ public class MeshCombinerEditor : EditorWindow
             MeshFilter meshFilter = meshFilters[i];
             if (meshFilter.sharedMesh == null) continue;
 
-            Transform meshTransform = meshFilter.transform;
-            if (keepRelativeTransform)
+            MeshRenderer meshRenderer = null;
+            if(meshFilter.TryGetComponent<MeshRenderer>(out meshRenderer))
             {
-                combine[i].mesh = meshFilter.sharedMesh;
-                combine[i].transform = targetTransform.worldToLocalMatrix * meshTransform.localToWorldMatrix;
-            }
-            else
-            {
-                combine[i].mesh = meshFilter.sharedMesh;
-                combine[i].transform = meshTransform.localToWorldMatrix;
-            }
+                // マテリアル登録
+                Material[] objMaterials = meshRenderer.sharedMaterials;
 
-            materials[i] = meshFilter.GetComponent<MeshRenderer>()?.sharedMaterial;
+                Mesh mesh = meshFilter.sharedMesh;
+                for (int j = 0; j < mesh.subMeshCount; j++)
+                {
+                    Material mat = objMaterials[j];
+
+                    // 既存のマテリアルリストにこのマテリアルがあるか確認
+                    if (!materials.Contains(mat) || keepSubMeshesSeparate)
+                    {
+                        materials.Add(mat);
+                        materialToSubmeshIndices[mat] = new List<int>();
+                    }
+
+                    Transform meshTransform = meshFilter.transform;
+                    CombineInstance combine = default;
+                    if (keepRelativeTransform)
+                    {
+                        // CombineInstanceを作成
+                        combine = new CombineInstance
+                        {
+                            mesh = mesh,
+                            subMeshIndex = j,
+                            transform = targetTransform.worldToLocalMatrix * meshTransform.localToWorldMatrix
+                        };
+                    }
+                    else
+                    {
+                        // CombineInstanceを作成
+                        combine = new CombineInstance
+                        {
+                            mesh = mesh,
+                            subMeshIndex = j,
+                            transform = meshTransform.localToWorldMatrix
+                        };
+                    }
+
+                    combines.Add(combine);
+                    materialToSubmeshIndices[mat].Add(combines.Count - 1);
+                }
+            }
         }
 
         // 3. 新しいメッシュを作成
         Mesh combinedMesh = new Mesh();
         combinedMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
-        combinedMesh.CombineMeshes(combine, !keepMaterials, true);
+        combinedMesh.CombineMeshes(combines.ToArray(), false, true);   // このクラスの核。メッシュ結合
+        // // 結合されたメッシュの最適化？
+        // combinedMesh.RecalculateNormals();  // 法線の再計算
+        // combinedMesh.RecalculateBounds();   // 境界ボックスの再計算
+
+        // --- ここからサブメッシュ統合処理 ---
+        if (!keepSubMeshesSeparate) // 統合処理を適用する場合
+        {
+            List<int[]> newSubmeshTriangles = new List<int[]>();
+
+            foreach (var kvp in materialToSubmeshIndices)
+            {
+                List<int> mergedTriangles = new List<int>();
+
+                foreach (int index in kvp.Value)
+                {
+                    mergedTriangles.AddRange(combinedMesh.GetTriangles(index));
+                }
+
+                newSubmeshTriangles.Add(mergedTriangles.ToArray());
+            }
+
+            // 新しいサブメッシュ情報を設定
+            combinedMesh.subMeshCount = newSubmeshTriangles.Count;
+            for (int i = 0; i < newSubmeshTriangles.Count; i++)
+            {
+                combinedMesh.SetTriangles(newSubmeshTriangles[i], i);
+            }
+
+            // マテリアルリストを更新
+            materials = new List<Material>(materialToSubmeshIndices.Keys);
+        }
 
         string path = "Assets/CombinedMesh.asset";
         AssetDatabase.CreateAsset(combinedMesh, path);
         AssetDatabase.SaveAssets();
 
-        MeshFilter newMeshFilter = targetObject.GetComponent<MeshFilter>() ?? targetObject.AddComponent<MeshFilter>();
+        MeshFilter newMeshFilter = null;
+        if( !targetObject.TryGetComponent<MeshFilter>(out newMeshFilter) )
+        {
+            newMeshFilter = targetObject.AddComponent<MeshFilter>();
+        }
+            
         newMeshFilter.sharedMesh = combinedMesh;
-        MeshRenderer newMeshRenderer = targetObject.GetComponent<MeshRenderer>() ?? targetObject.AddComponent<MeshRenderer>();
 
-        if (keepMaterials)
+        MeshRenderer newMeshRenderer = null;
+        if( !targetObject.TryGetComponent<MeshRenderer>(out newMeshRenderer) )
         {
-            newMeshRenderer.sharedMaterials = materials;
+            newMeshRenderer = targetObject.AddComponent<MeshRenderer>();
         }
-        else
-        {
-            newMeshRenderer.sharedMaterial = materials[0];
-        }
+
+        newMeshRenderer.sharedMaterials = materials.ToArray();
+
         
 
         // 4. 元のオブジェクトの Mesh & Renderer を削除し、適切に処理
@@ -99,6 +165,7 @@ public class MeshCombinerEditor : EditorWindow
         {
             foreach (MeshFilter meshFilter in meshFilters)
             {
+                if(meshFilter == null) continue;
                 GameObject obj = meshFilter.gameObject;
                 if (obj == targetObject) continue; // 統合対象オブジェクトはスキップ
 
@@ -130,12 +197,23 @@ public class MeshCombinerEditor : EditorWindow
                     DestroyImmediate(obj); // 完全に不要なら削除
                 }
             }
+
+            // 空っぽになったゲームオブジェクトがあれば消す
+            Transform[] childlen = targetObject.GetComponentsInChildren<Transform>();
+            foreach (Transform child in childlen)
+            {
+                if(child == targetObject.transform) continue;
+                GameObject obj = child.gameObject;
+
+                if(obj.GetComponents<Component>().Length <= 1)
+                    DestroyImmediate(obj);
+            }
         }
 
-        PrefabUtility.SaveAsPrefabAsset(targetObject, "Assets/YourPrefab.prefab");
+        // PrefabUtility.SaveAsPrefabAsset(targetObject, "Assets/YourPrefab.prefab");
 
         Debug.Log(
-            (keepMaterials ? "Materials preserved." : "Materials merged.") +
+            (keepSubMeshesSeparate ? "Materials preserved." : "Materials merged.") +
             (keepRelativeTransform ? " Relative transform maintained." : " World position applied.") +
             (removeOriginalMeshes ? " Original meshes removed and colliders handled." : " Original meshes kept.")
         );
