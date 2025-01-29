@@ -202,6 +202,7 @@ public class MeshCombinerEditor : EditorWindow
             Transform[] childlen = targetObject.GetComponentsInChildren<Transform>();
             foreach (Transform child in childlen)
             {
+                if( child == null || !child.gameObject ) continue;
                 if(child == targetObject.transform) continue;
                 GameObject obj = child.gameObject;
 
