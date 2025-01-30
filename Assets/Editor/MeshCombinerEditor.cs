@@ -1,12 +1,14 @@
 using UnityEditor;
 using UnityEngine;
 using System.Collections.Generic;
+using System.IO;
 
 public class MeshCombinerEditor : EditorWindow
 {
     private bool keepSubMeshesSeparate = true;
     private bool keepRelativeTransform = true;
     private bool removeOriginalMeshes = false;
+    private string nameOfCreateMesh = "";
 
     [MenuItem("Tools/Combine Meshes")]
     public static void ShowWindow()
@@ -22,6 +24,7 @@ public class MeshCombinerEditor : EditorWindow
         keepRelativeTransform = EditorGUILayout.Toggle("選択オブジェクトの相対位置を保持", keepRelativeTransform);
         removeOriginalMeshes = EditorGUILayout.Toggle("元のメッシュを削除", removeOriginalMeshes);
         EditorGUILayout.Toggle("ダミーわんわん", true);
+        nameOfCreateMesh = EditorGUILayout.TextField("統合されたメッシュ名", "Combined__" + Selection.activeGameObject.name);
 
         if (GUILayout.Button("Combine Meshes"))
         {
@@ -138,9 +141,10 @@ public class MeshCombinerEditor : EditorWindow
             materials = new List<Material>(materialToSubmeshIndices.Keys);
         }
 
-        string path = "Assets/CombinedMesh.asset";
-        AssetDatabase.CreateAsset(combinedMesh, path);
-        AssetDatabase.SaveAssets();
+        // string path = "Assets/Combined_"+ targetObject.name +" .asset";
+        SaveUniqueAsset(combinedMesh, "Assets/Models", nameOfCreateMesh);
+        // AssetDatabase.CreateAsset(combinedMesh, path);
+        // AssetDatabase.SaveAssets();
 
         MeshFilter newMeshFilter = null;
         if( !targetObject.TryGetComponent<MeshFilter>(out newMeshFilter) )
@@ -219,4 +223,45 @@ public class MeshCombinerEditor : EditorWindow
             (removeOriginalMeshes ? " Original meshes removed and colliders handled." : " Original meshes kept.")
         );
     }
+
+    // 重複削除
+    public void SaveUniqueAsset(Mesh asset, string folderPath, string baseFileName)
+    {
+        // 拡張子を付ける（例: ".asset"）
+        string extension = ".asset";
+        string fullPath = Path.Combine(folderPath, baseFileName + extension);
+
+        // 重複チェックしてユニークな名前を取得
+        string uniquePath = GetUniqueAssetPath(fullPath);
+
+        // アセットを保存
+        AssetDatabase.CreateAsset(asset, uniquePath);
+        AssetDatabase.SaveAssets();
+        AssetDatabase.Refresh();
+
+        Debug.Log($"Asset saved as: {uniquePath}");
+    }
+
+    private string GetUniqueAssetPath(string path)
+    {
+        if (!File.Exists(path))
+        {
+            return path; // すでにユニークならそのまま
+        }
+
+        string directory = Path.GetDirectoryName(path);
+        string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(path);
+        string extension = Path.GetExtension(path);
+
+        int index = 1;
+        string newPath;
+        
+        do
+        {
+            newPath = Path.Combine(directory, $"{fileNameWithoutExtension} ({index}){extension}");
+            index++;
+        } while (File.Exists(newPath));
+
+        return newPath;
+    } 
 }
