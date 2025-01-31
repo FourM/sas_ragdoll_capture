@@ -24,6 +24,7 @@ public class EnemyGun : CatchableObj
     private Human _human = null;
     private Transform _target = null;
     private float _targetForward = 0f;
+    private bool _haveHuman = false;
     // ---------- クラス変数宣言 ----------
     // ---------- インスタンス変数宣言 ----------
     // ---------- Unity組込関数 ----------
@@ -126,7 +127,22 @@ public class EnemyGun : CatchableObj
 
     public Vector3 GetShotPos(){ return _shotPos.position; }
     public float GetShotSpd(){ return _shotSpd; }
-    public void SetHuman(Human human){ _human = human; }
+    public void SetHuman(Human human)
+    { 
+        _human = human; 
+        _haveHuman = true;
+        _human.AddOnCatch(()=>
+        {
+            _isShot = false;
+            // 持ち主から切り離す
+            this.transform.parent = _human.transform.parent.parent;
+            Rigidbody rigidbody = GetRigidbody(); 
+            rigidbody.isKinematic = false;
+            rigidbody.useGravity = true;
+            _haveHuman = false;
+            HumanChild humanChild = null;
+        });
+    }
     public void SetTarget(Transform target, float targetForward = 0f)
     { 
         _target = target; 
@@ -137,23 +153,29 @@ public class EnemyGun : CatchableObj
     // メイスを奪った時の処理
     protected override void OnCatchUnique()
     {
-        GameObject parent = this.transform.parent.gameObject;
+        if(_haveHuman)
+        {
+            _haveHuman = false;
+            GameObject parent = this.transform.parent.gameObject;
 
-        // 持ち主から切り離す
-        this.transform.parent = _human.transform.parent.parent;
-        Rigidbody rigidbody = GetRigidbody(); 
-        rigidbody.isKinematic = false;
-        rigidbody.useGravity = true;
+            // 持ち主から切り離す
+            this.transform.parent = _human.transform.parent.parent;
+            Rigidbody rigidbody = GetRigidbody(); 
+            rigidbody.isKinematic = false;
+            rigidbody.useGravity = true;
 
-        HumanChild humanChild = null;
+            HumanChild humanChild = null;
 
-        _human.Flinch();
+            _human.Flinch();
 
-        _isShot = false;
+            _isShot = false;
+        }
+
+        _rigidbody.excludeLayers = LayerMask.GetMask("");
     }
 
     protected override void OnReleaseUnique()
     {
-
+        
     }
 }

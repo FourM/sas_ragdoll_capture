@@ -121,6 +121,9 @@ public class Shield : CatchableObj
         }).SetLink(this.gameObject).OnComplete(()=>{_OnCompleteGuardEnd?.Invoke();});
 
         RereaseShield();
+
+        _rigidbody.excludeLayers = LayerMask.GetMask("");
+        this.gameObject.layer = LayerMask.NameToLayer("catchable");
     }
     private void RereaseShield()
     {

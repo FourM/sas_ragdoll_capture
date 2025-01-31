@@ -204,6 +204,8 @@ public class Human : CatchableObj
         IsFallable = true;
         // 床で死ぬのを有効化
         IsFloorDead = true;
+
+        _onFlinchEndCallback?.RemoveAllListeners();
     }
 
     protected override void OnReleaseUnique()

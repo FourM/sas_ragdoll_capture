@@ -71,6 +71,7 @@ public class Player : MonoBehaviour
     // ---------- Public関数 ------------------------- 
     public void Reset()
     {
+        _playerBody.localPosition = new Vector3(0, -1.8f, 0);
         _playerBody.localEulerAngles = Vector3.zero;
         _cinemachineDollyCart.enabled = true;
         // アニメーションに関係する手をゲーム起動時に再生成していて、アニメーションから手の参照が切れているため、再スキャンする
@@ -78,6 +79,7 @@ public class Player : MonoBehaviour
         _handAnimator.Update(0);  // これも重要
         _onWebNumEmplty = new UnityEvent();
         _webNum = SaveDataManager.GetLevelWebNum() + 3;
+        SetState(PlayerState.stop);
     }
     public CinemachineDollyCart GetMovePath(){ return _cinemachineDollyCart; }
     public void StopPathMove(){ _cinemachineDollyCart.m_Speed = 0f; }

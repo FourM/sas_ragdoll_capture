@@ -37,6 +37,10 @@ public class HumanActiveActionGunShot : HumanActiveAction
         {
             _isHaveGun = false;
         });
+        _human.AddOnCatch(()=>
+        {
+            _isHaveGun = false;
+        });
 
         _enemyGun.Initialize();
         _enemyGun.SetBurretParent(_human.transform.parent.parent);

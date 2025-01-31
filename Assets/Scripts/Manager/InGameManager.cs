@@ -66,7 +66,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
     private UnityEvent _onInitialize = null;
     private UnityEvent _onInitializeMaterialManager = null;
     private bool _isCatch = false;
-    private float _springPosZ = 0.0f;
+    private float _springPosZ = 0.0f;   // 掴んだ物との距離
     private Material _webRopeMaterial = default;
     private Material _webRopeMaterial2 = default;
     private Color32 _webRopeColor = default;
@@ -206,15 +206,24 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
                 break;
             case GameState.main:
             case GameState.endlessBattleEnemyAttack:
+                float tooNearWay = 3f;
+                float nearWay = 4f;
                 if(GameMode == GameMode.endlessBattle)
+                {
+                    tooNearWay = 5f;
+                    nearWay = 6.5f;
+                }
+
+                // 掴んだものが近すぎたら少し奥に運ぶ
+                // if(GameMode == GameMode.endlessBattle)
                 {   
-                    if(_springPosZ < 5f)
-                        _springPosZ = 5f;
-                    if(_springPosZ < 6.5f)
+                    if(_springPosZ < tooNearWay)
+                        _springPosZ = tooNearWay;
+                    if(_springPosZ < nearWay)
                     {
                         _springPosZ += Time.deltaTime * 1f;
-                        if( 6.5f <= _springPosZ )
-                            _springPosZ = 6.5f;
+                        if( nearWay <= _springPosZ )
+                            _springPosZ = nearWay;
                     }
 
                     _endlessBattleLastScore = GetPlayerMoveLength();
@@ -499,6 +508,19 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
     // 敵になぐられた時の演出
     public void OnEnemyAttackHit()
     {
+        if( GameMode == GameMode.main)
+        {
+            VibrationManager.VibrateShort();
+            // GameState = GameState.result;
+            ReleaseCatchObj();
+            _player.Down(()=>
+            {
+                DOVirtual.DelayedCall(0.75f, ()=>
+                {
+                    UndoInGame();
+                });
+            });
+        }
         if( GameMode == GameMode.endlessBattle)
         {
             // リザルト表示
