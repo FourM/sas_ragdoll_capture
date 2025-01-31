@@ -5,7 +5,7 @@ using System.IO;
 
 public class MeshCombinerEditor : EditorWindow
 {
-    private bool keepSubMeshesSeparate = true;
+    private bool submeshOptimization = false;
     private bool keepRelativeTransform = true;
     private bool removeOriginalMeshes = false;
     private string nameOfCreateMesh = "";
@@ -20,7 +20,7 @@ public class MeshCombinerEditor : EditorWindow
     {
         GUILayout.Label("Mesh Combiner Settings", EditorStyles.boldLabel);
 
-        keepSubMeshesSeparate = EditorGUILayout.Toggle("マテリアルの保持/マテリアル毎にサブメッシュを統合", keepSubMeshesSeparate);
+        submeshOptimization = EditorGUILayout.Toggle("マテリアル毎にサブメッシュを統合/マテリアルの保持", true);
         keepRelativeTransform = EditorGUILayout.Toggle("選択オブジェクトの相対位置を保持", keepRelativeTransform);
         removeOriginalMeshes = EditorGUILayout.Toggle("元のメッシュを削除", removeOriginalMeshes);
         EditorGUILayout.Toggle("ダミーわんわん", true);
@@ -69,8 +69,8 @@ public class MeshCombinerEditor : EditorWindow
                 {
                     Material mat = objMaterials[j];
 
-                    // 既存のマテリアルリストにこのマテリアルがあるか確認
-                    if (!materials.Contains(mat) || keepSubMeshesSeparate)
+                    // 既存のマテリアルリストにこのマテリアルがあるか確認。すでにこのマテリアルがあり、マテリアル毎にサブメッシュを統合する設定なら無視する
+                    if (!materials.Contains(mat) || !submeshOptimization)
                     {
                         materials.Add(mat);
                         materialToSubmeshIndices[mat] = new List<int>();
@@ -114,7 +114,7 @@ public class MeshCombinerEditor : EditorWindow
         // combinedMesh.RecalculateBounds();   // 境界ボックスの再計算
 
         // --- ここからサブメッシュ統合処理 ---
-        if (!keepSubMeshesSeparate) // 統合処理を適用する場合
+        if (submeshOptimization) // 統合処理を適用する場合
         {
             List<int[]> newSubmeshTriangles = new List<int[]>();
 
@@ -218,7 +218,7 @@ public class MeshCombinerEditor : EditorWindow
         // PrefabUtility.SaveAsPrefabAsset(targetObject, "Assets/YourPrefab.prefab");
 
         Debug.Log(
-            (keepSubMeshesSeparate ? "Materials preserved." : "Materials merged.") +
+            (submeshOptimization ? "Materials preserved." : "Materials merged.") +
             (keepRelativeTransform ? " Relative transform maintained." : " World position applied.") +
             (removeOriginalMeshes ? " Original meshes removed and colliders handled." : " Original meshes kept.")
         );

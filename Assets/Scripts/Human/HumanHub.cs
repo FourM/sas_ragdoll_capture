@@ -5,7 +5,7 @@ using System;
 using DG.Tweening;
 using UnityEngine.Events;
 
-public class HumanHub : MonoBehaviour
+public class HumanHub : MonoBehaviour, IInitializer
 {
     // ---------- 定数宣言 ----------
     // ---------- ゲームオブジェクト参照変数宣言 ----------
@@ -22,13 +22,18 @@ public class HumanHub : MonoBehaviour
     private Human _activeHuman = null;
     private bool _isInitialize = false;
     private Vector3 _scale = default;
-    private UnityEvent _onInitialize = null;
+    // private UnityEvent _onInitialize = null;
     private bool _isVisibleCheck = false;
     private Transform _cameraTransform = null;
     private Transform _showHumanCheckarTransform = null;
+    [field: SerializeField] public InitializerBase Initializer { get; set; }    // 擬似多重継承インターフェースクラスを用いるときに必要な処理1/2。publicだけど基本的に外部からは使わない
     // ---------- クラス変数宣言 ----------
     // ---------- インスタンス変数宣言 ----------
     // ---------- Unity組込関数 ----------
+    private void Awake()
+    {
+        Initializer.Init(this, this);  // 擬似多重継承インターフェースクラスを用いるときに必要な処理2/2。
+    }
     private void Update()
     {
         // if(this.gameObject.name == "HumanHub EndlessBattle Mob1")
@@ -100,11 +105,13 @@ public class HumanHub : MonoBehaviour
         ghost.parent = this.transform;
         ghost.localScale = _scale;
 
-        _onInitialize?.Invoke();
-        _onInitialize?.RemoveAllListeners();
-
         if(_shield != null)
             _activeHuman.AddOnInitialize(HaveShield);
+
+        // _onInitialize?.Invoke();
+        // _onInitialize?.RemoveAllListeners();
+        Initializer.OnInitialize?.Invoke();
+        Initializer.OnInitialize?.RemoveAllListeners();
 
         this.enabled = false;
         
@@ -180,9 +187,10 @@ public class HumanHub : MonoBehaviour
 
     public void AddOnInitialize( UnityAction onInitialize)
     {
-        if(_onInitialize == null)
-            _onInitialize = new UnityEvent();
-        _onInitialize.AddListener(onInitialize);
+        // if(_onInitialize == null)
+        //     _onInitialize = new UnityEvent();
+        // _onInitialize.AddListener(onInitialize);
+        Initializer.AddOnInitialize(onInitialize);
     }
     // ---------- Private関数 ----------
     private void HaveShield()

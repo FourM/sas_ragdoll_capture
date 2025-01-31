@@ -544,6 +544,7 @@ public class Human : CatchableObj
 
     // シールド設定
     public void SetHaveShield(Shield haveShield){ _haveShield = haveShield;} 
+    public Shield GetHaveShield(){ return _haveShield;} 
     // ガードの可否（シールドを持ってたら）
     public void SetIsCanGuard(bool isCanGuard){ _isCanGuard = isCanGuard; }
     // 代わりに捕まえさせる物を返す。nullならデフォルト値を返すけど、それもnull

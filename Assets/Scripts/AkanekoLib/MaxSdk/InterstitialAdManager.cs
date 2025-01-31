@@ -49,7 +49,7 @@ public class InterstitialAdManager : MonoBehaviour
     // //    if(buffer == 1000)
     // //         ShowAd();
     // }
-       public void InitializeInterstitialAds()
+    private void InitializeInterstitialAds()
     {
         // Attach callback
         MaxSdkCallbacks.Interstitial.OnAdLoadedEvent += OnInterstitialLoadedEvent;
