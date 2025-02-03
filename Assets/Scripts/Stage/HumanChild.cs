@@ -43,7 +43,7 @@ public class HumanChild : CatchableObj
         if(collision.gameObject.layer == LayerMask.NameToLayer("catchableNotKill"))
             return;
         // ギミックで倒す必要があるなら、床への激突では死なない　＋　床で死ぬフラグがOFFなら床では死なない
-        if(collision.gameObject.layer == LayerMask.NameToLayer("Floor") && GameDataManager.IsGimmickKill() && !_parentHuman.IsFloorDead)
+        if(collision.gameObject.layer == LayerMask.NameToLayer("Floor") && ( GameDataManager.IsGimmickKill() || !_parentHuman.IsFloorDead ))
             return;
         // ギミックで倒す必要があるなら、他Humanの激突では死なない
         if(collision.gameObject.layer == LayerMask.NameToLayer("BreakableParts") && GameDataManager.IsGimmickKill())
@@ -114,6 +114,7 @@ public class HumanChild : CatchableObj
             // 致死衝撃を受けた処理
             // OnBreak();
             OnDamage(1);
+            Debug.Log("死ぬ！！" + this.gameObject.name + ", " + collision.gameObject.name);
             if(isOtherHuman)
             {
                 // ぶつかった相手のHumanは死んだ時のエフェクトを発生させない
@@ -131,7 +132,9 @@ public class HumanChild : CatchableObj
         }
 
         if( !isDead)
+        {
             FirebaseManager.instance.EventCrashed(collisionSpeed, _parentHuman.IsDead());
+        }
     }
 
     // 直前まで触れていたオブジェクトとして登録

@@ -83,13 +83,18 @@ public class InterstitialAdManager : MonoBehaviour
     {
         // Interstitial ad failed to load 
         // AppLovin recommends that you retry with exponentially higher delays, up to a maximum delay (in this case 64 seconds)
-
         retryAttempt++;
         double retryDelay = Math.Pow(2, Math.Min(6, retryAttempt));
-
-        Invoke("LoadInterstitial", (float)retryDelay);
-        LoadInterstitial();
-
+        
+        try
+        {
+            Invoke("LoadInterstitial", (float)retryDelay);
+            // LoadInterstitial();
+        }
+        catch(Exception e)
+        {
+            Invoke("LoadInterstitial", (float)retryDelay);
+        }
     }
 
     private void OnInterstitialDisplayedEvent(string adUnitId, MaxSdkBase.AdInfo adInfo) {

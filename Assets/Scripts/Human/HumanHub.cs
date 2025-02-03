@@ -18,6 +18,8 @@ public class HumanHub : MonoBehaviour, IInitializer
     [SerializeField, Tooltip("この敵に触れてなくても落ちることがあるか(崩れる床の上にいるやつとかはONにする)")] private bool _isFallable = true;
     [SerializeField, Tooltip("激しいアニメーションをするなどで床ダメで勝手に死なない(事故死)ロック。プレイヤーに捕まったり落下したりしたらOFFにする")] private bool _initIsFloorDead = true;
     [SerializeField, Tooltip("Humanリスト")] private ChildTrigger _showHumanCheckar;
+    [SerializeField, Tooltip("サイズ変えるトランスフォームリスト")] private List<Transform> _listScalear;
+    [SerializeField, Tooltip("ログを出すか")] private bool _isLog = false;
     // ---------- プロパティ ----------
     private Human _activeHuman = null;
     private bool _isInitialize = false;
@@ -86,12 +88,12 @@ public class HumanHub : MonoBehaviour, IInitializer
         _activeHuman.gameObject.SetActive(true);
         _activeHuman.transform.parent = this.transform;
         _activeHuman.transform.localPosition = Vector3.zero;
-        _activeHuman.transform.localScale = _scale;
         _activeHuman.transform.localEulerAngles = Vector3.one;
         _activeHuman.SetChildLayer(_childLayer);
         _activeHuman.SetFlinchAnim(_animFlinch);
         _activeHuman.IsFallable = _isFallable;
         _activeHuman.InitIsFloorDead = _initIsFloorDead;
+        _activeHuman.IsLog = _isLog;
 
         if(_animeController != null)
             _activeHuman.SetAnimatorController(_animeController);
@@ -103,7 +105,7 @@ public class HumanHub : MonoBehaviour, IInitializer
 
         Transform ghost = _activeHuman.GetGhost();
         ghost.parent = this.transform;
-        ghost.localScale = _scale;
+        _activeHuman.SetScale(_scale);
 
         if(_shield != null)
             _activeHuman.AddOnInitialize(HaveShield);

@@ -42,6 +42,7 @@ public class Human : CatchableObj
     [SerializeField, Tooltip("声リスト")] private List<AudioClip> _listAudioClip = default;
     [SerializeField, Tooltip("カメラ外、カメラ内イベント")] private ChildTrigger _visibleEventTrigger;
     [SerializeField, Tooltip("Ragdoll根本の位置の補助オブジェクト")] private Transform _basePosChild;
+    [SerializeField, Tooltip("サイズ変えるトランスフォームリスト")] private List<Transform> _listScalear;
     // private bool _isBroken = false;
     private UnityEvent _onCatchCallback = default;
     private UnityEvent _onReleaseCallback = default;
@@ -77,8 +78,15 @@ public class Human : CatchableObj
     private bool _isFallable = true;                    //　床がないと感じたら落ちるか
     private bool _isFloorDead = true;                   // 床ダメで死ぬか(事故死で勝手に死ぬロック)
     private bool _initIsFloorDead = true;               // _isFloorDeadの初期値。trueなら平時でも床で事故死する恐れがある。
+    private bool _isLog = false;
+    public bool IsLog{ get{ return _isLog; } set{ _isLog = value; }}
 
-    public bool IsFallable{ get{ return _isFallable; } set{ _isFallable = value; } }
+    public bool IsFallable{ get{ return _isFallable; } 
+        set{ 
+            _isFallable = value; 
+            if(GetRigidbody() != null)
+                GetRigidbody().useGravity = value;
+            } }
     public bool IsFloorDead{ get{ return _isFloorDead; } set{ _isFloorDead = value; } }
     public bool InitIsFloorDead{ get{ return _initIsFloorDead; } set{ _isFloorDead = value; _isFloorDead = value; } }
     // ---------- クラス変数宣言 ----------
@@ -549,6 +557,14 @@ public class Human : CatchableObj
     public Shield GetHaveShield(){ return _haveShield;} 
     // ガードの可否（シールドを持ってたら）
     public void SetIsCanGuard(bool isCanGuard){ _isCanGuard = isCanGuard; }
+
+    public void SetScale(Vector3 scale)
+    {
+        for(int i = 0; i < _listScalear.Count; i++)
+        {
+            _listScalear[i].localScale = scale;
+        } 
+    }
     // 代わりに捕まえさせる物を返す。nullならデフォルト値を返すけど、それもnull
     protected override CatchableObj GetAlternateUnique()
     {
@@ -587,6 +603,8 @@ public class Human : CatchableObj
 
                 // Vector3 eulerAngles = looker.eulerAngles;
                 // looker.eulerAngles = new Vector3(0, 180, 0);
+
+                // Vector3 beforeLocalEulerAngles = looker.localEulerAngles;
 
                 looker.LookAt(lookPos);
 
@@ -629,6 +647,9 @@ public class Human : CatchableObj
                 // looker.rotation = Quaternion.RotateTowards(Quaternion.identity, rotation, _maxAngle);
                 
                 // looker.Rotate(0, _plusRotationY, _plusRotationZ);//回転値をプラスして補間
+
+                if(index == 0 && IsLog)
+                    Debug.Log("みる pos:" + looker.position + ", " + looker.localPosition + ", " + looker.localEulerAngles + ", ");
             }
             else
             {
