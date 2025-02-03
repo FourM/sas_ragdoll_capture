@@ -18,6 +18,7 @@ public abstract class CatchableObj : MonoBehaviour
     [SerializeField, Tooltip("ぐるぐる巻き糸のローカル回転。nullなら0")] protected Vector3 _webRotate = default;
     [SerializeField, Tooltip("ConnectedAnchorを矯正するか")] private bool _fixConnectedAnchor = false;
     [SerializeField, Tooltip("矯正ConnectedAnchor")] private Vector3 _connectedAnchor = default;
+    [SerializeField, Tooltip("掴める")] private bool _catchable = true;
     private bool _isCatch;
     protected bool _isBroken = false;
     private GameObject _parent;
@@ -30,6 +31,7 @@ public abstract class CatchableObj : MonoBehaviour
     private Vector3 _beforevelocity = default;
     // private Vector3 _beforevelocity2 = default;
     private float _fastSwipedTime = 0f;
+    public bool Catchable{ get{ return _catchable; } set{ _catchable = value; }}
     // ---------- クラス変数宣言 ----------
     // ---------- インスタンス変数宣言 ----------
     // ---------- Unity組込関数 ----------

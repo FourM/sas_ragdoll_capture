@@ -114,7 +114,7 @@ public class HumanChild : CatchableObj
             // 致死衝撃を受けた処理
             // OnBreak();
             OnDamage(1);
-            Debug.Log("死ぬ！！" + this.gameObject.name + ", " + collision.gameObject.name);
+            // Debug.Log("死ぬ！！" + this.gameObject.name + ", " + collision.gameObject.name);
             if(isOtherHuman)
             {
                 // ぶつかった相手のHumanは死んだ時のエフェクトを発生させない

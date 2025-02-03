@@ -678,6 +678,24 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
             if(hit.rigidbody == null)
                 return;
 
+            CatchableObj catchableObj = GameDataManager.GetCatchableObj(hit.transform.gameObject);
+            Human human = null;
+            HumanChild humanChild = null;
+
+            if(catchableObj != null)
+            {
+                 if(!catchableObj.Catchable)
+                    return;
+                humanChild = catchableObj.TryGetHumanChild();
+                human = catchableObj.TryGetParentHuman();
+
+                if(human != null && !human.Catchable)
+                    return;
+                if(humanChild != null && !human.Catchable)
+                    return;
+            }
+            
+
             GameDataManager.SetIsMainGameStart(true);
 
             // 仕様上たまによく消えがちな大事なゲームオブジェクトが不具合で消えた時のバックアップ復元
@@ -710,18 +728,13 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
             _catchWebTransform.localScale = Vector3.zero;
 
             // 取った対象のCatchableObj取得を試行
-            CatchableObj catchableObj = GameDataManager.GetCatchableObj(hit.transform.gameObject);
             GameDataManager.SetIsCatchSomething(true);
             GameDataManager.SetLookAtTransform(hit.transform);
 
             // Humanをタップしたか否か
             bool isOtherCatchHuman = false; // Humanで、他の何かに捕まってる
-            Human human = null;
-            HumanChild humanChild = null;
             if(catchableObj != null) 
             {
-                humanChild = catchableObj.TryGetHumanChild();
-                human = catchableObj.TryGetParentHuman();
                 if(human != null)
                 {
                     _isTaphuman = true; // イベント用：人をタップした

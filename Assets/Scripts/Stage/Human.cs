@@ -53,7 +53,7 @@ public class Human : CatchableObj
     private UnityEvent<UnityAction<HumanChild>> _onPartsActiion = default;
     private Dictionary<HumanParts, HumanChild> _humanPartsDictionary = null;
     private UnityEvent<float> _onDamage = default;
-    private List<Vector3> _lookerInitAngle = default;
+    private List<Quaternion> _lookerInitAngle = default;
     private bool _isGround = true;
     private Dictionary<GameObject, float> _stayObjectDic = null;
     private float _toughness = 1f;  // 死にやすさ。デフォルトは１
@@ -95,11 +95,11 @@ public class Human : CatchableObj
     // ---------- Public関数 ----------
     protected override void StartUnique()
     {
-        _lookerInitAngle = new List<Vector3>();
+        _lookerInitAngle = new List<Quaternion>();
 
         for(int i = 0; i < _lookers.Count; i++)
         {
-            _lookerInitAngle.Add(_lookers[i].localEulerAngles);
+            _lookerInitAngle.Add(_lookers[i].localRotation);
         }
         _stayObjectDic = new Dictionary<GameObject, float>();
 
@@ -140,7 +140,7 @@ public class Human : CatchableObj
                 // 死んでたら首だけそのまま、目はデフォルトに戻す
                 if( 0 < i )
                 {
-                    _lookers[i].localEulerAngles = _lookerInitAngle[i];
+                    _lookers[i].localRotation = _lookerInitAngle[i];
                 }
             }
 
@@ -575,89 +575,92 @@ public class Human : CatchableObj
         return ret;
     }
     // ---------- Private関数 ----------
-    private void LookAtTarget(Transform looker, Vector3 initAngle, int index)
+    private void LookAtTarget(Transform looker, Quaternion initAngle, int index)
     {
-        Vector3 currentAngle = looker.localEulerAngles;
-        Vector3 targetAngle = initAngle;
-        float _plusRotationY = initAngle.y;
-        float _plusRotationZ = initAngle.z;
-        float _maxAngle = 60;
-
-        float angleLimitX = 60f;
-        float angleLimitY = 45f;
-        float angleLimitZ = 10f;
-        if(index != 0)
-        {
-            angleLimitX = 15;
-            angleLimitY = 45;
-        }
-
         // 捕まってるやつを見るか否かのABフラグ
         if(PlayerPrefs.GetInt("Effect_ON", 1) == 1)
         {
+            bool isLook = false;
+
+            initAngle = looker.parent.rotation * Quaternion.Euler(0, 0, 0);
+            Quaternion targetRotation = initAngle;
+            float rotationSpeed = 360f * 2f;  // 1秒間に回転する角度（度）
+            float maxRotationAngle = 60f; // 正面からの最大回転角度（度）
+            // 最大回転角度（左右・上下）
+            float maxYawAngle = 90f;  // 左右（Yaw）の可動範囲
+            float maxPitchUpAngle = 70f;  // 上（Pitch）の可動範囲
+            float maxPitchDownAngle = 45f; // 下（Pitch）の可動範囲
+            Vector3 lookPos = Vector3.zero;
+
             if(GameDataManager.IsCatchSomething() && !_isBroken && !IsCatch() )
             {
-                Vector3 lookPos = GameDataManager.GetLookAtPos();
-                // targetAngle = initAngle;
-                // looker.localEulerAngles = initAngle;
-
-                // Vector3 eulerAngles = looker.eulerAngles;
-                // looker.eulerAngles = new Vector3(0, 180, 0);
-
-                // Vector3 beforeLocalEulerAngles = looker.localEulerAngles;
-
-                looker.LookAt(lookPos);
-
-                // looker.localEulerAngles += eulerAngles;
-
-                // 
-                // pos.y = looker.position.y;
-                // looker.LookAt(looker.position);
-                // looker.rotation = Quaternion.identity;
-                // targetAngle = GameDataManager.GetLookAtPos() - looker.position;
-                // looker.rotation = Quaternion.FromToRotation(Vector3.forward, targetAngle);
-
-                // targetAngle = targetAngle.normalized;
-
-                targetAngle = looker.localEulerAngles;
-                
-                // Debug.Log("pos:" + GameDataManager.GetLookAtPos());
-
-                // 首の角度がやばくなりそうなら、近似の正常な角度に戻す
-                if( angleLimitX < targetAngle.x && targetAngle.x < 180 ) 
-                    targetAngle.x = angleLimitX;
-                if( 180 < targetAngle.x && targetAngle.x < (360 - angleLimitX) ) 
-                    targetAngle.x = (360 - angleLimitX);
-                if( angleLimitY < targetAngle.y && targetAngle.y < 180 ) 
-                    targetAngle.y = angleLimitY;
-                if( 180 < targetAngle.y && targetAngle.y < (360 - angleLimitY)) 
-                    targetAngle.y = (360 - angleLimitY);
-                if( angleLimitZ < targetAngle.z && targetAngle.z < 180 ) 
-                    targetAngle.z = angleLimitZ;
-                if( 180 < targetAngle.z && targetAngle.z < (360 - angleLimitZ) ) 
-                    targetAngle.z = (360 - angleLimitZ);
-
-                // if(transform.parent.name == "HumanHub (3)")
-                //     Debug.Log("targetAngle:" + looker.localEulerAngles + ", " + looker.eulerAngles);
-
-
-                // 制限なしの回転を求め...
-                // var rotation = Quaternion.LookRotation(GameDataManager.GetLookAtPos() - looker.position);
-                // その回転角を_maxAngleまでに制限した回転を作り、それをrotationにセットする
-                // looker.rotation = Quaternion.RotateTowards(Quaternion.identity, rotation, _maxAngle);
-                
-                // looker.Rotate(0, _plusRotationY, _plusRotationZ);//回転値をプラスして補間
-
-                if(index == 0 && IsLog)
-                    Debug.Log("みる pos:" + looker.position + ", " + looker.localPosition + ", " + looker.localEulerAngles + ", ");
+                lookPos = GameDataManager.GetLookAtPos();
+                isLook = true;
+                // ターゲット方向を求める（ワールド座標基準）
+                Vector3 direction = lookPos - looker.position;
+                if (direction == Vector3.zero)
+                {
+                    targetRotation = initAngle;
+                    rotationSpeed = 180f;
+                    isLook = false;
+                }
+                // 目標回転
+                targetRotation = Quaternion.LookRotation(direction);
+                // if(index == 0 && IsLog && isLook)
+                    // Debug.Log("みる pos:" + looker.position + ", " + lookPos + ", " + targetRotation + ", " + looker.localPosition);
             }
             else
             {
-                targetAngle = initAngle;
-                looker.localEulerAngles = targetAngle;
+                // キャラクターの前方を向く（ワールド基準）
+                targetRotation = initAngle;
+                rotationSpeed = 180f;
+                isLook = false;
             }
+
+            // 現在の回転を基準にローカル角度を取得
+            Quaternion localRotation = Quaternion.Inverse(initAngle) * targetRotation;
+            localRotation.ToAngleAxis(out float angle, out Vector3 axis);
+
+            // 回転をYaw（左右）とPitch（上下）に分解
+            Vector3 euler = localRotation.eulerAngles;
+            float yaw = NormalizeAngle(euler.y);
+            float pitch = NormalizeAngle(euler.x);
+
+            // 上下の最大角度を適用（楕円内に収める処理）
+            float normalizedYaw = yaw / maxYawAngle;
+            float normalizedPitch = pitch / (0 <= pitch ? maxPitchUpAngle : maxPitchDownAngle);
+            float ellipseValue = (normalizedYaw * normalizedYaw) + (normalizedPitch * normalizedPitch);
+            
+            // 対象が下にいるのに上を向くようになっていたか、その逆になっていれば無視する
+            if(isLook)
+            {
+                if( (0 <= pitch && lookPos.y < looker.position.y)||
+                    ( pitch < 0 && looker.position.y < lookPos.y))
+                    {
+                        pitch = -pitch;
+                    }
+            }
+
+            if ( 1 < ellipseValue)
+            {
+                float scale = 1 / Mathf.Sqrt(ellipseValue);
+                yaw *= scale;
+                pitch *= scale;
+            }
+
+            // クランプされた回転を適用
+            Quaternion clampedRotation = initAngle * Quaternion.Euler(pitch, yaw, 0);
+            looker.rotation = Quaternion.RotateTowards(looker.rotation, clampedRotation, rotationSpeed * Time.deltaTime);
         }
 
-        looker.localEulerAngles = targetAngle;
+        // looker.localEulerAngles = targetRotation;
+    }
+
+    // 角度を -180° ~ 180° の範囲に正規化する
+    private float NormalizeAngle(float angle)
+    {
+        angle = (angle + 360) % 360;
+        if (angle > 180) angle -= 360;
+        return angle;
     }
 }

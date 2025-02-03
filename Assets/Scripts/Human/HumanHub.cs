@@ -20,6 +20,7 @@ public class HumanHub : MonoBehaviour, IInitializer
     [SerializeField, Tooltip("Humanリスト")] private ChildTrigger _showHumanCheckar;
     [SerializeField, Tooltip("サイズ変えるトランスフォームリスト")] private List<Transform> _listScalear;
     [SerializeField, Tooltip("ログを出すか")] private bool _isLog = false;
+    [SerializeField, Tooltip("掴める")] private bool _catchable = true;
     // ---------- プロパティ ----------
     private Human _activeHuman = null;
     private bool _isInitialize = false;
@@ -29,6 +30,7 @@ public class HumanHub : MonoBehaviour, IInitializer
     private Transform _cameraTransform = null;
     private Transform _showHumanCheckarTransform = null;
     [field: SerializeField] public InitializerBase Initializer { get; set; }    // 擬似多重継承インターフェースクラスを用いるときに必要な処理1/2。publicだけど基本的に外部からは使わない
+    public bool Catchable{ get{ return _catchable; } }
     // ---------- クラス変数宣言 ----------
     // ---------- インスタンス変数宣言 ----------
     // ---------- Unity組込関数 ----------
@@ -94,6 +96,7 @@ public class HumanHub : MonoBehaviour, IInitializer
         _activeHuman.IsFallable = _isFallable;
         _activeHuman.InitIsFloorDead = _initIsFloorDead;
         _activeHuman.IsLog = _isLog;
+        _activeHuman.Catchable = Catchable;
 
         if(_animeController != null)
             _activeHuman.SetAnimatorController(_animeController);
