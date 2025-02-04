@@ -201,6 +201,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
                         SaveDataManager.SetPlayEndlessCount(endlessCount);
                         FirebaseManager.instance.EventBonusStageStart();
                         GameDataManager.AddEndlessLife(-1);
+                        _player.SetState(PlayerState.move);
                     }
                 }
                 break;
@@ -498,6 +499,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
         if( GameMode == GameMode.endlessBattle)
         {
             GameState = GameState.main;
+            _player.IsEnemyAttackWait = false;
         }
     }
     // 敵を倒した時の処理
@@ -1239,13 +1241,14 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
                 }
                 if(GameMode == GameMode.endlessBattle)
                 {
-                    _player.SetState(PlayerState.move);
+                    
                 }
                 break;
             case GameState.endlessBattleEnemyAttack:
                 if(GameMode == GameMode.endlessBattle)
                 {
-                    _player.SetState(PlayerState.stop);
+                    _player.IsEnemyAttackWait = true;
+                    // _player.SetState(PlayerState.stop);
                 }
                 break;
             case GameState.result:

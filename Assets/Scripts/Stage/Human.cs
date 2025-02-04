@@ -80,6 +80,8 @@ public class Human : CatchableObj
     private bool _initIsFloorDead = true;               // _isFloorDeadの初期値。trueなら平時でも床で事故死する恐れがある。
     private bool _isLog = false;
     public bool IsLog{ get{ return _isLog; } set{ _isLog = value; }}
+    private bool _isLook = false;
+    public bool IsLook{ get{ return _isLook; } set{ _isLook = value; }}
 
     public bool IsFallable{ get{ return _isFallable; } 
         set{ 
@@ -578,7 +580,7 @@ public class Human : CatchableObj
     private void LookAtTarget(Transform looker, Quaternion initAngle, int index)
     {
         // 捕まってるやつを見るか否かのABフラグ
-        if(PlayerPrefs.GetInt("Effect_ON", 1) == 1)
+        if(PlayerPrefs.GetInt("Effect_ON", 1) == 1 && IsLook)
         {
             bool isLook = false;
 
@@ -587,8 +589,8 @@ public class Human : CatchableObj
             float rotationSpeed = 360f * 2f;  // 1秒間に回転する角度（度）
             float maxRotationAngle = 60f; // 正面からの最大回転角度（度）
             // 最大回転角度（左右・上下）
-            float maxYawAngle = 90f;  // 左右（Yaw）の可動範囲
-            float maxPitchUpAngle = 70f;  // 上（Pitch）の可動範囲
+            float maxYawAngle = 65f;  // 左右（Yaw）の可動範囲
+            float maxPitchUpAngle = 100f;  // 上（Pitch）の可動範囲
             float maxPitchDownAngle = 45f; // 下（Pitch）の可動範囲
             Vector3 lookPos = Vector3.zero;
 
@@ -632,14 +634,14 @@ public class Human : CatchableObj
             float ellipseValue = (normalizedYaw * normalizedYaw) + (normalizedPitch * normalizedPitch);
             
             // 対象が下にいるのに上を向くようになっていたか、その逆になっていれば無視する
-            if(isLook)
-            {
-                if( (0 <= pitch && lookPos.y < looker.position.y)||
-                    ( pitch < 0 && looker.position.y < lookPos.y))
-                    {
-                        pitch = -pitch;
-                    }
-            }
+            // if(isLook)
+            // {
+            //     if( (0 <= pitch && lookPos.y < looker.position.y)||
+            //         ( pitch < 0 && looker.position.y < lookPos.y))
+            //         {
+            //             pitch = -pitch;
+            //         }
+            // }
 
             if ( 1 < ellipseValue)
             {
@@ -650,10 +652,11 @@ public class Human : CatchableObj
 
             // クランプされた回転を適用
             Quaternion clampedRotation = initAngle * Quaternion.Euler(pitch, yaw, 0);
+            // 一瞬で振り向く(従来の仕様)
+            // looker.rotation = clampedRotation;
+            // 滑らからに振り向く(新仕様)
             looker.rotation = Quaternion.RotateTowards(looker.rotation, clampedRotation, rotationSpeed * Time.deltaTime);
         }
-
-        // looker.localEulerAngles = targetRotation;
     }
 
     // 角度を -180° ~ 180° の範囲に正規化する

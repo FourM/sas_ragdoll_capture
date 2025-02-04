@@ -52,6 +52,7 @@ public class EndlessBattlePath : MonoBehaviour
     public EnterLook EnterLook{ get{ return _enterLook; } }
     public ClearLook ClearLook{ get{ return _clearLook; } }
     public bool IsClearDash{ get{ return _isClearDash; } }
+    private bool _isClear = false;
     // ---------- クラス変数宣言 -----------------------
     // ---------- インスタンス変数宣言 ------------------
     // ---------- Unity組込関数 -----------------------
@@ -88,9 +89,12 @@ public class EndlessBattlePath : MonoBehaviour
     public bool IsRefPathClear(){ return 0 < _refCatchableObjList.Count || 0 < _refHumanList.Count; }
     public bool IsPathClear()
     { 
+        if(_isClear)
+            return true;
         // 何かしらの不具合で、カメラ内に敵がいなくなったのに進んでくれないとなったときに指定の時間経過でクリア判定する
         if(_enterPlayerState == EnterPlayerState.battleStop && _battleEndLimitTimer <= 0f )
         {
+            _isClear = true;
             return true;
         }
         for(int i = 0; i < _refCatchableObjList.Count; i++)
@@ -104,6 +108,7 @@ public class EndlessBattlePath : MonoBehaviour
             if( human != null && !human.IsBroken() && human.IsVisible)
                 return false;
         }
+        _isClear = true;
         return true;
     }
     // プレイヤーが通過した時の処理

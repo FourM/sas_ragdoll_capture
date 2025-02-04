@@ -21,6 +21,7 @@ public class HumanHub : MonoBehaviour, IInitializer
     [SerializeField, Tooltip("サイズ変えるトランスフォームリスト")] private List<Transform> _listScalear;
     [SerializeField, Tooltip("ログを出すか")] private bool _isLog = false;
     [SerializeField, Tooltip("掴める")] private bool _catchable = true;
+    [SerializeField, Tooltip("対象を見るか")] private bool _isLook = true;
     // ---------- プロパティ ----------
     private Human _activeHuman = null;
     private bool _isInitialize = false;
@@ -97,6 +98,7 @@ public class HumanHub : MonoBehaviour, IInitializer
         _activeHuman.InitIsFloorDead = _initIsFloorDead;
         _activeHuman.IsLog = _isLog;
         _activeHuman.Catchable = Catchable;
+        _activeHuman.IsLook = _isLook;
 
         if(_animeController != null)
             _activeHuman.SetAnimatorController(_animeController);

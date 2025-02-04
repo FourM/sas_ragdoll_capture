@@ -132,6 +132,12 @@ public class EndlessBattleSubManager : StageSubManager
                             _player.SetLookAtTarget(_clearLookPos);
                             break;
                     }
+
+                    List<EnemySpawnRayWall> listEnemySpawnRayWall = _currentSegment.ListEnemySpawnRayWall;
+                    for(int i = 0; i < listEnemySpawnRayWall.Count; i++)
+                    {
+                        listEnemySpawnRayWall[i].gameObject.SetActive(false);
+                    }
                     _newPath = false;
                 }
                 else

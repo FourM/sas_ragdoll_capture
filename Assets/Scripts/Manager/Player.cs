@@ -43,6 +43,19 @@ public class Player : MonoBehaviour
     public bool IsEnemyLook{ get{ return _isEnemyLook; } }
     private bool _isDash = false;
     private float _dashSpd = 1f;
+    private bool _isEnemyAttackWait = false;
+    public bool IsEnemyAttackWait
+    {   
+        get{ return _isEnemyAttackWait; } 
+        set{ 
+            _isEnemyAttackWait = value;
+            if( !_down && !value)
+                _cinemachineDollyCart.enabled = true;
+            else
+                _cinemachineDollyCart.enabled = false;
+        } 
+    }
+    private bool _down = false;
     // ---------- クラス変数宣言 -----------------------
     // ---------- インスタンス変数宣言 ------------------
     // ---------- Unity組込関数 -----------------------
@@ -157,6 +170,7 @@ public class Player : MonoBehaviour
 
     public void Down(TweenCallback onComplete)
     {
+        _down = true;
         Vector3 effectPos = this.transform.position;
         effectPos += this.transform.forward * 0.508f;
         effectPos += this.transform.up * -0.46f;

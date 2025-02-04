@@ -19,6 +19,7 @@ public class EndlessBattleSegment : MonoBehaviour, IHumanGetter, IInitializer
     [SerializeField, Tooltip("プレイヤーの移動パス")] private List<EndlessBattlePath> _pathList = null;
     [SerializeField, Tooltip("次のセグメントの位置")] private Transform _nextSegmentPos = null;
     [SerializeField, Tooltip("プレイヤーが見る位置")] private Transform _lookAtTarget = null;
+    [SerializeField, Tooltip("敵の出現を抑制するためのダミー壁")] private List<EnemySpawnRayWall> _listEnemySpawnRayWall = null;
     private List<Transform> _pathListTransform = null;
     private List<Human> _targethumanList = null;
     private Action _onCliearCallback = default;
@@ -28,6 +29,7 @@ public class EndlessBattleSegment : MonoBehaviour, IHumanGetter, IInitializer
     private bool _isClear = false;
     private float _pathLength = -1f;
     private bool _isDestroyWait = false;
+    public List<EnemySpawnRayWall> ListEnemySpawnRayWall{ get{ return _listEnemySpawnRayWall; } }
     public float PathLength
     { 
         get{ return _pathLength; }
