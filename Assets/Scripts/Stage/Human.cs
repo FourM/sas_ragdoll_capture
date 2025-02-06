@@ -90,7 +90,7 @@ public class Human : CatchableObj
                 GetRigidbody().useGravity = value;
             } }
     public bool IsFloorDead{ get{ return _isFloorDead; } set{ _isFloorDead = value; } }
-    public bool InitIsFloorDead{ get{ return _initIsFloorDead; } set{ _isFloorDead = value; _isFloorDead = value; } }
+    public bool InitIsFloorDead{ get{ return _initIsFloorDead; } set{ _initIsFloorDead = value; _isFloorDead = value; } }
     // ---------- クラス変数宣言 ----------
     // ---------- インスタンス変数宣言 ----------
     // ---------- Unity組込関数 ----------
@@ -214,7 +214,6 @@ public class Human : CatchableObj
         IsFallable = true;
         // 床で死ぬのを有効化
         IsFloorDead = true;
-
         _onFlinchEndCallback?.RemoveAllListeners();
     }
 
@@ -362,6 +361,10 @@ public class Human : CatchableObj
     public void RemoveActionChangeWaitCallBack( UnityAction callback )
     {
         _actionChangeWaitCallBack?.RemoveListener(callback);
+    }
+    public void AddOnStand(UnityAction callback)
+    { 
+        _humanPartsFollow.AddOnStand(callback);
     }
     
 

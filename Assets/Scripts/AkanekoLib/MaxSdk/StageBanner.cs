@@ -15,38 +15,48 @@ public class StageBanner : MonoBehaviour
     public int sbkcheck;
     public MaxSdkBase.AdInfo _adInfo = null;
     private UnityEvent _onLoaded = default;
-    public void Start()
+
+    static public StageBanner instance = null;
+    
+    void Awake()
     {
-#if UNITY_ANDROID
-         bannerAdUnitId  = "68993af9e20b894a";
-         check=1;
-#elif UNITY_IOS
-         bannerAdUnitId = "91a0381dd83e7a2b";
-         check=1;
-#else
-        bannerAdUnitId  = "unexpected_platform";
-#endif
-
-        //  InitializeBannerAds();
-         MaxSdk.ShowBanner(bannerAdUnitId);
-        check= PlayerPrefs.GetInt("banner");
+        if (instance == null)
+        {
+            instance = this;
+            transform.parent = null;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
     }
-    public void FixedUpdate()
-    {
-       
+//     public void Start()
+//     {
+// #if UNITY_ANDROID
+//          bannerAdUnitId  = "68993af9e20b894a";
+//          check=1;
+// #elif UNITY_IOS
+//          bannerAdUnitId = "91a0381dd83e7a2b";
+//          check=1;
+// #else
+//         bannerAdUnitId  = "unexpected_platform";
+// #endif
 
-
-
-
-
-    }
+//         //  InitializeBannerAds();
+//         //  MaxSdk.ShowBanner(bannerAdUnitId);
+//         check = PlayerPrefs.GetInt("banner");
+//     }
+    // public void FixedUpdate()
+    // {
+    // }
     public void InitializeBannerAds()
     {
 
 #if UNITY_ANDROID
          bannerAdUnitId  = "231fa7a1b73515a9";
 #elif UNITY_IOS
-     //   bannerAdUnitId = "9616ebb8764e92aa";
+       bannerAdUnitId = "91a0381dd83e7a2b";
 #else
         bannerAdUnitId  = "unexpected_platform";
 #endif
@@ -65,6 +75,7 @@ public class StageBanner : MonoBehaviour
     MaxSdkCallbacks.Banner.OnAdExpandedEvent += OnBannerAdExpandedEvent;
     MaxSdkCallbacks.Banner.OnAdCollapsedEvent += OnBannerAdCollapsedEvent;
         check = 1;
+    check = PlayerPrefs.GetInt("banner");
 }
 
 private void OnBannerAdLoadedEvent(string adUnitId, MaxSdkBase.AdInfo adInfo) {

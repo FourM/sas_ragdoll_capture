@@ -11,6 +11,7 @@ public class SegmentLocalPathCreator : MonoBehaviour
     // ---------- プレハブ ----------------------------
     // ---------- プロパティ --------------------------
     [SerializeField, Tooltip("パス")] private CinemachineSmoothPath _movePath = default;
+    [SerializeField] private InterfaceReference<IInitializer> _iInitializer;
     [SerializeField, Tooltip("参照する区画")] private EndlessBattleSegment _segment = default;
     [SerializeField, Tooltip("参照パス最小Index")] private int _refPathMin = 0;
     [SerializeField, Tooltip("参考パス最大Index、0未満なら全て参照")] private int _refPathMax = -1;
@@ -26,7 +27,10 @@ public class SegmentLocalPathCreator : MonoBehaviour
     // ---------- インスタンス変数宣言 ------------------
     // ---------- Unity組込関数 -----------------------
     private void Awake(){
-        _segment.AddOnInitialize(Initialize);
+        if(_segment != null)
+            _segment.AddOnInitialize(Initialize);
+        else
+            _iInitializer.Value.AddOnInitialize(Initialize);
     }
 
     private void Initialize(){

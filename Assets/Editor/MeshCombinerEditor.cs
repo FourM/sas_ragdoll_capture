@@ -142,7 +142,7 @@ public class MeshCombinerEditor : EditorWindow
         }
 
         // string path = "Assets/Combined_"+ targetObject.name +" .asset";
-        SaveUniqueAsset(combinedMesh, "Assets/Models", nameOfCreateMesh);
+        AssetSaver.SaveUniqueAsset(combinedMesh, "Assets/Models", nameOfCreateMesh);
         // AssetDatabase.CreateAsset(combinedMesh, path);
         // AssetDatabase.SaveAssets();
 

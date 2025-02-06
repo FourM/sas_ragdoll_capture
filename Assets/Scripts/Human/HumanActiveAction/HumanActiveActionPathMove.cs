@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Cinemachine;
 using UnityEngine.Events;
+using DG.Tweening;
 
 /// <summary>
 /// エンドレスバトル　敵の能動的行動　パス移動
@@ -19,6 +20,32 @@ public class HumanActiveActionPathMove : HumanActiveAction
     protected override void IniiializeUnique()
     {
         _lookTarget = GameDataManager.GetPlayer().transform;
+
+        _human.AddOnCatch(()=>
+        {
+            PauseUnique();
+        });
+        _human.AddOnBreakCallback(()=>
+        {
+            PauseUnique();
+        });
+        _human.AddOnStand(()=>
+        {
+            _isActivePathMove = true;
+            // パスに沿って移動する
+            _cinemachineDollyCart.m_Speed = _walkSpd;
+            _human.IsFloorDead = false;
+            // アニメーション再開
+            _human.EnableAnimation();
+            _human.GetRigidbody().velocity = Vector3.zero;
+            _human.GetRigidbody().angularVelocity = Vector3.zero;
+            _human.transform.DOLocalMove(Vector3.zero, 1f).SetLink(_human.gameObject);
+            _human.PartsActiion((HumanChild parts)=>
+            {
+                parts.GetRigidbody().velocity = Vector3.zero;
+                parts.GetRigidbody().angularVelocity = Vector3.zero;
+            });
+        });
     }
     protected override void StartActiveActionUnique()
     {
@@ -35,13 +62,18 @@ public class HumanActiveActionPathMove : HumanActiveAction
         _cinemachineDollyCart.m_Speed = 0f;
     }
     
-    // プレイヤーに向かって歩いてくる
+    // パスに沿って移動する
     protected override void UpdateActiveActionUnique()
     {   
         if(_isActivePathMove)
         {
             // パスに沿って移動する
             _cinemachineDollyCart.m_Speed = _walkSpd;
+            _human.PartsActiion((HumanChild parts)=>
+            {
+                parts.GetRigidbody().velocity = Vector3.zero;
+                parts.GetRigidbody().angularVelocity = Vector3.zero;
+            });
         }
     }
 }

@@ -56,6 +56,7 @@ public class Player : MonoBehaviour
         } 
     }
     private bool _down = false;
+    private Transform _beforeLookAtTransform = null;
     // ---------- クラス変数宣言 -----------------------
     // ---------- インスタンス変数宣言 ------------------
     // ---------- Unity組込関数 -----------------------
@@ -154,6 +155,15 @@ public class Player : MonoBehaviour
             _lookAtTransform = gameObject.transform;
         }
 
+        // 今見ているのが敵でなければ、「前見てたもの」を記憶
+        if( _lookAtTransform.parent != lookAtTarget && !_isEnemyLook)
+        {
+            if(_lookAtTransform.parent != null )
+                _beforeLookAtTransform = _lookAtTransform.parent;
+            else
+                _beforeLookAtTransform = null;
+        }
+
         if( lookAtTarget != null )
         {
             _lookAtTransform.parent = lookAtTarget;
@@ -166,6 +176,11 @@ public class Player : MonoBehaviour
             _lookAtTransform.localPosition = _initLookPos;
             _isEnemyLook = false;
         }
+    }
+
+    public void SetBeforeLookAtTarget()
+    {
+        _lookAtTransform.parent = _beforeLookAtTransform;
     }
 
     public void Down(TweenCallback onComplete)

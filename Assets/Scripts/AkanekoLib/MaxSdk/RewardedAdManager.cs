@@ -30,6 +30,21 @@ public class RewardedAdManager : MonoBehaviour
     private UnityEvent _onFailureReward = null;     // 自身で追加。リワードを受け取れなかった瞬間の処理
     private bool _isReceivedReward = false;
 
+    static public RewardedAdManager instance = null;
+    void Awake()
+    {
+        if (instance == null)
+        {
+            instance = this;
+            transform.parent = null;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
+
     public void InitializeRewardedAds()
     {
         // Attach callback

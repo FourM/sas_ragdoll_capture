@@ -11,6 +11,8 @@ public class HumanActiveActionGunShot : HumanActiveAction
     [SerializeField, Tooltip("発射開始ディレイ")] private float _shotDelay = 0.7f;
     [SerializeField, Tooltip("対象の前を狙う補正")] private float _targetForward = 0f;
     [SerializeField, Tooltip("対象を狙ってくるか")] private bool _isAim = true;
+    [SerializeField, Tooltip("偏差撃ちしてくるか")] private bool _isLeadShooting = false;
+    [SerializeField, Tooltip("銃を落とした後のアニメーション")] private RuntimeAnimatorController _gunDroopAnimation = null;
 
     private Transform _lookTarget = null;
     private Vector3 _targetPrePos = default;
@@ -36,6 +38,13 @@ public class HumanActiveActionGunShot : HumanActiveAction
         _enemyGun.AddOnCatch(()=>
         {
             _isHaveGun = false;
+
+            if(_gunDroopAnimation != null)
+            {
+                _human.AddActionChangeWaitCallBack(()=>{
+                    _human.SetAnimatorController(_gunDroopAnimation); 
+                });
+            }
         });
         _human.AddOnCatch(()=>
         {
@@ -84,7 +93,10 @@ public class HumanActiveActionGunShot : HumanActiveAction
             Vector3 currnetLookPos = _lookTarget.position + _lookTarget.forward * _targetForward;
             currnetLookPos.y += addY;
             // 射撃する位置を取得
-            lookPos = LinePrediction(_enemyGun.GetShotPos(), currnetLookPos, _targetPrePos, _enemyGun.GetShotSpd());
+            if(_isLeadShooting)
+                lookPos = LinePrediction(_enemyGun.GetShotPos(), currnetLookPos, _targetPrePos, _enemyGun.GetShotSpd());
+            else
+                lookPos = currnetLookPos;
             
             Vector3 HumanLookPos = lookPos;
             HumanLookPos.y = MoveTransform.position.y;

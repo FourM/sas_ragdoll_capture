@@ -473,7 +473,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
         {
             ReleaseCatchObj();
             TapUp();
-            GameState = GameState.endlessBattleEnemyAttack;
+            // GameState = GameState.endlessBattleEnemyAttack;
             Transform lookAt = human.GetParts(HumanParts.head).transform;
             _player.SetLookAtTarget(lookAt, true);
             human.ActiveLookPlayer(_prayerTransform);
@@ -500,6 +500,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
         {
             GameState = GameState.main;
             _player.IsEnemyAttackWait = false;
+            _player.SetBeforeLookAtTarget();
         }
     }
     // 敵を倒した時の処理
@@ -673,8 +674,10 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
 
         // 捕まえた！
         // if (Physics.Raycast(ray, out hit, 10000, mask))
-        if(Physics.CapsuleCast( mainCamera.transform.position, mainCamera.transform.position, 0.3f, ray.direction, out hit, 10000, mask ))
+        if(Physics.CapsuleCast( mainCamera.transform.position, mainCamera.transform.position, 0.25f, ray.direction, out hit, 10000, mask ))
         {
+            if(hit.transform.gameObject.tag == "UnCatchable")
+                return;
             // VibrationManager.VibrateLong();
             // RigidBodyがないなら無視
             if(hit.rigidbody == null)
@@ -1247,7 +1250,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
             case GameState.endlessBattleEnemyAttack:
                 if(GameMode == GameMode.endlessBattle)
                 {
-                    _player.IsEnemyAttackWait = true;
+                    // _player.IsEnemyAttackWait = true;
                     // _player.SetState(PlayerState.stop);
                 }
                 break;

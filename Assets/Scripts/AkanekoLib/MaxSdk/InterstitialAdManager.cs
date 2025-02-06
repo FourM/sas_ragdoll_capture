@@ -8,7 +8,15 @@ using AdjustSdk;
 // 広告マネージャー。
 public class InterstitialAdManager : MonoBehaviour
 {
-    string adUnitId;
+    // string adUnitId;
+    // string adUnitId  = "5c90ca19dea88f82";
+#if UNITY_ANDROID
+    string adUnitId  = "5c90ca19dea88f82";
+#elif UNITY_IOS
+    string adUnitId = "a2efe763c78307df";
+#else
+    string adUnitId  = "5c90ca19dea88f82";
+#endif
     int retryAttempt = 0;
     public int buffer;
     public MaxSdkBase.AdInfo _adInfo = null;
@@ -16,20 +24,28 @@ public class InterstitialAdManager : MonoBehaviour
     [SerializeField] private StageBanner _stageBanner = default;
     [SerializeField] private RewardedAdManager _rewardedAdManager = default;
 
+    static public InterstitialAdManager instance = null;
+    
+    void Awake()
+    {
+        if (instance == null)
+        {
+            instance = this;
+            transform.parent = null;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
+
     // Start is called before the first frame update
     void Start()
     { 
-        adUnitId  = "5c90ca19dea88f82";
-#if UNITY_ANDROID
-         adUnitId  = "5c90ca19dea88f82";
-#elif UNITY_IOS
-         adUnitId = "a2efe763c78307df";
-#else
-        adUnitId  = "5c90ca19dea88f82";
-#endif
-
         MaxSdkCallbacks.OnSdkInitializedEvent += (MaxSdkBase.SdkConfiguration sdkConfiguration) =>
         {
+            Debug.Log("AppLovin SDK Initialized");
             InitializeInterstitialAds();
             _stageBanner.InitializeBannerAds();
             _rewardedAdManager.InitializeRewardedAds();
@@ -38,7 +54,6 @@ public class InterstitialAdManager : MonoBehaviour
         //MaxSdk.SetTestDeviceAdvertisingIdentifiers(new string[] { "87FBF16D-0FCB-4CF4-AB0C-C1625A66F250" });
         MaxSdk.SetUserId("USER_ID");
         MaxSdk.InitializeSdk();
-        
     }
 
     // Update is called once per frame

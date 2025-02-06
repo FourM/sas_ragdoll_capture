@@ -32,13 +32,21 @@ public class EnemyGunBurret : CatchableObj
         // プレイヤーに捕まったらプレイヤーへの攻撃判定を無効化して、敵に対しての攻撃判定を有効化する
         AddOnCatch(()=>
         {
-            _playerCollider.gameObject.SetActive(false);
-            _enemyCollider.gameObject.SetActive(true);
-            _target = null;
+            Stall();
         });
 
         // 敵に対しての当たり判定を無効化しておく
-        _enemyCollider.gameObject.SetActive(false);
+        // _enemyCollider.gameObject.SetActive(false);
+    }
+
+    public void Stall( float multiVelocity = 0.5f )
+    {
+        _playerCollider.gameObject.SetActive(false);
+        _enemyCollider.gameObject.SetActive(true);
+        _target = null;
+        GetRigidbody().useGravity = true;
+        GetRigidbody().constraints = RigidbodyConstraints.None;
+        GetRigidbody().velocity *= multiVelocity;
     }
 
     public void FixedUpdate() {
@@ -101,6 +109,10 @@ public class EnemyGunBurret : CatchableObj
             // 敵の攻撃がヒットした時の処理
             GameDataManager.InGameMainEvent.OnEnemyAttackHit();
         }
+        else if(collision.gameObject.tag == "UnCatchable" || collision.gameObject.layer == LayerMask.NameToLayer("Default") || collision.gameObject.layer == LayerMask.NameToLayer("Floor"))
+        {
+            Stall(0.2f);
+        }
     }
     // 敵にぶつかった時の処理　IronBallからろくに処理を確認せずにほぼまんまコピペ
     private void OnEnemyCollision( Collision collision )
@@ -148,10 +160,11 @@ public class EnemyGunBurret : CatchableObj
 
     protected override void OnCatchUnique()
     {
-        _target = null;
-        GetRigidbody().useGravity = true;
-        GetRigidbody().constraints = RigidbodyConstraints.None;
-        GetRigidbody().velocity /= 2f;
+        // _target = null;
+        // GetRigidbody().useGravity = true;
+        // GetRigidbody().constraints = RigidbodyConstraints.None;
+        // GetRigidbody().velocity /= 2f;
+        Stall();
     }
 
     // 偏差射撃する振り向き方。　コードはネットからのコピペ。二次方程式の応用らしい。

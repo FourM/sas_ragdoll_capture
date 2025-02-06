@@ -17,6 +17,8 @@ public class GameStage : MonoBehaviour, IInitializer
     [SerializeField, Tooltip("Humanの捕まる前の参考constraints")] private Rigidbody _rafConstraints = null;
     [SerializeField, Tooltip("背景色")] private Color32 _backGroundColor = default;
     [SerializeField, Tooltip("メイン環境光を用いるか")] private bool _isMainLight = true;
+    [SerializeField, Tooltip("プレイヤーが見る位置")] private Transform _lookAtTarget = null;
+
 
     [field: SerializeField] public InitializerBase Initializer { get; set; }
     // [field: SerializeField] public FugaBase Fuga { get; set; }
@@ -108,6 +110,17 @@ public class GameStage : MonoBehaviour, IInitializer
 
         MaterialManager.instance.SetBackGroundColor(_backGroundColor);
         MaterialManager.instance.SetEnableMainLight(_isMainLight);
+
+        Player player = GameDataManager.GetPlayer();
+        if(_lookAtTarget != null)
+            player.SetLookAtTarget(_lookAtTarget);
+        else
+        {
+            _lookAtTarget = new GameObject().transform;
+            _lookAtTarget.parent = this.transform;
+            _lookAtTarget.localPosition = new Vector3(0, 1.8f, 0);
+            player.SetLookAtTarget(_lookAtTarget);
+        }
     }
     public Human GetHuman(int index = 0)
     { 

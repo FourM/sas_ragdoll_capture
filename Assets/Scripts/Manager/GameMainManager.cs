@@ -19,8 +19,8 @@ public class GameMainManager : MonoBehaviour
     // ---------- プレハブ ----------
     // ---------- プロパティ ----------
     [SerializeField, Tooltip("インゲームマネージャー")] private InGameManager _inGameManager = default;
-    [SerializeField, Tooltip("広告マネージャー")] private InterstitialAdManager _adManager = default;
-    [SerializeField, Tooltip("リワード広告マネージャー")] private RewardedAdManager _rewardAdManager = default;
+    // [SerializeField, Tooltip("広告マネージャー")] private InterstitialAdManager _adManager = default;
+    // [SerializeField, Tooltip("リワード広告マネージャー")] private RewardedAdManager _rewardAdManager = default;
     [SerializeField, Tooltip("ABテストフラグ設定クラス")] private UserSegment _userSegment = default;
     private bool _isInitialize = false;
     // ---------- クラス変数宣言 ----------
@@ -70,7 +70,7 @@ public class GameMainManager : MonoBehaviour
         // 広告イベント設定
         AdsGameEventManager.AddOnShowRewardAd(OnShowRewardAd);
 
-        _rewardAdManager.AddOnLoadedCallback(AdsGameEventManager.OnRewardLoaded);
+        RewardedAdManager.instance.AddOnLoadedCallback(AdsGameEventManager.OnRewardLoaded);
 
         GameReset();
     }
@@ -79,7 +79,8 @@ public class GameMainManager : MonoBehaviour
     {
         if(30f <= TimeManager.instance.elapsedTime)
         {
-            _adManager.ShowAd();
+            // _adManager.ShowAd();
+            InterstitialAdManager.instance.ShowAd();
             TimeManager.instance.elapsedTime = 0;
         }
         else
@@ -91,7 +92,8 @@ public class GameMainManager : MonoBehaviour
     private void ShowAd()
     {
         // 広告表示関連のコード
-        _adManager.ShowAd();
+        // _adManager.ShowAd();
+        InterstitialAdManager.instance.ShowAd();
     }
     public void GameReset()
     {
@@ -109,7 +111,7 @@ public class GameMainManager : MonoBehaviour
     /// <param name="onfailure">失敗時の処理</param>
     private void OnShowRewardAd(UnityAction onSuccess, UnityAction onfailure)
     {
-        _rewardAdManager.ShowReward(onSuccess, onfailure);
+        RewardedAdManager.instance.ShowReward(onSuccess, onfailure);
     }
 
 }
