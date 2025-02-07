@@ -5,7 +5,7 @@ using System.Collections.Generic;
 public class MeshSaveEditor : EditorWindow
 {
     private string meshSavePath = "";
-    private string nameOfCreateMesh = "";
+    private string nameOfCreateMesh = "DefaultMesh";
 
 
     [MenuItem("Tools/MeshSave")]
@@ -14,13 +14,20 @@ public class MeshSaveEditor : EditorWindow
         GetWindow<MeshSaveEditor>("Mesh Saver");
     }
 
+    private void OnSelectionChange()
+    {
+        // オブジェクト選択が変更されたときに更新
+        nameOfCreateMesh = Selection.activeGameObject != null ? "Cut__" + Selection.activeGameObject.name : "DefaultMesh";
+        Repaint(); // 再描画をリクエスト
+    }
+
     private void OnGUI()
     {
         GUILayout.Label("Mesh Saver Settings", EditorStyles.boldLabel);
 
-        EditorGUILayout.Toggle("ダミーわんわん", true);
+        EditorGUILayout.Toggle("ダミーにゃんにゃん", true);
         meshSavePath = EditorGUILayout.TextField("保存パス", "Assets/Models");
-        nameOfCreateMesh = EditorGUILayout.TextField("メッシュ名", "Cut__" + Selection.activeGameObject.name);
+        nameOfCreateMesh = EditorGUILayout.TextField("メッシュ名", "Cut__" + nameOfCreateMesh);
 
         if (GUILayout.Button("Combine Meshes"))
         {

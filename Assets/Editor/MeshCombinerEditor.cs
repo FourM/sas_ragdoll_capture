@@ -13,7 +13,14 @@ public class MeshCombinerEditor : EditorWindow
     [MenuItem("Tools/Combine Meshes")]
     public static void ShowWindow()
     {
-        GetWindow<MeshCombinerEditor>("Mesh Combiner");
+        GetWindow<MeshCombinerEditor>("not selected a mesh!!");
+    }
+
+    private void OnSelectionChange()
+    {
+        // オブジェクト選択が変更されたときに更新
+        nameOfCreateMesh = Selection.activeGameObject != null ? "Combined__" + Selection.activeGameObject.name : "not selected a mesh!!";
+        Repaint(); // 再描画をリクエスト
     }
 
     private void OnGUI()
@@ -24,7 +31,7 @@ public class MeshCombinerEditor : EditorWindow
         keepRelativeTransform = EditorGUILayout.Toggle("選択オブジェクトの相対位置を保持", keepRelativeTransform);
         removeOriginalMeshes = EditorGUILayout.Toggle("元のメッシュを削除", removeOriginalMeshes);
         EditorGUILayout.Toggle("ダミーわんわん", true);
-        nameOfCreateMesh = EditorGUILayout.TextField("統合されたメッシュ名", "Combined__" + Selection.activeGameObject.name);
+        nameOfCreateMesh = EditorGUILayout.TextField("統合されたメッシュ名", nameOfCreateMesh);
 
         if (GUILayout.Button("Combine Meshes"))
         {
