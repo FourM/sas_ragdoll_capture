@@ -44,6 +44,8 @@ public class Player : MonoBehaviour
     private bool _isDash = false;
     private float _dashSpd = 1f;
     private bool _isEnemyAttackWait = false;
+    private float _unSlowSpd = 0.5f;
+    private float _slowSpd = 0.3f;
     public bool IsEnemyAttackWait
     {   
         get{ return _isEnemyAttackWait; } 
@@ -63,23 +65,29 @@ public class Player : MonoBehaviour
     private void Awake()
     {
         _initPos = this.transform.position;
-        _cinemachineDollyCart.m_Speed = 0f;
+        _unSlowSpd = 0f;
         _initLookPos = _lookAtTransform.transform.localPosition;
     }
-    // private void Start(){
-        
-    // }
 
-    // private void Update(){
+    private void Start() {
+        // EndlessBattleTimeScaleManager.OnSlow += LookEnemy;
+        // EndlessBattleTimeScaleManager.OnAttackCansel += LookEnemy;
+        EndlessBattleTimeScaleManager.OnResume += CanselLookEnemy;
+    }
 
-    // }
     private void FixedUpdate(){
         if(_state == PlayerState.dash)
         {
             _dashSpd += 0.05f;
             if(2.3f < _dashSpd)
                 _dashSpd = 2.5f;
-            _cinemachineDollyCart.m_Speed = _baseSpeed * _dashSpd; 
+            _unSlowSpd = _baseSpeed * _dashSpd; 
+        }
+        
+        _cinemachineDollyCart.m_Speed = _unSlowSpd;
+        if(EndlessBattleTimeScaleManager.IsSlow)
+        {
+            _cinemachineDollyCart.m_Speed *= _slowSpd;
         }
     }
     // ---------- Public関数 ------------------------- 
@@ -94,19 +102,21 @@ public class Player : MonoBehaviour
         _onWebNumEmplty = new UnityEvent();
         _webNum = SaveDataManager.GetLevelWebNum() + 3;
         SetState(PlayerState.stop);
+
+        // _unSlowSpd = _baseSpeed;
     }
     public CinemachineDollyCart GetMovePath(){ return _cinemachineDollyCart; }
-    public void StopPathMove(){ _cinemachineDollyCart.m_Speed = 0f; }
+    public void StopPathMove(){ _unSlowSpd = 0f; }
     public void ContinuePathMove(bool isDash = false)
     { 
         _isDash = isDash;
         if(!isDash)
         {
-            _cinemachineDollyCart.m_Speed = _baseSpeed; 
+            _unSlowSpd = _baseSpeed; 
         }
         else
         {
-            _cinemachineDollyCart.m_Speed = _baseSpeed * _dashSpd; 
+            _unSlowSpd = _baseSpeed * _dashSpd; 
         }   
     }
     public void InitPos(){ this.transform.position = _initPos; }
@@ -125,10 +135,10 @@ public class Player : MonoBehaviour
                 StopPathMove();
                 break;
             case PlayerState.battle:
-                _cinemachineDollyCart.m_Speed = _baseSpeed / 4.5f; 
+                _unSlowSpd = _baseSpeed / 4.5f; 
                 break;
             case PlayerState.battleStop:
-                _cinemachineDollyCart.m_Speed = 0f; 
+                _unSlowSpd = 0f; 
                 break;
             case PlayerState.move:
                 ContinuePathMove();
@@ -180,6 +190,11 @@ public class Player : MonoBehaviour
 
     public void SetBeforeLookAtTarget()
     {
+        if(_lookAtTransform == null)
+        {
+            GameObject gameObject = new GameObject("CameraFollowPos");
+            _lookAtTransform = gameObject.transform;
+        }
         _lookAtTransform.parent = _beforeLookAtTransform;
     }
 
@@ -247,4 +262,12 @@ public class Player : MonoBehaviour
 
     public Transform GetBulletTargetTransform(){ return _bulletTargetPos; }
     // ---------- Private関数 ------------------------
+    // private void LookEnemy()
+    // {
+    //     IAttacker attacker = EndlessBattleTimeScaleManager.HashIAttacker;
+    // }
+    private void CanselLookEnemy()
+    {
+        SetBeforeLookAtTarget();
+    }
 }

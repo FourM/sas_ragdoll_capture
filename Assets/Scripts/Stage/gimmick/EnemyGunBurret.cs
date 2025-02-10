@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using DG.Tweening;
 
-public class EnemyGunBurret : CatchableObj
+public class EnemyGunBurret : CatchableObj, IAttacker
 {
     // ---------- 定数宣言 ----------------------------
     // ---------- ゲームオブジェクト参照変数宣言 ----------
@@ -13,14 +13,21 @@ public class EnemyGunBurret : CatchableObj
     [SerializeField, Tooltip("プレイヤーに対しての当たり判定")] private ChildTrigger _playerCollider = default;
     [SerializeField, Tooltip("敵に対しての当たり判定")] private ChildTrigger _enemyCollider = default;
 
+    [field: SerializeField] public AttackerBase AttackerBaseClass { get; set; }
+
     private float _duration = 0;
     Transform _target = null;
     private Vector3 _targetPrePos = default;
     private float _spd = 0;
     private float _targetForward = 0f;
+    private bool _playerAttacker = true;
     // ---------- クラス変数宣言 -----------------------
     // ---------- インスタンス変数宣言 ------------------
     // ---------- Unity組込関数 -----------------------
+    protected override void AwakeUnique()
+    {
+        AttackerBaseClass.Init(this, this);
+    }
     protected override void StartUnique()
     {
         // プレイヤーに対しての当たり判定を有効化
@@ -47,9 +54,11 @@ public class EnemyGunBurret : CatchableObj
         GetRigidbody().useGravity = true;
         GetRigidbody().constraints = RigidbodyConstraints.None;
         GetRigidbody().velocity *= multiVelocity;
+        _playerAttacker = false;
     }
 
     public void FixedUpdate() {
+        float attackHitTime = 1000000f;
         if(_target != null && GameDataManager.GameState != GameState.result)
         {
             Vector3 currentTargetPos = _target.position + _target.forward * _targetForward;
@@ -71,7 +80,22 @@ public class EnemyGunBurret : CatchableObj
             // 目標地点に近くなったら追従を止める
             if(posSub.magnitude < 1.0f)
                 _target = null;
+
+            if(_spd != 0f)
+                attackHitTime = posSub.magnitude / _spd;
         }
+
+        // スローモーション判定
+        AttackerBaseClass.CheckAttackConfirmed(()=>
+        {
+            if(GameDataManager.GameState == GameState.result)
+                return false;
+            if(!_playerAttacker)
+                return false;
+            if(attackHitTime < 0.5f)
+                return true;
+            return false;
+        });
     }
 
     // セットアップ　発射位置、弾速、親、寿命
@@ -165,6 +189,11 @@ public class EnemyGunBurret : CatchableObj
         // GetRigidbody().constraints = RigidbodyConstraints.None;
         // GetRigidbody().velocity /= 2f;
         Stall();
+    }
+
+    protected override void OnDisableUnique()
+    {
+        AttackerBaseClass.AttackEnd();
     }
 
     // 偏差射撃する振り向き方。　コードはネットからのコピペ。二次方程式の応用らしい。

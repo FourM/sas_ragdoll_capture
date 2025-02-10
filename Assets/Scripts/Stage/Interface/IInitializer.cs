@@ -5,6 +5,8 @@ using UnityEngine.Events;
 
 /// <summary>
 /// 擬似多重クラス継承できるインターフェース : 初期化
+/// [field: SerializeField] public InitializerBase Initializer { get; set; }    // 擬似多重継承先に書く必要がある処理1/2。グローバル変数定義。publicだけど基本的に外部からは使わない
+/// Initializer.Init(this, this);  　　　　　　　　　　　　　　　　　　　　　　　　　　　// 擬似多重継承先に書く必要がある処理2/2。Awake内に書く
 /// </summary>
 public interface IInitializer
 {

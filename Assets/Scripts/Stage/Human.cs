@@ -43,6 +43,7 @@ public class Human : CatchableObj
     [SerializeField, Tooltip("カメラ外、カメラ内イベント")] private ChildTrigger _visibleEventTrigger;
     [SerializeField, Tooltip("Ragdoll根本の位置の補助オブジェクト")] private Transform _basePosChild;
     [SerializeField, Tooltip("サイズ変えるトランスフォームリスト")] private List<Transform> _listScalear;
+    [SerializeField, Tooltip("メガネ")] private GameObject _glasses;
     // private bool _isBroken = false;
     private UnityEvent _onCatchCallback = default;
     private UnityEvent _onReleaseCallback = default;
@@ -101,7 +102,8 @@ public class Human : CatchableObj
 
         for(int i = 0; i < _lookers.Count; i++)
         {
-            _lookerInitAngle.Add(_lookers[i].localRotation);
+            if(_lookers[i] != null)
+                _lookerInitAngle.Add(_lookers[i].localRotation);
         }
         _stayObjectDic = new Dictionary<GameObject, float>();
 
@@ -127,6 +129,17 @@ public class Human : CatchableObj
         {
             IsFloorDead = InitIsFloorDead;
         });
+
+        // スローモーション
+        bool isEnemyglasses = (SaveDataManager.IsEnemyglasses() == 1);
+        _glasses.SetActive(isEnemyglasses);
+        for(int i = 0; i < _lookers.Count; i++)
+        {
+            if( 0 < i )
+            {
+                _lookers[i].gameObject.SetActive(!isEnemyglasses);
+            }
+        }
     }
     protected override void UpdateUnique()
     {
@@ -142,7 +155,8 @@ public class Human : CatchableObj
                 // 死んでたら首だけそのまま、目はデフォルトに戻す
                 if( 0 < i )
                 {
-                    _lookers[i].localRotation = _lookerInitAngle[i];
+                    if(_lookers[i] != null )
+                        _lookers[i].localRotation = _lookerInitAngle[i];
                 }
             }
 

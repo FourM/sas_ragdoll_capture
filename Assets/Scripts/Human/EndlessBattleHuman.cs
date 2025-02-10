@@ -13,7 +13,7 @@ public enum EndlessBattleHumanState
     guard,          //  ガード
     flinch          //  怯み
 }
-public class EndlessBattleHuman : MonoBehaviour
+public class EndlessBattleHuman : MonoBehaviour, IAttacker
 {
     // ---------- 定数宣言 ----------------------------
     // ---------- ゲームオブジェクト参照変数宣言 ----------
@@ -28,6 +28,7 @@ public class EndlessBattleHuman : MonoBehaviour
     [SerializeField, Tooltip("能動的アクション")] private HumanActiveAction _activeActionControllrer = null;
     [SerializeField, Tooltip("HP(シールド)の補正値")] private int _addShield = 0;
     [SerializeField, Tooltip("盾")] private Shield _shield = null;
+    [SerializeField, Tooltip("こいつを見るか")] private bool _isLook = true;
     private Human _human = null;
     private bool _isAttack = false;
     // private bool _isSetHpBar = false;
@@ -37,11 +38,13 @@ public class EndlessBattleHuman : MonoBehaviour
     private List<RectTransform> _shieldList = null;
     private EndlessBattleHumanState _state = EndlessBattleHumanState.idle;
     private EndlessBattleHumanState _beforState = EndlessBattleHumanState.idle;
+    [field: SerializeField] public AttackerBase AttackerBaseClass { get; set; } 
     // ---------- クラス変数宣言 -----------------------
     // ---------- インスタンス変数宣言 ------------------
     // ---------- Unity組込関数 -----------------------
     private void Awake() {
         _humanHub.AddOnInitialize(Initialize);
+        AttackerBaseClass.Init(this, this);
     }
     private void Update()
     {
@@ -53,7 +56,7 @@ public class EndlessBattleHuman : MonoBehaviour
                 if( _attackCounter <= 0 )
                 {
                     GameDataManager.InGameMainEvent.OnEnemyAttackHit();
-                    _attackCounter = 1000000;
+                    _attackCounter = 10000000;
                 }
             }
             else
@@ -94,6 +97,14 @@ public class EndlessBattleHuman : MonoBehaviour
                     break;
             }
         }
+
+        // スローモーション判定
+        AttackerBaseClass.CheckAttackConfirmed(()=>
+        {
+            if(_isAttack && _attackCounter < 0.5f)
+                return true;
+            return false;
+        });
     }
     private void FixedUpdate() {
         if(GameDataManager.GameState == GameState.result)
@@ -105,6 +116,11 @@ public class EndlessBattleHuman : MonoBehaviour
                 FixedUpdateActiveAction();
                 break;
         }
+    }
+
+    private void OnDisable()
+    {
+        AttackerBaseClass.AttackEnd();
     }
     // ---------- Public関数 -------------------------
     // ---------- Private関数 ------------------------
@@ -273,7 +289,7 @@ public class EndlessBattleHuman : MonoBehaviour
         if(IsCanAttack() && GameDataManager.GameState == GameState.main)
         {
             // Debug.Log("攻撃！:" + collider.name + ", " + collider.gameObject.layer);
-            GameDataManager.InGameMainEvent.OnEnemyAttackStart(_human);
+            GameDataManager.InGameMainEvent.OnEnemyAttackStart(_human, _isLook);
             // InGameManager.instance.OnEnemyAttackStart()　と書くよりも、InGameManagerへの強い依存関係をなくせる
 
             _human.SetAnimatorController(_attackAnimation);

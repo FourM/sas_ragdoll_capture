@@ -10,6 +10,7 @@ public class HumanActiveActionGunShot : HumanActiveAction
     [SerializeField, Tooltip("銃")] private EnemyGun _enemyGun = null;
     [SerializeField, Tooltip("発射開始ディレイ")] private float _shotDelay = 0.7f;
     [SerializeField, Tooltip("対象の前を狙う補正")] private float _targetForward = 0f;
+    [SerializeField, Tooltip("狙ってくる時間")] private float _aimTime = -1f;
     [SerializeField, Tooltip("対象を狙ってくるか")] private bool _isAim = true;
     [SerializeField, Tooltip("偏差撃ちしてくるか")] private bool _isLeadShooting = false;
     [SerializeField, Tooltip("銃を落とした後のアニメーション")] private RuntimeAnimatorController _gunDroopAnimation = null;
@@ -19,14 +20,21 @@ public class HumanActiveActionGunShot : HumanActiveAction
     private float _shotWait = 0f;
     private bool _isHaveGun = true;
     private float addY = 0.1f;
+    private bool isAimTimer = false;
 
     protected override void IniiializeUnique()
     {
+        if(0 < _aimTime)
+            isAimTimer = true;
+
         if(_isAim)
         {
             _lookTarget = GameDataManager.GetPlayer().GetBulletTargetTransform();
             _targetPrePos = _lookTarget.position + _lookTarget.forward * _targetForward;
             _targetPrePos.y += addY;
+
+            Vector3 currnetLookPos = _lookTarget.position + _lookTarget.forward * _targetForward;
+            _enemyGun.transform.LookAt(currnetLookPos);
         }
         else
         {
@@ -109,7 +117,18 @@ public class HumanActiveActionGunShot : HumanActiveAction
         if(_isHaveGun)
         {
             if(_isAim)
-                _enemyGun.transform.LookAt(lookPos);
+            {
+                if(isAimTimer)
+                {
+                    _aimTime -= Time.deltaTime;
+                    if(_aimTime < 0)
+                        _aimTime = 0;
+                }
+                if(!isAimTimer || 0 < _aimTime)
+                {
+                    _enemyGun.transform.LookAt(lookPos);
+                }
+            }
 
             // 時間計測
             _shotWait -= Time.deltaTime;

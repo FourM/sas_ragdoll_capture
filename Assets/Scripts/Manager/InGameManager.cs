@@ -466,16 +466,19 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
     }
 
     // 敵の攻撃開始時の処理
-    public void OnEnemyAttackStart(Human human)
+    public void OnEnemyAttackStart(Human human, bool isLook = true)
     {
-        // Debug.Log("敵の攻撃!!");
+        // // Debug.Log("敵の攻撃!!");
         if( GameMode == GameMode.endlessBattle)
         {
             ReleaseCatchObj();
             TapUp();
             // GameState = GameState.endlessBattleEnemyAttack;
-            Transform lookAt = human.GetParts(HumanParts.head).transform;
-            _player.SetLookAtTarget(lookAt, true);
+            if(isLook)
+            {
+                Transform lookAt = human.GetParts(HumanParts.head).transform;
+                _player.SetLookAtTarget(lookAt, true);
+            }
             human.ActiveLookPlayer(_prayerTransform);
         }
     }
@@ -489,17 +492,17 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
     // 敵とお互いに見合う時の処理
     public void OnEnemyLook(Human human)
     {
-        Transform lookAt = human.GetParts(HumanParts.head).transform;
-        _player.SetLookAtTarget(lookAt, true);
-        human.ActiveLookPlayer(_prayerTransform);
+        // Transform lookAt = human.GetParts(HumanParts.head).transform;
+        // _player.SetLookAtTarget(lookAt, true);
+        // human.ActiveLookPlayer(_prayerTransform);
     }
     // 敵の攻撃をキャンセルさせた時の演出
     public void OnEnemyAttackCansel()
     {
         if( GameMode == GameMode.endlessBattle)
         {
-            GameState = GameState.main;
-            _player.IsEnemyAttackWait = false;
+            // GameState = GameState.main;
+            // _player.IsEnemyAttackWait = false;
             _player.SetBeforeLookAtTarget();
         }
     }

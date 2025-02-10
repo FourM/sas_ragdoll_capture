@@ -18,7 +18,7 @@ public interface InGameMainEventManager
     // ---------- インスタンス変数宣言 ------------------
     // ---------- Unity組込関数 -----------------------
     // ---------- Public関数 -------------------------
-    public void OnEnemyAttackStart(Human human)
+    public void OnEnemyAttackStart(Human human, bool isLook = true)
     {
         Debug.Log("敵の攻撃");
     }

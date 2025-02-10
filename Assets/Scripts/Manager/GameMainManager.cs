@@ -5,6 +5,7 @@ using UnityEngine.SceneManagement;
 using Firebase;
 using Firebase.Extensions;
 using UnityEngine.Events;
+using AppLovinMax.Internal;
 
 /// <summary>
 /// ゲーム全体のマネージャー
@@ -42,6 +43,7 @@ public class GameMainManager : MonoBehaviour
     // ---------- Public関数 ----------
     public void SceneReload()
     {
+        MaxEventExecutor.InitializeIfNeeded();
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
         GameReset();
     }

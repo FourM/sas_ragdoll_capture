@@ -14,11 +14,12 @@ public static class AssetSaver
 
         // 重複チェックしてユニークな名前を取得
         string uniquePath = GetUniqueAssetPath(fullPath);
-
+#if UNITY_EDITOR
         // アセットを保存
         AssetDatabase.CreateAsset(asset, uniquePath);
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
+#endif
 
         Debug.Log($"Asset saved as: {uniquePath}");
     }

@@ -73,6 +73,8 @@ namespace AppLovinMax.Internal
 
         public void Update()
         {
+            if(instance == null) return;
+            // Debug.Log("ああああああああああ：" + this.gameObject.name);
             if (adEventsQueueEmpty) return;
 
             var actionsToExecute = new List<MaxAction>();
@@ -101,6 +103,10 @@ namespace AppLovinMax.Internal
         }
 
         public void Disable()
+        {
+            instance = null;
+        }
+        private void OnDestroy()
         {
             instance = null;
         }

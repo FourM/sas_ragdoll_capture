@@ -45,4 +45,6 @@ public static class SaveDataManager
     public static int GetEndlessStart(){ return PlayerPrefs.GetInt("Endless_Start_Stage", 0); }
     // リワードを有効にするか
     public static int GetIsRewarded(){ return PlayerPrefs.GetInt("Rewarded_Life_ON", 0); }
+    // 敵はメガネをかけるか
+    public static int IsEnemyglasses(){ return PlayerPrefs.GetInt("Enemyglasses", 0); }
 }

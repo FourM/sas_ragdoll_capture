@@ -35,6 +35,10 @@ public abstract class CatchableObj : MonoBehaviour
     // ---------- クラス変数宣言 ----------
     // ---------- インスタンス変数宣言 ----------
     // ---------- Unity組込関数 ----------
+    private void Awake()
+    {
+        AwakeUnique();
+    }
     private void Start(){
         Initialize();
     }
@@ -46,7 +50,19 @@ public abstract class CatchableObj : MonoBehaviour
             _fastSwipedTime = 0;
         UpdateUnique();
     }
-    private void FixedUpdate(){
+    private void FixedUpdate()
+    {
+        // スローの影響を受けずスローの影響を受けず、通常の時間で物理計算
+        if(!Physics.autoSimulation)
+        {
+            float fixedDelta = Time.fixedDeltaTime;
+            fixedDelta *= 0.1f;
+            // Physics.Simulate(fixedDelta);
+
+            // Debug.Log("fixedDelta:" + fixedDelta + ", " + Time.fixedDeltaTime + ", " + Time.timeScale);
+            Physics.Simulate(0.0005f);
+        }
+    
         FixedUpdateUnique();
     }
     
@@ -91,6 +107,8 @@ public abstract class CatchableObj : MonoBehaviour
         //     return;
         _isCatch = true; 
         OnCatchUnique();
+        // Physics.autoSimulation = false; // 手動で物理計算を制御
+
         _onCatch?.Invoke();
     }
     // 離された時の共通処理
@@ -99,6 +117,8 @@ public abstract class CatchableObj : MonoBehaviour
         if(!_isCatch)
             return;
         _isCatch = false; 
+        Physics.autoSimulation = true; // 自動で物理計算を制御
+
         _onDoReleaseCallback?.Invoke();
         OnReleaseUnique();
     }
@@ -125,6 +145,7 @@ public abstract class CatchableObj : MonoBehaviour
         OnBreakUnique();
         _onBreakCallback?.Invoke();
         _isBroken = true;
+        Physics.autoSimulation = true; // 自動で物理計算を制御
     }
     public void OnDamage(int damage)
     {
@@ -210,6 +231,7 @@ public abstract class CatchableObj : MonoBehaviour
         }
     }
     // ---------- Private関数 ----------
+    protected virtual void AwakeUnique(){  }
     // Startの、継承先の独自処理
     protected virtual void StartUnique(){  }
     protected virtual void UpdateUnique(){  }

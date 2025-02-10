@@ -142,6 +142,7 @@ public class EnemyGun : CatchableObj
             _haveHuman = false;
             HumanChild humanChild = null;
         });
+        GetRigidbody().isKinematic = true;
     }
     public void SetTarget(Transform target, float targetForward = 0f)
     { 
