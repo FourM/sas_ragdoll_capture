@@ -54,7 +54,17 @@ public static class EndlessBattleTimeScaleManager
     // ---------- Private関数 ------------------------
     public static void Initialize()
     {
+        Reset();
+    }
+
+    public static void Reset()
+    {
+        if(_hashIAttacker != null)
+        {
+            HashRemoveAll();
+        }
         _hashIAttacker = new HashSet<IAttacker>();
+        Time.timeScale = 1f;
     }
 
     // もうすぐ攻撃を当ててくる敵を登録
@@ -98,6 +108,21 @@ public static class EndlessBattleTimeScaleManager
                 // _onSlow?.Invoke();
                 OnSlow?.Invoke();
             }
+        }
+    }
+
+    private static void HashRemoveAll()
+    {
+        List<IAttacker> toRemove = new List<IAttacker>();
+
+        foreach (var item in _hashIAttacker)
+        {
+            toRemove.Add(item);
+        }
+
+        foreach (var item in toRemove)
+        {
+            _hashIAttacker.Remove(item);
         }
     }
 

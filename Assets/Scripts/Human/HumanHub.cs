@@ -161,6 +161,8 @@ public class HumanHub : MonoBehaviour, IInitializer
         }
     }
 
+    public RuntimeAnimatorController GetIdleAnimation(){ return _animeController; }
+
     private void TryShowHuman()
     {
         // if(this.gameObject.name == "HumanHub EndlessBattle Mob1")

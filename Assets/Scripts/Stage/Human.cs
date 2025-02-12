@@ -229,6 +229,10 @@ public class Human : CatchableObj
         // 床で死ぬのを有効化
         IsFloorDead = true;
         _onFlinchEndCallback?.RemoveAllListeners();
+        PartsActiion((HumanChild parts)=>
+        {
+            parts.GetRigidbody().isKinematic = false;
+        });
     }
 
     protected override void OnReleaseUnique()
@@ -390,14 +394,23 @@ public class Human : CatchableObj
         // 直前までアニメーションが無効化されてたら位置補正
         if(!_animator.enabled)
         {
-            // _basePosChild.parent = this.transform.parent.parent;
-
             Vector3 setpos = _basePosChild.position;
 
             setpos.y -= _basePos.localPosition.z * _basePos.parent.localScale.z;
             this.transform.position = setpos;
 
             _animator.runtimeAnimatorController = _ghostAnimator.runtimeAnimatorController;
+            PartsActiion((HumanChild parts)=>
+            {
+                Rigidbody rigidbody = parts.GetRigidbody();
+                // rigidbody.velocity = Vector3.zero;
+                // rigidbody.angularVelocity = Vector3.zero;
+                rigidbody.isKinematic = true;
+            });
+            GetRigidbody().velocity = Vector3.zero;
+            GetRigidbody().angularVelocity = Vector3.zero;
+
+            StartCoroutine(FixPosCoroutine());
         }
 
         _animator.enabled = true;
@@ -412,6 +425,18 @@ public class Human : CatchableObj
         if(_collider != null)
             _collider.enabled = true;
     }
+
+    private IEnumerator FixPosCoroutine()
+    {
+        yield return null;
+
+        Transform childTransform = GetRigidbody().transform;
+        
+        this.transform.position += childTransform.localPosition;
+        childTransform.localPosition = Vector3.zero;
+    }
+
+
     public bool IsEnableAnimation(){ return _animator.enabled; }
     public void SetChildLayer(int layerMask){ _childLayer = layerMask; } 
     public int GetChildLayer(){ return _childLayer; } 

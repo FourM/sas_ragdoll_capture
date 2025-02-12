@@ -4,8 +4,9 @@ using UnityEngine;
 
 /// <summary>
 /// 敵の能動的行動ハンドラー（基本的にEndlessBattleHumanから一部機能を抜き出しただけ）
+/// IAttackerインターフェースは近接攻撃用。クラスを分けれたら外す
 /// </summary>
-public class HumanActiveActionHandler : MonoBehaviour
+public class HumanActiveActionHandler : MonoBehaviour, IAttacker
 {
    // ---------- 定数宣言 ----------------------------
     // ---------- ゲームオブジェクト参照変数宣言 ----------
@@ -13,8 +14,15 @@ public class HumanActiveActionHandler : MonoBehaviour
     // ---------- プロパティ --------------------------
     [SerializeField, Tooltip("Hub")] private HumanHub _humanHub = default;
     [SerializeField, Tooltip("トリガー")] private InterfaceReference<IEventTrigger> _iEventTrigger = default;
-    // [SerializeField, Tooltip("プレイヤーが通過したらこれがアクションを起こすパス")] private EndlessBattlePath _triggerPath = default;
     [SerializeField, Tooltip("能動的アクション")] private HumanActiveAction _activeActionControllrer = null;
+
+    // プレイヤーが近くなったら殴りかかる処理　できればクラスを分けたい
+    [SerializeField, Tooltip("Hub")] private ChildTrigger _attackTrigger = default;
+    [SerializeField, Tooltip("攻撃アニメーション")] private RuntimeAnimatorController _attackAnimation = default;
+    [SerializeField, Tooltip("Hub")] private float _attackTime = 1.0f;
+    [SerializeField, Tooltip("こいつを見るか")] private bool _isLook = true;
+
+    // シールド
     private Shield _shield = null;
     private Human _human = null;
     private bool _isAttack = false;
@@ -23,14 +31,22 @@ public class HumanActiveActionHandler : MonoBehaviour
     private List<RectTransform> _shieldList = null;
     private EndlessBattleHumanState _state = EndlessBattleHumanState.idle;
     private EndlessBattleHumanState _beforState = EndlessBattleHumanState.idle;
+    private bool _isActiveActionTriggered = false;
+
+    // 近接攻撃に関するパラメータ
+    private bool _AttackWait = false;
+    [field: SerializeField] public AttackerBase AttackerBaseClass { get; set; } 
     // ---------- クラス変数宣言 -----------------------
     // ---------- インスタンス変数宣言 ------------------
     // ---------- Unity組込関数 -----------------------
     private void Awake() {
         _humanHub.AddOnInitialize(Initialize);
+        // 近接攻撃に関する処理
+        AttackerBaseClass.Init(this, this);
     }
     private void Update()
     {
+        // 敵の近接攻撃
         if(_isAttack && GameDataManager.GameState != GameState.result)
         {
             if(IsCanAttack())
@@ -48,7 +64,33 @@ public class HumanActiveActionHandler : MonoBehaviour
                 _isAttack = false;
             }
         }
+        // 攻撃できなくなったら攻撃待機を解除する
+        if(_AttackWait && !IsCanAttack())
+        {
+            _human.RemoveActionChangeWaitCallBack(HumanAttack);
+            _AttackWait = false;
+            ChangeState(EndlessBattleHumanState.idle); 
+            _human.AddActionChangeWaitCallBack(()=>{
+                if(_isActiveActionTriggered)
+                {
+                    ChangeState(EndlessBattleHumanState.ActiveAction); 
+                }
+                else
+                {
+                    ChangeState(EndlessBattleHumanState.idle); 
+                }
+            });
+        }
+        // スローモーション判定
+        AttackerBaseClass.CheckAttackConfirmed(()=>
+        {
+            if(_isAttack && _attackCounter < 0.5f)
+                return true;
+            return false;
+        });
 
+
+        
         if(GameDataManager.GameState != GameState.result)
         {
             // ステータス別の行動
@@ -75,7 +117,6 @@ public class HumanActiveActionHandler : MonoBehaviour
     // ---------- Private関数 ------------------------
     private void Initialize()
     {
-        // プレイヤーが近接攻撃範囲内に入ったら攻撃待機
         _human = _humanHub.GetActiveHuman();
         _shield = _human.GetHaveShield();
 
@@ -86,7 +127,7 @@ public class HumanActiveActionHandler : MonoBehaviour
             }
         });
 
-        // プレイヤーが指定のパスを通過したら能動的行動を始める（待機する）
+        // 特定の条件を満たしたら能動的行動を始める
         if(_iEventTrigger != null)
         {
             _iEventTrigger.Value.AddOnEventTrigger(()=>
@@ -94,6 +135,7 @@ public class HumanActiveActionHandler : MonoBehaviour
                 _human.AddActionChangeWaitCallBack(()=>{
                     ChangeState(EndlessBattleHumanState.ActiveAction); 
                 });
+                _isActiveActionTriggered = true;
             });
         }
 
@@ -121,6 +163,18 @@ public class HumanActiveActionHandler : MonoBehaviour
         _human.AddCallbackOnFlinchEnd(()=>{
             ChangeState(_beforState);
         });
+
+
+
+        // プレイヤーが近づいたら殴る処理
+        _attackTrigger.AddCallbackOnTriggerEnter((Collider collider)=>{
+            if(IsCanAttack())
+            {
+                _AttackWait = true;
+                // 攻撃コマンドを待機させる
+                _human.AddActionChangeWaitCallBack(HumanAttack);
+            }
+        });
     }
     private bool IsCanAttack()
     {
@@ -144,6 +198,22 @@ public class HumanActiveActionHandler : MonoBehaviour
 
         _beforState = _state;
         _state = state;
+
+        // 近接攻撃
+        if(_state == EndlessBattleHumanState.attack)
+        {
+            _attackCounter = _attackTime;
+            _isAttack = true;
+        }
+        else
+        {
+            _isAttack = false;
+        }
+
+        if(_state == EndlessBattleHumanState.idle)
+        {
+            _human.SetAnimatorController(_humanHub.GetIdleAnimation());
+        }
 
         if(_state == EndlessBattleHumanState.ActiveAction)
         {
@@ -169,4 +239,22 @@ public class HumanActiveActionHandler : MonoBehaviour
         if(IsCanAttack())
             _activeActionControllrer?.FixedUpdateActiveAction();
     }
+
+
+
+
+    // 敵の近接攻撃
+    private void HumanAttack()
+    {
+        // このHumanが攻撃できる状態にある
+        if(IsCanAttack() && GameDataManager.GameState == GameState.main)
+        {
+            GameDataManager.InGameMainEvent.OnEnemyAttackStart(_human, _isLook);
+
+            _human.SetAnimatorController(_attackAnimation);
+            _human.EnableAnimation();
+            _human.SetIsCanGuard(false);
+            ChangeState(EndlessBattleHumanState.attack);
+        }
+    } 
 }

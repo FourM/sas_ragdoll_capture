@@ -26,12 +26,10 @@ public class EndlessBattleHuman : MonoBehaviour, IAttacker
     [SerializeField, Tooltip("攻撃アニメーション")] private RuntimeAnimatorController _attackAnimation = default;
     [SerializeField, Tooltip("プレイヤーが通過したらこれがアクションを起こすパス")] private EndlessBattlePath _triggerPath = default;
     [SerializeField, Tooltip("能動的アクション")] private HumanActiveAction _activeActionControllrer = null;
-    [SerializeField, Tooltip("HP(シールド)の補正値")] private int _addShield = 0;
     [SerializeField, Tooltip("盾")] private Shield _shield = null;
     [SerializeField, Tooltip("こいつを見るか")] private bool _isLook = true;
     private Human _human = null;
     private bool _isAttack = false;
-    // private bool _isSetHpBar = false;
     private bool _isDead = false;
     private bool _AttackWait = false;
     private float _attackCounter = 0f;
@@ -71,21 +69,6 @@ public class EndlessBattleHuman : MonoBehaviour, IAttacker
             _human.RemoveActionChangeWaitCallBack(HumanAttack);
             _AttackWait = false;
         }
-
-        // if(!_isSetHpBar)
-        // {
-        //     if(_human != null && _human.GetParts(HumanParts.head) != null)
-        //     {
-        //         _canvas.transform.parent = _human.GetParts(HumanParts.head).transform;
-        //         _attackTrigger.transform.parent = _human.GetParts(HumanParts.body).transform;
-        //         _lookTrigger.transform.parent = _human.GetParts(HumanParts.body).transform;
-        //         _isSetHpBar = true;
-        //         InitShield();
-        //     }
-        // }
-        // _shieldContainer.transform.rotation = Camera.main.transform.rotation;
-        // _canvas.transform.rotation = Camera.main.transform.rotation;
-
 
         if(GameDataManager.GameState != GameState.result)
         {
@@ -198,41 +181,9 @@ public class EndlessBattleHuman : MonoBehaviour, IAttacker
         ret &= _human.IsGround();
         return ret;
     }
-    private void InitShield()
-    {
-        // HPの補正を適用
-        int hp = 1;
-        // int hp = _human.MaxHP;
-        // hp += _addShield;
-        // if(hp < 1)
-        //     hp = 1;
-        // _human.InitMaxHp(hp);
-        _human.InitMaxHp(hp);
-
-        // _shieldList = new List<RectTransform>();
-        // foreach( Transform child in _shieldContainer.transform)
-        // {
-        //     Destroy(child.gameObject);
-        // }
-        
-        // for(int i = 0; i < (hp - 1); i++)
-        // {
-        //     RectTransform shield = Instantiate(_shieldIconPrefab);
-        //     shield.parent = _shieldContainer.transform;
-        //     _shieldList.Add(shield);
-        //     shield.transform.localScale = Vector3.one;
-        //     shield.transform.localPosition = Vector3.zero;
-        //     shield.transform.localEulerAngles = Vector3.zero;
-        // }
-    }
     private void OnDamage(float damage)
     {
-        // int hp = _human.HP;
-        // for(int i = _shieldList.Count - 1; (hp - 1) <= i; i--)
-        // {
-        //     if( 0 <= i)
-        //         _shieldList[i].gameObject.SetActive(false);
-        // }
+
     }
 
     // ステータス変更

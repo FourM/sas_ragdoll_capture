@@ -444,6 +444,8 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
         _inGameUiManager.ChangeGameMode(_gameMode);
         GameDataManager.ResetPlayerMoveLength();
         GameDataManager.SetIsMainGameStart(false);
+
+        EndlessBattleTimeScaleManager.Reset();
     }
 
     public void SetDebugStageLoop(bool isStageLoop)
