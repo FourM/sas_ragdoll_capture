@@ -30,13 +30,27 @@ public class InitializerBase : IInitializer
 
 
     //　自由枠　------------------------------
-    public UnityEvent OnInitialize = null;
+    private UnityEvent _onInitialize = null;
+    private bool _isInitialize = false;
+    public void OnInitialize()
+    {
+        _isInitialize = true;
+        _onInitialize?.Invoke();
+        _onInitialize?.RemoveAllListeners();
+    }
+
     // メソッド
     public void AddOnInitialize( UnityAction onInitialize)
     {
-        if(OnInitialize == null)
-            OnInitialize = new UnityEvent();
-        OnInitialize.AddListener(onInitialize);
+        if(!_isInitialize)
+        {
+            if(_onInitialize == null)
+                _onInitialize = new UnityEvent();
+            _onInitialize.AddListener(onInitialize);
+        }
+        else
+        {
+            onInitialize?.Invoke();
+        }
     }
-
 }

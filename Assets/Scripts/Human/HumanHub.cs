@@ -14,6 +14,7 @@ public class HumanHub : MonoBehaviour, IInitializer
     [SerializeField, Tooltip("レイヤー")] private int _childLayer = 20;
     [SerializeField, Tooltip("アニメーションコントローラー")] private RuntimeAnimatorController _animeController = null;
     [SerializeField, Tooltip("怯みアニメーション")] private RuntimeAnimatorController _animFlinch = null;
+    [SerializeField, Tooltip("敵が右手に持つ武器")] private CatchableObj _weaponR = default;
     [SerializeField, Tooltip("盾")] private Shield _shield = null;
     [SerializeField, Tooltip("この敵に触れてなくても落ちることがあるか(崩れる床の上にいるやつとかはONにする)")] private bool _isFallable = true;
     [SerializeField, Tooltip("激しいアニメーションをするなどで床ダメで勝手に死なない(事故死)ロック。プレイヤーに捕まったり落下したりしたらOFFにする")] private bool _initIsFloorDead = true;
@@ -58,6 +59,8 @@ public class HumanHub : MonoBehaviour, IInitializer
     public void Initialize(int layer = 0)
     { 
         if(_isInitialize )
+            return;
+        if(this.transform == null)
             return;
         _isInitialize = true;
 
@@ -115,10 +118,33 @@ public class HumanHub : MonoBehaviour, IInitializer
         if(_shield != null)
             _activeHuman.AddOnInitialize(HaveShield);
 
+        if(_weaponR != null)
+        {
+            Vector3 pos = _weaponR.transform.localPosition;
+            Vector3 ang = _weaponR.transform.localEulerAngles;
+
+            _activeHuman.AddOnInitialize(()=>
+            {
+                Transform hand = null;
+                hand = _activeHuman.GetParts(HumanParts.handR).transform;
+                if(hand != null)
+                    _weaponR.transform.parent = hand;
+
+                _activeHuman.AddOnBreakCallback(()=>
+                {
+                    _weaponR.transform.parent = this.transform;
+                    _weaponR.GetRigidbody().useGravity = true;
+                    _weaponR.GetRigidbody().isKinematic = false;
+                });
+
+                _weaponR.transform.localPosition = pos;
+                _weaponR.transform.localEulerAngles = ang;
+            });
+        }
+
         // _onInitialize?.Invoke();
         // _onInitialize?.RemoveAllListeners();
-        Initializer.OnInitialize?.Invoke();
-        Initializer.OnInitialize?.RemoveAllListeners();
+        Initializer.OnInitialize();
 
         this.enabled = false;
         

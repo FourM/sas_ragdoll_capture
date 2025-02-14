@@ -31,8 +31,11 @@ public class AttackerBase : IAttacker
     }
 
     //　自由枠　------------------------------
+    // これが迫ってる時にプレイヤーがみる対象。初期化時に設定してもらう
+    public Transform LookTransform{ get; set; }
     public GameObject Object{ get{ return MB.gameObject; } }
     private Func<bool> _onCheckAttackConfirmed = null;
+    private bool _neko = false;
 
     // Update文で呼んでもらう
     // もうすぐ攻撃が当たるかそうでないかの判定をして、そうならスローモーにする
@@ -49,9 +52,12 @@ public class AttackerBase : IAttacker
         if(func())
         {
             EndlessBattleTimeScaleManager.RegistIAttacker(Interface);
+            _neko = true;
         }
         else
         {
+            if(_neko)
+                // Debug.Log("ワイン");
             EndlessBattleTimeScaleManager.UnRegistIAttacker(Interface);
         }
     }

@@ -23,8 +23,7 @@ public class SpearShotter : MonoBehaviour, IInitializer
                 _listSpear[i].StartMove();
             }
         });
-        Initializer.OnInitialize?.Invoke();
-        Initializer.OnInitialize?.RemoveAllListeners();
+        Initializer.OnInitialize();
     }
     public void AddOnInitialize( UnityAction onInitialize)
     {

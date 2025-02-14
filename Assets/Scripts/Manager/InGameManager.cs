@@ -476,11 +476,11 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
             ReleaseCatchObj();
             TapUp();
             // GameState = GameState.endlessBattleEnemyAttack;
-            if(isLook)
-            {
-                Transform lookAt = human.GetParts(HumanParts.head).transform;
-                _player.SetLookAtTarget(lookAt, true);
-            }
+            // if(isLook)
+            // {
+            //     Transform lookAt = human.GetParts(HumanParts.head).transform;
+            //     _player.SetLookAtTarget(lookAt, true);
+            // }
             human.ActiveLookPlayer(_prayerTransform);
         }
     }
@@ -516,6 +516,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
     // 敵になぐられた時の演出
     public void OnEnemyAttackHit()
     {
+        EndlessBattleTimeScaleManager.Reset();
         if( GameMode == GameMode.main)
         {
             VibrationManager.VibrateShort();
@@ -717,8 +718,8 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
             // 糸を表示
             SetEnableWebRope(true);
             // _player.AddWebNum(-1);
-            if(_player.IsEnemyLook)
-                _player.SetLookAtTarget(null);
+            // if(_player.IsEnemyLook)
+            //     _player.SetLookAtTarget(null);
 
             // イベント用：対象をタップした
             if(!_isTap)

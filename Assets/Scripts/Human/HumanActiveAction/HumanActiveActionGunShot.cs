@@ -73,8 +73,6 @@ public class HumanActiveActionGunShot : HumanActiveAction
             hand = _human.GetParts(HumanParts.handR).transform;
             if(hand != null)
                 _enemyGun.transform.parent = hand;
-            // else
-            //     Debug.Log("handがNullだぞい");
 
             _human.AddOnBreakCallback(()=>
             {
@@ -84,8 +82,8 @@ public class HumanActiveActionGunShot : HumanActiveAction
             });
             _enemyGun.transform.localPosition = pos;
             _enemyGun.transform.localEulerAngles = ang;
+            _enemyGun.SetHuman(_human);
         });
-        _enemyGun.SetHuman(_human);
     }
     protected override void StartActiveActionUnique()
     {

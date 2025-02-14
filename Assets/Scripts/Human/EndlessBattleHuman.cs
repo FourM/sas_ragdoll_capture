@@ -172,6 +172,22 @@ public class EndlessBattleHuman : MonoBehaviour, IAttacker
         _human.AddCallbackOnFlinchEnd(()=>{
             ChangeState(_beforState);
         });
+        _human.AddOnCatch(()=>{
+            _isAttack = false;
+            _attackCounter = 1000000;
+        });
+        _human.AddOnBreakCallback(()=>{
+            _isAttack = false;
+            _attackCounter = 1000000;
+        });
+
+
+        _human.AddOnInitialize(()=>{
+            if(_isLook)
+                AttackerBaseClass.LookTransform = _human.GetParts(HumanParts.head).transform;
+            else
+                AttackerBaseClass.LookTransform = null;
+        });
     }
     private bool IsCanAttack()
     {

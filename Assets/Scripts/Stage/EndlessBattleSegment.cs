@@ -131,8 +131,7 @@ public class EndlessBattleSegment : MonoBehaviour, IHumanGetter, IInitializer
         _onInitialize?.Invoke();
         _onInitialize?.RemoveAllListeners();
 
-        Initializer.OnInitialize?.Invoke();
-        Initializer.OnInitialize?.RemoveAllListeners();
+        Initializer.OnInitialize(); 
     }
     public Human GetHuman(int index = 0)
     { 

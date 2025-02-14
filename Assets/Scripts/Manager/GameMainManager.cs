@@ -74,6 +74,8 @@ public class GameMainManager : MonoBehaviour
 
         RewardedAdManager.instance.AddOnLoadedCallback(AdsGameEventManager.OnRewardLoaded);
 
+        EndlessBattleTimeScaleManager.Initialize();
+
         GameReset();
     }
     // インステ広告表示試行

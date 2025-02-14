@@ -100,8 +100,7 @@ public class GameStage : MonoBehaviour, IInitializer
             obj.transform.localEulerAngles = ang;
         }
 
-        Initializer.OnInitialize?.Invoke();
-        Initializer.OnInitialize?.RemoveAllListeners();
+        Initializer.OnInitialize();
 
         if(_isGimmickKill && PlayerPrefs.GetInt("Gimmick_Kill", 1) == 1)
             GameDataManager.SetGimmickKill(true);

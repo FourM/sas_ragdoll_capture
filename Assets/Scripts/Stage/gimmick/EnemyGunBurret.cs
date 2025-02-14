@@ -123,6 +123,9 @@ public class EnemyGunBurret : CatchableObj, IAttacker
             _targetPrePos = _target.position + _target.forward * _targetForward;
         }
         _targetForward = targetForward;
+
+        // AttackerBaseClass.LookTransform = this.transform;
+        AttackerBaseClass.LookTransform = null;
     }
     // ---------- Public関数 -------------------------
     // ---------- Private関数 ------------------------

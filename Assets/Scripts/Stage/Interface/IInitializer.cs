@@ -21,7 +21,8 @@ public interface IInitializer
     //      get { return Hoge.HP; }
     // }
 
-    public UnityEvent OnInitialize{ get { return Initializer.OnInitialize; } }
+    // public UnityEvent OnInitialize{ get { return Initializer.OnInitialize; } }
+    public void OnInitialize(){ Initializer.OnInitialize(); }
 
     // メソッド
     public void AddOnInitialize( UnityAction onInitialize)

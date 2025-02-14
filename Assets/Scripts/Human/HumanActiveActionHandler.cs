@@ -13,11 +13,12 @@ public class HumanActiveActionHandler : MonoBehaviour, IAttacker
     // ---------- プレハブ ----------------------------
     // ---------- プロパティ --------------------------
     [SerializeField, Tooltip("Hub")] private HumanHub _humanHub = default;
-    [SerializeField, Tooltip("トリガー")] private InterfaceReference<IEventTrigger> _iEventTrigger = default;
+    [SerializeField, Tooltip("トリガー")] private InterfaceReference<IEventTrigger> _iEventTrigger = null;
     [SerializeField, Tooltip("能動的アクション")] private HumanActiveAction _activeActionControllrer = null;
 
     // プレイヤーが近くなったら殴りかかる処理　できればクラスを分けたい
     [SerializeField, Tooltip("Hub")] private ChildTrigger _attackTrigger = default;
+    [SerializeField, Tooltip("プレイヤー検知トリガー")] private ChildTrigger _recognitionTrigger = default;
     [SerializeField, Tooltip("攻撃アニメーション")] private RuntimeAnimatorController _attackAnimation = default;
     [SerializeField, Tooltip("Hub")] private float _attackTime = 1.0f;
     [SerializeField, Tooltip("こいつを見るか")] private bool _isLook = true;
@@ -26,6 +27,7 @@ public class HumanActiveActionHandler : MonoBehaviour, IAttacker
     private Shield _shield = null;
     private Human _human = null;
     private bool _isAttack = false;
+    private bool _isInAttackRange = false;
     private bool _isDead = false;
     private float _attackCounter = 0f;
     private List<RectTransform> _shieldList = null;
@@ -118,62 +120,102 @@ public class HumanActiveActionHandler : MonoBehaviour, IAttacker
     private void Initialize()
     {
         _human = _humanHub.GetActiveHuman();
-        _shield = _human.GetHaveShield();
-
-        _human.AddOnBreakCallback(()=>{
-            if(!_isDead)
-            {
-                _isDead = true;
-            }
-        });
-
-        // 特定の条件を満たしたら能動的行動を始める
-        if(_iEventTrigger != null)
+        _human.AddOnInitialize(()=>
         {
-            _iEventTrigger.Value.AddOnEventTrigger(()=>
-            { 
-                _human.AddActionChangeWaitCallBack(()=>{
-                    ChangeState(EndlessBattleHumanState.ActiveAction); 
+            _shield = _human.GetHaveShield();
+
+            _human.AddOnBreakCallback(()=>{
+                if(!_isDead)
+                {
+                    _isDead = true;
+                }
+            });
+
+            // 特定の条件を満たしたら能動的行動を始める
+            if(_iEventTrigger != null && _iEventTrigger.Value != null)
+            {
+                _iEventTrigger.Value.AddOnEventTrigger(()=>
+                { 
+                    _human.AddActionChangeWaitCallBack(()=>{
+                        ChangeState(EndlessBattleHumanState.ActiveAction); 
+                    });
+                    _isActiveActionTriggered = true;
                 });
-                _isActiveActionTriggered = true;
-            });
-        }
+            }
 
-        _activeActionControllrer?.SetHuman(_human);
-        _activeActionControllrer?.Iniiialize();
+            _activeActionControllrer?.SetHuman(_human);
+            _activeActionControllrer?.Iniiialize();
 
-        // シールドを持っているなら
-        if(_shield != null)
-        {
-            // シールドが取られた時のコールバック設定
-            _shield.AddOnCatch(()=>
+            // シールドを持っているなら
+            if(_shield != null)
             {
-                ChangeState(EndlessBattleHumanState.guard);
+                // シールドが取られた時のコールバック設定
+                _shield.AddOnCatch(()=>
+                {
+                    ChangeState(EndlessBattleHumanState.guard);
+                    // Debug.Log("およよお？？");
+                });
+                // 構えをやめた時のコールバック設定
+                _shield.AddOnCompleteGuardEnd(()=>
+                {
+                    ChangeState(_beforState);
+                });
+            }
+            // 怯んだ時と、それが終わった時のコールバック設定
+            _human.AddCallbackOnFlinch(()=>{
+                ChangeState(EndlessBattleHumanState.flinch);
             });
-            // 構えをやめた時のコールバック設定
-            _shield.AddOnCompleteGuardEnd(()=>
-            {
+            _human.AddCallbackOnFlinchEnd(()=>{
                 ChangeState(_beforState);
             });
-        }
-        // 怯んだ時と、それが終わった時のコールバック設定
-        _human.AddCallbackOnFlinch(()=>{
-            ChangeState(EndlessBattleHumanState.flinch);
-        });
-        _human.AddCallbackOnFlinchEnd(()=>{
-            ChangeState(_beforState);
-        });
+            _human.AddOnCatch(()=>{
+                _isAttack = false;
+                _attackCounter = 1000000;
+            });
+            _human.AddOnBreakCallback(()=>{
+                _isAttack = false;
+                _attackCounter = 1000000;
+            });
 
 
-
-        // プレイヤーが近づいたら殴る処理
-        _attackTrigger.AddCallbackOnTriggerEnter((Collider collider)=>{
-            if(IsCanAttack())
+            if(_attackTrigger != null)
             {
-                _AttackWait = true;
-                // 攻撃コマンドを待機させる
-                _human.AddActionChangeWaitCallBack(HumanAttack);
+                // プレイヤーが近づいたら殴る処理
+                _attackTrigger.AddCallbackOnTriggerEnter((Collider collider)=>{
+                    if(IsCanAttack())
+                    {
+                        _AttackWait = true;
+                        _isInAttackRange = true;
+                        // 攻撃コマンドを待機させる
+                        _human.AddActionChangeWaitCallBack(HumanAttack);
+                    }
+                });
+                // プレイヤーが近接攻撃範囲外に出たら攻撃待機を解除
+                _attackTrigger.AddCallbackOnTriggerExit((Collider collider)=>{
+                    if(_AttackWait)
+                    {
+                        _isInAttackRange = false;
+                        _human.RemoveActionChangeWaitCallBack(HumanAttack);
+                        _AttackWait = false;
+                    }
+                }); 
             }
+
+            if(_recognitionTrigger != null)
+            {
+                // プレイヤーを検知して行動を起こしてくる処理
+                _recognitionTrigger.AddCallbackOnTriggerEnter((Collider collider)=>{
+                    _human.AddActionChangeWaitCallBack(()=>{
+                        ChangeState(EndlessBattleHumanState.ActiveAction); 
+                    });
+                    _isActiveActionTriggered = true;
+                });
+            }
+            
+            if(_isLook)
+                AttackerBaseClass.LookTransform = _human.GetParts(HumanParts.head).transform;
+            else
+                AttackerBaseClass.LookTransform = null;
         });
     }
     private bool IsCanAttack()
@@ -202,11 +244,19 @@ public class HumanActiveActionHandler : MonoBehaviour, IAttacker
         // 近接攻撃
         if(_state == EndlessBattleHumanState.attack)
         {
-            _attackCounter = _attackTime;
-            _isAttack = true;
+            if(_isInAttackRange )
+            {
+                _attackCounter = _attackTime;
+                _isAttack = true;
+            }
+            else
+            {
+                ChangeState(EndlessBattleHumanState.idle);
+            }
         }
         else
         {
+            _attackCounter = 1000000;
             _isAttack = false;
         }
 

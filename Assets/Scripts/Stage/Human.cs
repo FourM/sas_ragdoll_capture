@@ -104,6 +104,8 @@ public class Human : CatchableObj
         {
             if(_lookers[i] != null)
                 _lookerInitAngle.Add(_lookers[i].localRotation);
+            else
+                _lookerInitAngle.Add(Quaternion.identity);
         }
         _stayObjectDic = new Dictionary<GameObject, float>();
 
@@ -155,7 +157,7 @@ public class Human : CatchableObj
                 // 死んでたら首だけそのまま、目はデフォルトに戻す
                 if( 0 < i )
                 {
-                    if(_lookers[i] != null )
+                    if(_lookers[i] != null && i < _lookerInitAngle.Count)
                         _lookers[i].localRotation = _lookerInitAngle[i];
                 }
             }
@@ -195,6 +197,7 @@ public class Human : CatchableObj
 
         if(_LookPlayer != null)
         {
+            // Debug.Log("プレイヤーを見るお");
             Vector3 LookPos = _LookPlayer.position;
             LookPos.y = _basePos.position.y;
             _basePos.LookAt(LookPos);

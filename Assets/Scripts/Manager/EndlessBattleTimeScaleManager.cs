@@ -10,21 +10,22 @@ public static class EndlessBattleTimeScaleManager
     // ---------- ゲームオブジェクト参照変数宣言 ----------
     // ---------- プレハブ ----------------------------
     // ---------- プロパティ --------------------------
-    private static HashSet<IAttacker> _hashIAttacker = null;
-    public static HashSet<IAttacker> HashIAttacker{ get{ return _hashIAttacker; } }
+    private static List<IAttacker> _listIAttacker = null;
+    public static List<IAttacker> HashIAttacker{ get{ return _listIAttacker; } }
     public static bool IsSlow{ get{
         // 攻撃が当たりそうな要素が一つもいないならFalse
-        if(_hashIAttacker == null )
+        if(_listIAttacker == null )
             return false;
         
         // 自衛処理：参照しているインターフェースが消えていたらそれを弾く
-        _hashIAttacker.RemoveWhere(i => i == null);
+        _listIAttacker.RemoveAll(i => i == null);
 
-        if(_hashIAttacker.Count <= 0 )
+        if(_listIAttacker.Count <= 0 )
             return false;
 
         return true;
     } }
+    // private static bool IsSlowLock = false;
     private static bool _beforeIsSlow = false;
     public static event UnityAction OnSlow;
     public static event UnityAction OnResume;
@@ -59,28 +60,30 @@ public static class EndlessBattleTimeScaleManager
 
     public static void Reset()
     {
-        if(_hashIAttacker != null)
+        if(_listIAttacker != null)
         {
             HashRemoveAll();
         }
-        _hashIAttacker = new HashSet<IAttacker>();
+        _listIAttacker = new List<IAttacker>();
         Time.timeScale = 1f;
     }
 
     // もうすぐ攻撃を当ててくる敵を登録
     public static void RegistIAttacker( IAttacker iAttacker )
     {
-        if(_hashIAttacker == null)
-            _hashIAttacker = new HashSet<IAttacker>();
-        _hashIAttacker.Add(iAttacker);
+        if(_listIAttacker == null)
+            _listIAttacker = new List<IAttacker>();
+        if(_listIAttacker.Contains(iAttacker))
+            return;
+        _listIAttacker.Add(iAttacker);
         UpdateSlowMotion();
     }
     // もうすぐ攻撃を当ててくる敵の登録から解除
     public static void UnRegistIAttacker( IAttacker iAttacker )
     {
-        if(_hashIAttacker == null || !_hashIAttacker.Contains(iAttacker))
+        if(_listIAttacker == null || !_listIAttacker.Contains(iAttacker))
             return;
-        _hashIAttacker.Remove(iAttacker);
+        _listIAttacker.Remove(iAttacker);
         OnAttackCansel?.Invoke();
         UpdateSlowMotion();
     }
@@ -94,7 +97,6 @@ public static class EndlessBattleTimeScaleManager
             if(_beforeIsSlow != IsSlow)
             {
                 _beforeIsSlow = IsSlow;
-                // _onResume?.Invoke();
                 OnResume?.Invoke();
             }
         }
@@ -105,7 +107,6 @@ public static class EndlessBattleTimeScaleManager
             if(_beforeIsSlow != IsSlow)
             {
                 _beforeIsSlow = IsSlow;
-                // _onSlow?.Invoke();
                 OnSlow?.Invoke();
             }
         }
@@ -113,17 +114,30 @@ public static class EndlessBattleTimeScaleManager
 
     private static void HashRemoveAll()
     {
-        List<IAttacker> toRemove = new List<IAttacker>();
+        _listIAttacker.Clear();
+        // List<IAttacker> toRemove = new List<IAttacker>();
 
-        foreach (var item in _hashIAttacker)
-        {
-            toRemove.Add(item);
-        }
+        // foreach (var item in _listIAttacker)
+        // {
+        //     toRemove.Add(item);
+        // }
 
-        foreach (var item in toRemove)
+        // foreach (var item in toRemove)
+        // {
+        //     _listIAttacker.Remove(item);
+        // }
+    }
+
+    //　スロー時にプレイヤーが見る対象
+    public static Transform GetPrimaryLookAtTarget()
+    {
+        for(int i = 0; i < _listIAttacker.Count; i++)
         {
-            _hashIAttacker.Remove(item);
+            Transform lookTarget = _listIAttacker[i].AttackerBaseClass.LookTransform;
+            if(lookTarget != null)
+                return lookTarget;
         }
+        return null;
     }
 
     // 敵の攻撃が１つでももうすぐ当たりそうならスローモーションにする

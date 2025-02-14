@@ -39,8 +39,8 @@ public class Player : MonoBehaviour
     private int _webNum = 4;
     public int WebNum{ get{ return _webNum; } }
     private UnityEvent _onWebNumEmplty = null;
-    private bool _isEnemyLook = false;
-    public bool IsEnemyLook{ get{ return _isEnemyLook; } }
+    private bool _isPrimary = false;
+    public bool IsEnemyLook{ get{ return _isPrimary; } }
     private bool _isDash = false;
     private float _dashSpd = 1f;
     private bool _isEnemyAttackWait = false;
@@ -59,6 +59,7 @@ public class Player : MonoBehaviour
     }
     private bool _down = false;
     private Transform _beforeLookAtTransform = null;
+    private Transform _baseLookAtTransform = null;  // 通常見るやつ
     // ---------- クラス変数宣言 -----------------------
     // ---------- インスタンス変数宣言 ------------------
     // ---------- Unity組込関数 -----------------------
@@ -70,8 +71,8 @@ public class Player : MonoBehaviour
     }
 
     private void Start() {
-        // EndlessBattleTimeScaleManager.OnSlow += LookEnemy;
-        // EndlessBattleTimeScaleManager.OnAttackCansel += LookEnemy;
+        EndlessBattleTimeScaleManager.OnSlow += LookEnemy;
+        EndlessBattleTimeScaleManager.OnAttackCansel += LookEnemy;
         EndlessBattleTimeScaleManager.OnResume += CanselLookEnemy;
     }
 
@@ -157,45 +158,79 @@ public class Player : MonoBehaviour
     }
 
     // プレイヤーの向き更新
-    public void SetLookAtTarget( Transform lookAtTarget, bool isEnemyLook = false)
+    public void SetLookAtTarget( Transform lookAtTarget = null, bool isBase = false, bool isEnemyLook = false)
     {
+        // if(_isPrimary && !isPrimary)
+        //     return;
+
+        // カメラが実際に見るオブジェクトがなくなってたら復活
         if(_lookAtTransform == null)
         {
             GameObject gameObject = new GameObject("CameraFollowPos");
             _lookAtTransform = gameObject.transform;
         }
 
-        // 今見ているのが敵でなければ、「前見てたもの」を記憶
-        if( _lookAtTransform.parent != lookAtTarget && !_isEnemyLook)
-        {
-            if(_lookAtTransform.parent != null )
-                _beforeLookAtTransform = _lookAtTransform.parent;
-            else
-                _beforeLookAtTransform = null;
-        }
+        
+        // 優先してみるべき対象がいるか
+        Transform primaryLookAtTarget = EndlessBattleTimeScaleManager.GetPrimaryLookAtTarget();
+        if( isEnemyLook && primaryLookAtTarget == null )
+            return;
 
+        // 優先して見る対象じゃあなければ、通常見る対象として保存
+        if(lookAtTarget != primaryLookAtTarget || primaryLookAtTarget == null )
+        {
+            if(!isEnemyLook)
+            {
+                _baseLookAtTransform = lookAtTarget;
+                // if(_baseLookAtTransform != null)
+                //     Debug.Log("base：保存：" + _baseLookAtTransform.name);
+                // else
+                //     Debug.Log("base：保存：null");
+            }
+        }
+        if(isBase)
+        {
+            lookAtTarget = _baseLookAtTransform;
+            // if(lookAtTarget != null)
+            //     Debug.Log("base：復元：" + lookAtTarget.name);
+            // else
+            //     Debug.Log("base：復元：null");
+        }
+        // 優先して見る対象があるなら、見る対象をそちらにすり替え
+        if(primaryLookAtTarget != null)
+        {
+            lookAtTarget = primaryLookAtTarget;
+        }
+        
+        if(lookAtTarget != null)
+            Debug.Log("lookAtTarget: " + lookAtTarget.name);
+        else
+            Debug.Log("lookAtTarget: null");
         if( lookAtTarget != null )
         {
             _lookAtTransform.parent = lookAtTarget;
             _lookAtTransform.localPosition = Vector3.zero;
-            _isEnemyLook = isEnemyLook;
+            // _isPrimary = isPrimary;
         }
         else
         {
             _lookAtTransform.parent = this.transform;
             _lookAtTransform.localPosition = _initLookPos;
-            _isEnemyLook = false;
+            // _isPrimary = false;
         }
+
+        // if( _lookAtTransform.parent != lookAtTarget && !_isPrimary)
+        // {
+        //     if(_lookAtTransform.parent != null )
+        //         _baseLookAtTransform = _lookAtTransform.parent;
+        //     else
+        //         _baseLookAtTransform = null;
+        // }
     }
 
     public void SetBeforeLookAtTarget()
     {
-        if(_lookAtTransform == null)
-        {
-            GameObject gameObject = new GameObject("CameraFollowPos");
-            _lookAtTransform = gameObject.transform;
-        }
-        _lookAtTransform.parent = _beforeLookAtTransform;
+        SetLookAtTarget(_baseLookAtTransform, true);
     }
 
     public void Down(TweenCallback onComplete)
@@ -262,10 +297,11 @@ public class Player : MonoBehaviour
 
     public Transform GetBulletTargetTransform(){ return _bulletTargetPos; }
     // ---------- Private関数 ------------------------
-    // private void LookEnemy()
-    // {
-    //     IAttacker attacker = EndlessBattleTimeScaleManager.HashIAttacker;
-    // }
+    private void LookEnemy()
+    {
+        SetLookAtTarget(null, false, true);
+        // IAttacker attacker = EndlessBattleTimeScaleManager.HashIAttacker;
+    }
     private void CanselLookEnemy()
     {
         SetBeforeLookAtTarget();

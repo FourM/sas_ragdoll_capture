@@ -195,11 +195,20 @@ public abstract class CatchableObj : MonoBehaviour
     //         return (T)this;
     //     return null;
     // }
-    public void AddOnInitialize( UnityAction onInitialize)
+    public void AddOnInitialize( UnityAction onInitialize, bool isRunIfAlradyInitialize = true)
     {
-        if(_onInitialize == null)
-            _onInitialize = new UnityEvent();
-        _onInitialize.AddListener(onInitialize);
+        // 初期化済みで、「初期化済みなら即処理をする」がONなら即処理をする
+        if(_isInitialize)
+        {
+            if(isRunIfAlradyInitialize)
+                onInitialize?.Invoke();
+        }
+        else
+        {
+            if(_onInitialize == null)
+                _onInitialize = new UnityEvent();
+            _onInitialize.AddListener(onInitialize);
+        }
     }
     public void AddOnCatch( UnityAction onCatch)
     {

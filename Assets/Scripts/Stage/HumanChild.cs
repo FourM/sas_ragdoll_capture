@@ -398,8 +398,8 @@ public class HumanChild : CatchableObj
         {
             // Debug.Log("壊れるぅ２:" + this.transform.name);
             _breakableParts.Break(GetRigidbody().velocity, _parentHuman.transform.parent);
-
-            gameObject.SetActive(false);
+            if( gameObject != null )
+                gameObject.SetActive(false);
             if(_breakableParts != null && _breakableParts.transform.parent == this.transform)
             {
                 Debug.Log("逃げ遅れたで。1:" + _breakableParts.transform.name);
