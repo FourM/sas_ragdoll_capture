@@ -152,20 +152,28 @@ public class HumanActiveActionHandler : MonoBehaviour, IAttacker
                 // シールドが取られた時のコールバック設定
                 _shield.AddOnCatch(()=>
                 {
+                    if(_human.IsBroken())
+                        return;
                     ChangeState(EndlessBattleHumanState.guard);
                     // Debug.Log("およよお？？");
                 });
                 // 構えをやめた時のコールバック設定
                 _shield.AddOnCompleteGuardEnd(()=>
                 {
+                    if(_human.IsBroken())
+                        return;
                     ChangeState(_beforState);
                 });
             }
             // 怯んだ時と、それが終わった時のコールバック設定
             _human.AddCallbackOnFlinch(()=>{
+                if(_human.IsBroken())
+                    return;
                 ChangeState(EndlessBattleHumanState.flinch);
             });
             _human.AddCallbackOnFlinchEnd(()=>{
+                if(_human.IsBroken())
+                    return;
                 ChangeState(_beforState);
             });
             _human.AddOnCatch(()=>{
@@ -230,6 +238,8 @@ public class HumanActiveActionHandler : MonoBehaviour, IAttacker
     // ステータス変更
     private void ChangeState(EndlessBattleHumanState state)
     {
+        if(_human.IsBroken())
+            return;
         if(_state == state)
             return;
 

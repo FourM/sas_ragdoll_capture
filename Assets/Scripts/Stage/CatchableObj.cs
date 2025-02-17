@@ -19,6 +19,7 @@ public abstract class CatchableObj : MonoBehaviour
     [SerializeField, Tooltip("ConnectedAnchorを矯正するか")] private bool _fixConnectedAnchor = false;
     [SerializeField, Tooltip("矯正ConnectedAnchor")] private Vector3 _connectedAnchor = default;
     [SerializeField, Tooltip("掴める")] private bool _catchable = true;
+    [SerializeField, Tooltip("一度捕まった以降の重さ　ごく一部のギミックしか使わない")] private float _catchMass = -1f;
     private bool _isCatch;
     protected bool _isBroken = false;
     private GameObject _parent;
@@ -107,6 +108,8 @@ public abstract class CatchableObj : MonoBehaviour
         //     return;
         _isCatch = true; 
         OnCatchUnique();
+        if( 0 <= _catchMass)
+            _rigidbody.mass = _catchMass;
         // Physics.autoSimulation = false; // 手動で物理計算を制御
 
         _onCatch?.Invoke();

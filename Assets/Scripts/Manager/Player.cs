@@ -162,7 +162,8 @@ public class Player : MonoBehaviour
     {
         // if(_isPrimary && !isPrimary)
         //     return;
-
+        if(this == null)
+            return;
         // カメラが実際に見るオブジェクトがなくなってたら復活
         if(_lookAtTransform == null)
         {
@@ -202,10 +203,10 @@ public class Player : MonoBehaviour
             lookAtTarget = primaryLookAtTarget;
         }
         
-        if(lookAtTarget != null)
-            Debug.Log("lookAtTarget: " + lookAtTarget.name);
-        else
-            Debug.Log("lookAtTarget: null");
+        // if(lookAtTarget != null)
+        //     Debug.Log("lookAtTarget: " + lookAtTarget.name);
+        // else
+        //     Debug.Log("lookAtTarget: null");
         if( lookAtTarget != null )
         {
             _lookAtTransform.parent = lookAtTarget;
