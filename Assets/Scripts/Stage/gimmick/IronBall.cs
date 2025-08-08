@@ -8,7 +8,7 @@ public class IronBall : CatchableObj
     // ---------- ゲームオブジェクト参照変数宣言 ----------
     // ---------- プレハブ ----------
     // ---------- プロパティ ----------
-    [SerializeField, Tooltip("捕まった時の質量")] private float _catchMass = 1f;
+    [SerializeField, Tooltip("捕まった時の質量")] private float _catchMass2 = 1f;
     [SerializeField, Tooltip("離された時の質量")] private float _releaseMass = 1000f;
     // ---------- クラス変数宣言 ----------
     // ---------- インスタンス変数宣言 ----------
@@ -69,11 +69,11 @@ public class IronBall : CatchableObj
     // ---------- Public関数 ----------
     // ---------- Private関数 ----------
     protected override void OnCatchUnique()
-    { 
-        if(_catchMass < 0)
+    {
+        if (_catchMass2 < 0)
             return;
         Rigidbody rigidbody = GetRigidbody();
-        rigidbody.mass = _catchMass;
+        rigidbody.mass = _catchMass2;
     }
     protected override void OnReleaseUnique()
     { 

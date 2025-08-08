@@ -71,7 +71,7 @@ public class InterstitialAdManager : MonoBehaviour
         MaxSdkCallbacks.Interstitial.OnAdLoadFailedEvent += OnInterstitialLoadFailedEvent;
         MaxSdkCallbacks.Interstitial.OnAdDisplayedEvent += OnInterstitialDisplayedEvent;
         MaxSdkCallbacks.Interstitial.OnAdClickedEvent += OnInterstitialClickedEvent;
-        MaxSdkCallbacks.Interstitial.OnAdRevenuePaidEvent += OnBannerAdRevenuePaidEvent;
+        MaxSdkCallbacks.Interstitial.OnAdRevenuePaidEvent += OnInterstitialAdRevenuePaidEvent;
         MaxSdkCallbacks.Interstitial.OnAdHiddenEvent += OnInterstitialHiddenEvent;
         MaxSdkCallbacks.Interstitial.OnAdDisplayFailedEvent += OnInterstitialAdFailedToDisplayEvent;
 
@@ -125,7 +125,7 @@ public class InterstitialAdManager : MonoBehaviour
 
     private void OnInterstitialClickedEvent(string adUnitId, MaxSdkBase.AdInfo adInfo) { }
 
-    private void OnBannerAdRevenuePaidEvent(string adUnitId, MaxSdkBase.AdInfo adInfo)
+    private void OnInterstitialAdRevenuePaidEvent(string adUnitId, MaxSdkBase.AdInfo adInfo)
     {
         // Banner ad revenue paid. Use this callback to track user revenue.
 
@@ -137,6 +137,18 @@ public class InterstitialAdManager : MonoBehaviour
         string networkName = adInfo.NetworkName; // Display name of the network that showed the ad (e.g. "AdColony")
         string adUnitIdentifier = adInfo.AdUnitIdentifier; // The MAX Ad Unit ID
         string placement = adInfo.Placement; // The placement this ad's postbacks are tied to
+
+        // 広告単価を取得してFirebaseでイベント発火
+        // double revenue = impressionData.Revenue;
+        var impressionParameters = new[] {
+        new Firebase.Analytics.Parameter("ad_platform", "AppLovin"),
+        // new Firebase.Analytics.Parameter("ad_source", impressionData.NetworkName),
+        // new Firebase.Analytics.Parameter("ad_unit_name", impressionData.AdUnitIdentifier),
+        // new Firebase.Analytics.Parameter("ad_format", impressionData.AdFormat),
+        new Firebase.Analytics.Parameter("value", revenue),
+        new Firebase.Analytics.Parameter("currency", "USD"), // All AppLovin revenue is sent in USD
+        };
+        Firebase.Analytics.FirebaseAnalytics.LogEvent("ad_impression", impressionParameters);
 
         TrackAdRevenue(adInfo);
     }
