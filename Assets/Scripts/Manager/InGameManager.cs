@@ -846,7 +846,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
             _beforeMousePos = Input.mousePosition;
             _currentTotalFastSwipeAway = 0f;
 
-             // バイブレーションさせる
+            // バイブレーションさせる
             VibrationManager.VibrateShort();
             PlayRandomSound(_audioSouceWebShot, _listAudioClipWebShot);
             PlayRandomSound(_audioSouceWebCatch, _listAudioClipWebCatch);
