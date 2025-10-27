@@ -63,6 +63,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
     [SerializeField, Tooltip("ゲームモード")] private GameMode _gameMode = GameMode.main;
     [SerializeField, Tooltip("ゲームステート")] private GameState _gameState = GameState.main;
     [SerializeField, Tooltip("壁")] private GameObject _wall;
+    [SerializeField, Tooltip("広告待機中の暗転画像")] private GameObject _blackImage;
     private UnityEvent _onInitialize = null;
     private UnityEvent _onInitializeMaterialManager = null;
     private bool _isCatch = false;
@@ -421,7 +422,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
     public void SetTryShowInterstitialAdAction( Action action ){ _showAdAction = action; }
     public void UndoInGame()
     {
-        if(!_isInitialize)
+        if (!_isInitialize)
             return;
 
         // 仕様上たまによく消えがちな大事なゲームオブジェクトが不具合で消えた時のバックアップ復元
@@ -433,7 +434,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
         _prayerTransform.localEulerAngles = Vector3.zero;
         _player.SetLookAtTarget(null);
         _player.Reset();
-        
+
         _webLineEndPosTransform.parent = this.transform;
         _stageManager.DeleteStage();
         _stageManager.StageLoad();
@@ -446,6 +447,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
         GameDataManager.SetIsMainGameStart(false);
 
         EndlessBattleTimeScaleManager.Reset();
+        _blackImage.SetActive(false);
     }
 
     public void SetDebugStageLoop(bool isStageLoop)
@@ -1161,7 +1163,8 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
             _catchWebTransform.parent = this.transform;
             _catchWeb.gameObject.SetActive(false);
             _stageManager.DeleteStage();
-            _stageManager.StageLoad();
+            // _stageManager.StageLoad();
+            _blackImage.SetActive(true);
             _inGameUiManager.ShowInGameUI();
             // ステージスタートイベント発火を待機状態にさせる。
             GameDataManager.SetWaitEventStageStart(true);
@@ -1224,13 +1227,15 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
     // レビュー促進ポップアップ表示を試行
     private void TryRequestReview()
     {
-        if(this != null && this.gameObject.activeSelf)
+        if (this != null && this.gameObject.activeSelf)
         {
-            if((PlayerPrefs.GetInt("currentStage", 0) + 1) % 30 == 0)
+            if ((PlayerPrefs.GetInt("currentStage", 0) + 1) % 30 == 0)
             {
                 StartCoroutine(InAppReviewManager.RequestReview());
                 // Debug.Log("Show InAppReview!!!");
             }
+            _stageManager.StageLoad();
+            _blackImage.SetActive(false);
         }
     }
 
