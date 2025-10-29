@@ -53,7 +53,7 @@ public class EnemyGunBurret : CatchableObj, IAttacker
         _target = null;
         GetRigidbody().useGravity = true;
         GetRigidbody().constraints = RigidbodyConstraints.None;
-        GetRigidbody().velocity *= multiVelocity;
+        GetRigidbody().linearVelocity *= multiVelocity;
         _playerAttacker = false;
     }
 
@@ -68,13 +68,13 @@ public class EnemyGunBurret : CatchableObj, IAttacker
             Vector3 posSub = (targetPos - this.transform.position);
             Vector3 ang = posSub.normalized;
 
-            GetRigidbody().velocity = ang * _spd;
+            GetRigidbody().linearVelocity = ang * _spd;
 
             _targetPrePos = currentTargetPos;
 
             // 移動している方を向く
             float rotationSpeed = 0.5f;
-            Quaternion targetRotation = Quaternion.LookRotation(GetRigidbody().velocity);
+            Quaternion targetRotation = Quaternion.LookRotation(GetRigidbody().linearVelocity);
             this.transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * rotationSpeed);
 
             // 目標地点に近くなったら追従を止める
@@ -174,7 +174,7 @@ public class EnemyGunBurret : CatchableObj, IAttacker
                 
                 if(catchableObj.GetRigidbody() != null)
                 {
-                    catchableObj.GetRigidbody().velocity = GetBeforeVelocity().normalized * 10f;
+                    catchableObj.GetRigidbody().linearVelocity = GetBeforeVelocity().normalized * 10f;
                 }
                 catchableObj.OnDamage(150);
 

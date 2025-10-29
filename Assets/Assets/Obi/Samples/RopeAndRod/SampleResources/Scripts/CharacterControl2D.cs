@@ -28,6 +28,6 @@ public class CharacterControl2D : MonoBehaviour {
     }
 
     void FixedUpdate () {
-		unityRigidbody.velocity = Vector3.ClampMagnitude(unityRigidbody.velocity,maxSpeed);
+		unityRigidbody.linearVelocity = Vector3.ClampMagnitude(unityRigidbody.linearVelocity,maxSpeed);
 	}
 }

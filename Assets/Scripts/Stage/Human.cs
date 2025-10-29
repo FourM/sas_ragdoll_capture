@@ -410,7 +410,7 @@ public class Human : CatchableObj
                 // rigidbody.angularVelocity = Vector3.zero;
                 rigidbody.isKinematic = true;
             });
-            GetRigidbody().velocity = Vector3.zero;
+            GetRigidbody().linearVelocity = Vector3.zero;
             GetRigidbody().angularVelocity = Vector3.zero;
 
             StartCoroutine(FixPosCoroutine());

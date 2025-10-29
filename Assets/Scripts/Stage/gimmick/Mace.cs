@@ -50,13 +50,13 @@ public class Mace : CatchableObj
         {
             bool isBroken = catchableObj.IsBroken();
             // ぶっ壊す
-            if(killShockStrength <= GetRigidbody().velocity.magnitude)
+            if(killShockStrength <= GetRigidbody().linearVelocity.magnitude)
             {
                 if(parentCatchableObj != null)
                     parentCatchableObj.OnBreak();
                 
                 if(catchableObj.GetRigidbody() != null)
-                    catchableObj.GetRigidbody().velocity = GetRigidbody().velocity * 5f;
+                    catchableObj.GetRigidbody().linearVelocity = GetRigidbody().linearVelocity * 5f;
                 // catchableObj.OnBreak();
                 catchableObj.OnDamage(110);
 

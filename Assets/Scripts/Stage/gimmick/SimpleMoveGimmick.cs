@@ -63,7 +63,7 @@ public class SimpleMoveGimmick : MonoBehaviour
         {
             _rigidBody.isKinematic = false;
             _rigidBody.useGravity = true;
-            _rigidBody.velocity = _velocity;
+            _rigidBody.linearVelocity = _velocity;
         }
     }
 }

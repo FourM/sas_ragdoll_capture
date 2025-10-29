@@ -35,7 +35,7 @@ public class Needle : MonoBehaviour
     {
         if(_rigidbody != null)
         {
-            _beforevelocity = _rigidbody.velocity;
+            _beforevelocity = _rigidbody.linearVelocity;
             _moveSpeed = this.transform.position - _beforePos;
             _beforePos = this.transform.position;
         }
@@ -55,7 +55,7 @@ public class Needle : MonoBehaviour
 
             if(_rigidbody != null)
             {
-                Vector3 addVelocity = _rigidbody.velocity;
+                Vector3 addVelocity = _rigidbody.linearVelocity;
                 if(addVelocity.magnitude < _beforevelocity.magnitude)
                     addVelocity = _beforevelocity;
                 if(addVelocity.magnitude < _moveSpeed.magnitude)
@@ -67,14 +67,14 @@ public class Needle : MonoBehaviour
                 if(catchableObj.GetRigidbody() != null)
                 {
                     catchableObj.GetRigidbody().constraints = RigidbodyConstraints.None;
-                    catchableObj.GetRigidbody().velocity = addVelocity;
+                    catchableObj.GetRigidbody().linearVelocity = addVelocity;
                 }
 
                 Human human = catchableObj.TryGetParentHuman();
                 if(human != null)
                 {
                     human.GetRigidbody().constraints = RigidbodyConstraints.None;
-                    human.GetRigidbody().velocity = addVelocity;
+                    human.GetRigidbody().linearVelocity = addVelocity;
                     human.SetImpactPos(effectPos);
                 }
             }

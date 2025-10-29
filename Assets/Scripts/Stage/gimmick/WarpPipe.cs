@@ -40,7 +40,7 @@ public class WarpPipe : MonoBehaviour
         {
             collitionChatchableObj.transform.position = _warpToPos.position;
             collitionChatchableObj.OnRelease();
-            collitionChatchableObj.GetRigidbody().velocity = Vector3.zero;
+            collitionChatchableObj.GetRigidbody().linearVelocity = Vector3.zero;
         }
         else
         {
@@ -51,6 +51,6 @@ public class WarpPipe : MonoBehaviour
     // 各パーツに対する処理
     private void ChangeVelocityHumanParts(HumanChild parts)
     {
-        parts.GetRigidbody().velocity = Vector3.zero;
+        parts.GetRigidbody().linearVelocity = Vector3.zero;
     } 
 }

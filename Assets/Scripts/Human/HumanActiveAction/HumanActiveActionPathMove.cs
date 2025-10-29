@@ -37,12 +37,12 @@ public class HumanActiveActionPathMove : HumanActiveAction
             _human.IsFloorDead = false;
             // アニメーション再開
             _human.EnableAnimation();
-            _human.GetRigidbody().velocity = Vector3.zero;
+            _human.GetRigidbody().linearVelocity = Vector3.zero;
             _human.GetRigidbody().angularVelocity = Vector3.zero;
             _human.transform.DOLocalMove(Vector3.zero, 1f).SetLink(_human.gameObject);
             _human.PartsActiion((HumanChild parts)=>
             {
-                parts.GetRigidbody().velocity = Vector3.zero;
+                parts.GetRigidbody().linearVelocity = Vector3.zero;
                 parts.GetRigidbody().angularVelocity = Vector3.zero;
             });
         });
@@ -71,7 +71,7 @@ public class HumanActiveActionPathMove : HumanActiveAction
             _cinemachineDollyCart.m_Speed = _walkSpd;
             _human.PartsActiion((HumanChild parts)=>
             {
-                parts.GetRigidbody().velocity = Vector3.zero;
+                parts.GetRigidbody().linearVelocity = Vector3.zero;
                 parts.GetRigidbody().angularVelocity = Vector3.zero;
             });
         }

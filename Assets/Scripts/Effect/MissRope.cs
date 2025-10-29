@@ -63,14 +63,14 @@ public class MissRope : MonoBehaviour
         for(int i = 0; i < _pointList.Count; i++)
         {
             float magnitude = 10.0f * i / (_pointList.Count - 1);
-            _pointList[i].velocity = this.transform.forward * magnitude;
+            _pointList[i].linearVelocity = this.transform.forward * magnitude;
         }
 
         Tween tween = DOVirtual.DelayedCall(waitTime, ()=>
         {
             for(int i = 0; i < _pointList.Count; i++)
             {
-                _pointList[i].velocity = this.transform.forward * 10.0f;
+                _pointList[i].linearVelocity = this.transform.forward * 10.0f;
             }
             _away = true;
         });

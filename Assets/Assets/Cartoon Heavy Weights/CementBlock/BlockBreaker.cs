@@ -107,11 +107,11 @@ public class BlockBreaker : MonoBehaviour {
 			if(copyVelocity == true) {
 				if((this.GetComponent<Rigidbody>() != null) && (debris.GetComponent<Rigidbody>() != null)) {
 					//copy over the velocity
-					debris.GetComponent<Rigidbody>().velocity = this.GetComponent<Rigidbody>().velocity;
+					debris.GetComponent<Rigidbody>().linearVelocity = this.GetComponent<Rigidbody>().linearVelocity;
 					
 					//Randomize velocity
 					if(randomVelocity.magnitude > 0.0f) {
-						debris.GetComponent<Rigidbody>().velocity += new Vector3(Random.Range(-randomVelocity.x,randomVelocity.x),
+						debris.GetComponent<Rigidbody>().linearVelocity += new Vector3(Random.Range(-randomVelocity.x,randomVelocity.x),
 						                                         Random.Range(-randomVelocity.y,randomVelocity.y),
 						                                         Random.Range(-randomVelocity.z,randomVelocity.z));
 					}

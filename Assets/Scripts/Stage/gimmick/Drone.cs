@@ -30,13 +30,13 @@ public class Drone : CatchableObj
     }
     protected override void UpdateUnique()
     {
-        if( 5f <= GetRigidbody().velocity.magnitude )
+        if( 5f <= GetRigidbody().linearVelocity.magnitude )
         {
-            _velocity = GetRigidbody().velocity;
+            _velocity = GetRigidbody().linearVelocity;
             _velocity = _velocity.normalized * 10f;
         }
         else
-            _velocity = GetRigidbody().velocity;
+            _velocity = GetRigidbody().linearVelocity;
     }
     protected override void OnDisableUnique()
     {

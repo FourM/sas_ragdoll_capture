@@ -44,7 +44,7 @@ public abstract class CatchableObj : MonoBehaviour
         Initialize();
     }
     private void Update(){
-        _beforevelocity = _rigidbody.velocity;
+        _beforevelocity = _rigidbody.linearVelocity;
 
         _fastSwipedTime -= Time.deltaTime;
         if(_fastSwipedTime <= 0)
@@ -324,9 +324,9 @@ public abstract class CatchableObj : MonoBehaviour
             bool isBroken = catchableObj.IsBroken();
 
             if(catchableObj.GetRigidbody() != null)
-                catchableObj.GetRigidbody().velocity = velocity;
+                catchableObj.GetRigidbody().linearVelocity = velocity;
 
-            if( killShockStrength <= GetRigidbody().velocity.magnitude )
+            if( killShockStrength <= GetRigidbody().linearVelocity.magnitude )
             {
                 if(humanChild != null)
                     humanChild.SetImpactPos(collision.GetContact(0).point);

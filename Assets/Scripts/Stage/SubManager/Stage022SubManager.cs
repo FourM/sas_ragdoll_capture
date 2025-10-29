@@ -52,7 +52,7 @@ public class Stage022SubManager : MonoBehaviour
 
         _shotBall.isKinematic = true;
         _shotBall.useGravity = false;
-        _shotBall.velocity = Vector3.zero;
+        _shotBall.linearVelocity = Vector3.zero;
         _shotBall.gameObject.SetActive(false);
 
 
@@ -108,7 +108,7 @@ public class Stage022SubManager : MonoBehaviour
                 _shotBall.transform.eulerAngles = _shotPos.eulerAngles;
                 Vector3 velocity = _shotBall.transform.forward * _frontVelocity;
                 velocity += _shotBall.transform.up * _upVelocity;
-                _shotBall.velocity = velocity;
+                _shotBall.linearVelocity = velocity;
 
                 // 音を出す
                 if(PlayerPrefs.GetInt("Effect_ON", 1) == 1)

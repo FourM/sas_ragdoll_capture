@@ -23,13 +23,13 @@ public class scaffold : CatchableObj
 
     private void UpdateUnique()
     {
-        if( 5f <= GetRigidbody().velocity.magnitude )
+        if( 5f <= GetRigidbody().linearVelocity.magnitude )
         {
-            _velocity = GetRigidbody().velocity;
+            _velocity = GetRigidbody().linearVelocity;
             _velocity = _velocity.normalized * 10f;
         }
         else
-            _velocity = GetRigidbody().velocity;
+            _velocity = GetRigidbody().linearVelocity;
     }
     // ---------- Public関数 ----------
     // ---------- Private関数 ----------

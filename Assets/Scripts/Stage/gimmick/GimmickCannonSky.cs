@@ -71,7 +71,7 @@ public class GimmickCannonSky : MonoBehaviour
         human.OnRelease();
         humanChild.OnRelease();
         Rigidbody rigidbody = human.GetParts(HumanParts.waist).GetRigidbody();
-        rigidbody.velocity = Vector3.zero;
+        rigidbody.linearVelocity = Vector3.zero;
         rigidbody.isKinematic = true;
         rigidbody.useGravity = false;
         human.gameObject.SetActive(false);
@@ -100,13 +100,13 @@ public class GimmickCannonSky : MonoBehaviour
             human.transform.localPosition = Vector3.zero;
             human.SetPos(_dymmyCanonBall.transform.position);
             human.PartsActiion((HumanChild parts)=>{
-                parts.GetRigidbody().velocity = Vector3.zero;
+                parts.GetRigidbody().linearVelocity = Vector3.zero;
                 parts.GetRigidbody().useGravity = false;
             });
             human.GetRigidbody().useGravity = false;
-            human.GetRigidbody().velocity = Vector3.zero;
+            human.GetRigidbody().linearVelocity = Vector3.zero;
 
-            _dymmyCanonBall.velocity = _shotVelocity;
+            _dymmyCanonBall.linearVelocity = _shotVelocity;
 
             for(int i = 0; i < _collisions.Count; i++)
             {

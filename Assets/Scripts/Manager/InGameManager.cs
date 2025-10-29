@@ -967,7 +967,7 @@ public class InGameManager : MonoBehaviour, InGameMainEventManager
                 float _beforeTotalFastSwipeAway = _currentTotalFastSwipeAway;
                 _currentTotalFastSwipeAway += swipeSpeed;
 
-                float catchObjSpeed = _currentCatchObj.GetRigidbody().velocity.magnitude;
+                float catchObjSpeed = _currentCatchObj.GetRigidbody().linearVelocity.magnitude;
                 // Debug.Log("掴んでるやつの速度:" + catchObjSpeed);
                 // 素早いスワイプを維持して一定距離スワイプした
                 if( _fastSwipeAway <= _currentTotalFastSwipeAway && _fastCatchObjSpd <= catchObjSpeed)

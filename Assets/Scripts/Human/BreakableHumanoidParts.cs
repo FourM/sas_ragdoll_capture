@@ -162,7 +162,7 @@ public class BreakableHumanoidParts : MonoBehaviour
         _collider.enabled = true;
         _rigidbody.isKinematic = false;
         _rigidbody.useGravity = true;
-        _rigidbody.velocity = velocity;
+        _rigidbody.linearVelocity = velocity;
         // Debug.Log("Break:" + this.transform.name + ", " + this.transform.parent.name);
     }
 

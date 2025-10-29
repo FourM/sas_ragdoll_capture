@@ -85,7 +85,7 @@ public class BomBarret : CatchableObj
         velocity = other.transform.position - this.transform.position;
         velocity = velocity.normalized * 10f;
         if(other.attachedRigidbody != null)
-            other.attachedRigidbody.velocity = velocity;
+            other.attachedRigidbody.linearVelocity = velocity;
     }
 
     private void OnDisableUnique()

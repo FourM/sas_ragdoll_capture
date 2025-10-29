@@ -121,7 +121,7 @@ namespace BzKovSoft.RagdollTemplate.Scripts.Charachter
 		void FixedUpdate()
 		{
 			if (_state == RagdollState.WaitStablePosition &&
-				_hipsTransformRigid.velocity.magnitude < 0.1f)
+				_hipsTransformRigid.linearVelocity.magnitude < 0.1f)
 			{
 				GetUp();
 			}
@@ -359,7 +359,7 @@ namespace BzKovSoft.RagdollTemplate.Scripts.Charachter
 		private void ApplyVelocity(Vector3 predieVelocity)
 		{
 			foreach (var rigid in _rigids)
-				rigid.RigidBody.velocity = predieVelocity;
+				rigid.RigidBody.linearVelocity = predieVelocity;
 		}
 
 		private void ActivateRagdollParts(bool activate)

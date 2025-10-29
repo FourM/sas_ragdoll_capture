@@ -447,7 +447,7 @@ public class MeshCut : MonoBehaviour
         obj.transform.localPosition = transform.localPosition;
         obj.transform.localRotation = transform.localRotation;
         obj.transform.localScale = transform.localScale;
-        obj.GetComponent<Rigidbody>().velocity = GetComponent<Rigidbody>().velocity;
+        obj.GetComponent<Rigidbody>().linearVelocity = GetComponent<Rigidbody>().linearVelocity;
         obj.GetComponent<Rigidbody>().angularVelocity = GetComponent<Rigidbody>().angularVelocity;
         obj.GetComponent<MeshCut>().skinWidth = skinWidth;
         obj.GetComponent<Rigidbody>().isKinematic = true;
@@ -471,7 +471,7 @@ public class MeshCut : MonoBehaviour
         obj2.transform.localPosition = transform.localPosition;
         obj2.transform.localRotation = transform.localRotation;
         obj2.transform.localScale = transform.localScale;
-        obj2.GetComponent<Rigidbody>().velocity = GetComponent<Rigidbody>().velocity;
+        obj2.GetComponent<Rigidbody>().linearVelocity = GetComponent<Rigidbody>().linearVelocity;
         obj2.GetComponent<Rigidbody>().angularVelocity = GetComponent<Rigidbody>().angularVelocity;
         obj2.GetComponent<MeshCut>().skinWidth = skinWidth;
         obj2.GetComponent<Rigidbody>().isKinematic = true;

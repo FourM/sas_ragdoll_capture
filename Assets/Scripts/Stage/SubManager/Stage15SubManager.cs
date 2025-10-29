@@ -59,7 +59,7 @@ public class Stage15SubManager : StageSubManager
         human.OnRelease();
         humanChild.OnRelease();
         Rigidbody humanRigidbody = human.GetParts(HumanParts.waist).GetRigidbody();
-        humanRigidbody.velocity = Vector3.zero;
+        humanRigidbody.linearVelocity = Vector3.zero;
         humanRigidbody.isKinematic = true;
         humanRigidbody.useGravity = false;
         human.gameObject.SetActive(false);
@@ -102,15 +102,15 @@ public class Stage15SubManager : StageSubManager
             human.transform.localPosition = Vector3.zero;           // 敵の位置補正
             human.SetPos(_dymmyCanonBall.transform.position);       // 敵の位置補正
             human.PartsActiion((HumanChild parts)=>{                // 敵の各部位にかかってる運動エネルギーをなくす
-                parts.GetRigidbody().velocity = Vector3.zero;
+                parts.GetRigidbody().linearVelocity = Vector3.zero;
                 parts.GetRigidbody().useGravity = false;
             });
             human.GetRigidbody().useGravity = false;                // 敵本体にかかってる運動エネルギーをなくす
-            human.GetRigidbody().velocity = Vector3.zero;
+            human.GetRigidbody().linearVelocity = Vector3.zero;
                                                                     // ダミー砲弾に初速設定
             Vector3 velocity = _dymmyCanonBall.transform.forward * _frontVelocity;
             velocity += _dymmyCanonBall.transform.up * _upVelocity;
-            _dymmyCanonBall.velocity = velocity;
+            _dymmyCanonBall.linearVelocity = velocity;
 
             // 大砲の壁の判定をなくす
             for(int i = 0; i < _collisions.Count; i++)
@@ -126,11 +126,11 @@ public class Stage15SubManager : StageSubManager
         sequence.AppendCallback(()=>{
             human.transform.parent = GameDataManager.GetStage().transform;
             human.PartsActiion((HumanChild parts)=>{
-                parts.GetRigidbody().velocity = _dymmyCanonBall.velocity;
+                parts.GetRigidbody().linearVelocity = _dymmyCanonBall.linearVelocity;
                 parts.GetRigidbody().useGravity = true;
             });
             human.GetRigidbody().useGravity = true;                
-            human.GetRigidbody().velocity = _dymmyCanonBall.velocity;
+            human.GetRigidbody().linearVelocity = _dymmyCanonBall.linearVelocity;
             human.GetRigidbody().isKinematic = false;
             humanRigidbody.isKinematic = false;
             _dymmyCanonBall.gameObject.SetActive(false);

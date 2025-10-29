@@ -114,7 +114,7 @@ public class HumanPartsFollow : MonoBehaviour
                 Vector3 movePos = parts.transform.position + GetSubPos(index) * _followTime * movePosFactor;
 
                 // 下から上にかかる力が掛かっているなら、下方向へ行く補正をなくす
-                if( 0f < parts.velocity.y )
+                if( 0f < parts.linearVelocity.y )
                 {
                     if(followForce.y < 0)
                         followForce.y = 0;
@@ -136,7 +136,7 @@ public class HumanPartsFollow : MonoBehaviour
             {
                 parts.transform.localPosition = followParts.transform.localPosition;
                 parts.transform.localEulerAngles = followParts.transform.localEulerAngles;
-                parts.velocity = Vector3.zero;
+                parts.linearVelocity = Vector3.zero;
                 parts.angularVelocity = Vector3.zero;
             }
         }

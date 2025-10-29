@@ -42,7 +42,7 @@ public class BreakableGlass : MonoBehaviour
         {
             Vector3 randomDirection = Random.onUnitSphere;
             velocity += randomDirection;
-            _rigidBodies[i].velocity = velocity;
+            _rigidBodies[i].linearVelocity = velocity;
             // yield return null;
         }
         yield return null;

@@ -38,7 +38,7 @@ public class Stage009SubManager : MonoBehaviour
         if(other.gameObject.layer == LayerMask.NameToLayer("Human1"))
         {
             Rigidbody waistRigid = _human.GetParts(HumanParts.waist).GetRigidbody();
-            Vector3 velocity = waistRigid.velocity;
+            Vector3 velocity = waistRigid.linearVelocity;
 
             if(0f < velocity.y )
             {

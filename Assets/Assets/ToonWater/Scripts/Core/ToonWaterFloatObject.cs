@@ -28,7 +28,7 @@ public class ToonWaterFloatObject:MonoBehaviour{
     
     public void Ripple(){
 
-    	if(inWater && rippleCounter < GetComponent<Rigidbody>().velocity.magnitude){
+    	if(inWater && rippleCounter < GetComponent<Rigidbody>().linearVelocity.magnitude){
     		rippleCounter = .5f;
     		water.Ripple(transform);
     	}
@@ -44,7 +44,7 @@ public class ToonWaterFloatObject:MonoBehaviour{
     		Vector3 actionPoint = transform.position + transform.TransformDirection(buoyancyCentreOffset);
     		float forceFactor = 1f - ((actionPoint.y - _yPosBuffer) / floatHeight);
     		if (forceFactor > 0f) {
-    			Vector3 uplift = -Physics.gravity * (forceFactor - GetComponent<Rigidbody>().velocity.y * bounceDamp);
+    			Vector3 uplift = -Physics.gravity * (forceFactor - GetComponent<Rigidbody>().linearVelocity.y * bounceDamp);
     			GetComponent<Rigidbody>().AddForceAtPosition(uplift*GetComponent<Rigidbody>().mass, actionPoint);
     		}
     		

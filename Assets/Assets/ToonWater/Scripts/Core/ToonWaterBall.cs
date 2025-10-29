@@ -73,13 +73,13 @@ public class ToonWaterBall:MonoBehaviour{
     public void FixedUpdate() {
     	if(carrier != null){	
     		float yDif = carrier.position.z -transform.position.z+yOffset;
-    		var tmp_cs1 = transform.GetComponent<Rigidbody>().velocity;
+    		var tmp_cs1 = transform.GetComponent<Rigidbody>().linearVelocity;
             tmp_cs1.z = yDif*50*Time.deltaTime;
-            transform.GetComponent<Rigidbody>().velocity = tmp_cs1;
+            transform.GetComponent<Rigidbody>().linearVelocity = tmp_cs1;
     		float xDif = carrier.position.x -transform.position.x+xOffset;
-    		var tmp_cs2 = transform.GetComponent<Rigidbody>().velocity;
+    		var tmp_cs2 = transform.GetComponent<Rigidbody>().linearVelocity;
             tmp_cs2.x = xDif*50*Time.deltaTime;
-            transform.GetComponent<Rigidbody>().velocity = tmp_cs2;
+            transform.GetComponent<Rigidbody>().linearVelocity = tmp_cs2;
     	}
     }
 }
